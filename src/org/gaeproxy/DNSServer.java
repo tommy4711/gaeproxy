@@ -500,6 +500,12 @@ public class DNSServer implements WrapServer {
 
 				Log.d(TAG, "解析" + questDomain);
 
+				if (questDomain.contains("appspot.com")) {
+					byte[] ips = parseIPString("72.14.203.141");
+					byte[] answer = createDNSResponse(udpreq, ips);
+					addToCache(questDomain, answer);
+				}
+				
 				if (dnsCache.containsKey(questDomain)) {
 
 					sendDns(dnsCache.get(questDomain).getDnsResponse(), dnsq,

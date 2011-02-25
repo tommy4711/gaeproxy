@@ -137,16 +137,16 @@ public class GAEProxyService extends Service {
 
 				if (isARMv6()) {
 					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 74.125.153.141 --dport 80  -j REDIRECT --to-ports 8123");
+							+ "-d ! 72.14.203.141 --dport 80  -j REDIRECT --to-ports 8123");
 					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 74.125.153.141 --dport 443 -j REDIRECT --to-ports 8124");
+							+ "-d ! 72.14.203.141 --dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
 				} else {
 					runRootCommand("/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 74.125.153.141 --dport 80 -j REDIRECT --to-ports 8123");
+							+ "-d ! 72.14.203.141 --dport 80 -j REDIRECT --to-ports 8123");
 					runRootCommand("/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 74.125.153.141 --dport 443 -j REDIRECT --to-ports 8124");
+							+ "-d ! 72.14.203.141 --dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
 				}
@@ -171,14 +171,16 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		connect();
+		
 
 		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353);
 		dnsServer.setBasePath("/data/data/org.gaeproxy");
 		new Thread(dnsServer).start();
 
-		if (dnsServer.isInService())
+		if (dnsServer.isInService()) {
 			finishConnection();
+			connect();
+		}
 		return true;
 	}
 

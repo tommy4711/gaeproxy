@@ -38,4 +38,5 @@
 <string name="download">Downloading file..</string>
 <string name="isInstalled_summary">Install / Uninstall extra packages (need SD CARD)</string>
 <string name="install_alert">Please install dependent module first!</string>
+<string name="sdcard_alert">Please make sure you have a SD CARD!</string>
 </resources>

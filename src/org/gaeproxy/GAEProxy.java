@@ -302,6 +302,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 				isRunningCheck.setChecked(false);
 				enableAll();
+				return false;
 			}
 			if (!serviceStart()) {
 				SharedPreferences settings = PreferenceManager
@@ -375,8 +376,15 @@ public class GAEProxy extends PreferenceActivity implements
 
 		if (key.equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
-				install();
-				isInstalledCheck.setChecked(true);
+				if (install()) {
+					isInstalledCheck.setChecked(true);
+				} else {
+					showAToast(getString(R.string.sdcard_alert));
+					Editor ed = settings.edit();
+					ed.putBoolean("isInstalled", false);
+					ed.commit();
+					isInstalledCheck.setChecked(false);
+				}
 			} else {
 				uninstall();
 				isInstalledCheck.setChecked(false);
@@ -452,7 +460,7 @@ public class GAEProxy extends PreferenceActivity implements
 		switch (id) {
 		case DIALOG_DOWNLOAD_PROGRESS:
 			mProgressDialog = new ProgressDialog(this);
-			mProgressDialog.setMessage("Downloading file..");
+			mProgressDialog.setMessage(getString(R.string.download));
 			mProgressDialog.setProgressStyle
 
 			(ProgressDialog.STYLE_HORIZONTAL);

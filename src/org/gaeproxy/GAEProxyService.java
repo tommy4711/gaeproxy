@@ -27,7 +27,7 @@ public class GAEProxyService extends Service {
 	public static final String PREFS_NAME = "GAEProxy";
 
 	private Process httpProcess = null;
-	private DataOutputStream httpOS = null;
+//	private DataOutputStream httpOS = null;
 
 	private String proxy;
 	private int port;
@@ -51,10 +51,7 @@ public class GAEProxyService extends Service {
 			String cmd = "/data/data/org.gaeproxy/localproxy.sh";
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec("su");
-			httpOS = new DataOutputStream(httpProcess.getOutputStream());
-			httpOS.writeBytes(cmd + "\n");
-			httpOS.flush();
+			httpProcess = Runtime.getRuntime().exec(cmd);
 
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
@@ -219,11 +216,11 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null) {
-				httpOS.writeBytes("exit\n");
-				httpOS.flush();
-				httpOS.close();
-			}
+//			if (httpOS != null) {
+//				httpOS.writeBytes("exit\n");
+//				httpOS.flush();
+//				httpOS.close();
+//			}
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {

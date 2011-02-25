@@ -525,30 +525,36 @@ public class GAEProxy extends PreferenceActivity implements
 			int count;
 
 			try {
-				URL url = new URL(path[0]);
-				URLConnection conexion = url.openConnection();
-				conexion.connect();
+				File zip = new File(path[1]);
+				if (!zip.exists()) {
+					URL url = new URL(path[0]);
+					URLConnection conexion = url.openConnection();
+					conexion.connect();
 
-				int lenghtOfFile = conexion.getContentLength();
-				Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+					int lenghtOfFile = conexion.getContentLength();
+					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
-				InputStream input = new BufferedInputStream(url.openStream());
-				OutputStream output = new FileOutputStream(path[1]);
+					InputStream input = new BufferedInputStream(
+							url.openStream());
+					OutputStream output = new FileOutputStream(path[1]);
 
-				byte data[] = new byte[1024];
+					byte data[] = new byte[1024];
 
-				long total = 0;
+					long total = 0;
 
-				while ((count = input.read(data)) != -1) {
-					total += count;
-					publishProgress("" + (int) ((total * 50) / lenghtOfFile));
-					output.write(data, 0, count);
+					while ((count = input.read(data)) != -1) {
+						total += count;
+						publishProgress(""
+								+ (int) ((total * 50) / lenghtOfFile));
+						output.write(data, 0, count);
+					}
+
+					output.flush();
+					output.close();
+					input.close();
+				} else {
+					publishProgress("" + 50);
 				}
-
-				output.flush();
-				output.close();
-				input.close();
-
 				// Unzip now
 				unzip(path[1], path[2]);
 
@@ -559,30 +565,36 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 
 			try {
-				URL url = new URL(path[3]);
-				URLConnection conexion = url.openConnection();
-				conexion.connect();
+				File zip = new File(path[4]);
+				if (!zip.exists()) {
+					URL url = new URL(path[3]);
+					URLConnection conexion = url.openConnection();
+					conexion.connect();
 
-				int lenghtOfFile = conexion.getContentLength();
-				Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+					int lenghtOfFile = conexion.getContentLength();
+					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
-				InputStream input = new BufferedInputStream(url.openStream());
-				OutputStream output = new FileOutputStream(path[4]);
+					InputStream input = new BufferedInputStream(
+							url.openStream());
+					OutputStream output = new FileOutputStream(path[4]);
 
-				byte data[] = new byte[1024];
+					byte data[] = new byte[1024];
 
-				long total = 0;
+					long total = 0;
 
-				while ((count = input.read(data)) != -1) {
-					total += count;
-					publishProgress(""
-							+ (int) (50 + (total * 50) / lenghtOfFile));
-					output.write(data, 0, count);
+					while ((count = input.read(data)) != -1) {
+						total += count;
+						publishProgress(""
+								+ (int) (50 + (total * 50) / lenghtOfFile));
+						output.write(data, 0, count);
+					}
+
+					output.flush();
+					output.close();
+					input.close();
+				} else {
+					publishProgress("" + 50);
 				}
-
-				output.flush();
-				output.close();
-				input.close();
 
 				// Unzip File
 				unzip(path[4], path[5]);

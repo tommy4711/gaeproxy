@@ -219,8 +219,11 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null)
+			if (httpOS != null) {
+				httpOS.writeBytes("exit\n");
+				httpOS.flush();
 				httpOS.close();
+			}
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {

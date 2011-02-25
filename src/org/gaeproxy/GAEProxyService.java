@@ -1,7 +1,10 @@
 package org.gaeproxy;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 
 import android.app.Notification;
@@ -23,14 +26,43 @@ public class GAEProxyService extends Service {
 	private static final String TAG = "GAEProxy";
 	public static final String PREFS_NAME = "GAEProxy";
 
+	private Process httpProcess = null;
+	private DataOutputStream httpOS = null;
+
 	private String proxy;
 	private int port;
 	private boolean isAutoSetProxy = false;
 	private DNSServer dnsServer = null;
-	private HTTPServer httpServer = null;
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
+
+	public boolean connect() {
+		try {
+
+			File conf = new File("data/data/org.gaeproxy/proxy.conf");
+			FileOutputStream is = new FileOutputStream(conf);
+			byte[] buffer = ("listen_port = " + port + "\n" + "fetch_server = "
+					+ proxy + "\n").getBytes();
+			is.write(buffer);
+			is.flush();
+			is.close();
+			
+			String cmd = "/data/data/org.gaeproxy/localproxy.sh";
+			Log.e(TAG, cmd);
+
+			httpProcess = Runtime.getRuntime().exec("su");
+			httpOS = new DataOutputStream(httpProcess.getOutputStream());
+			httpOS.writeBytes(cmd + "\n");
+			httpOS.flush();
+
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			return false;
+		}
+
+		return true;
+	}
 
 	/**
 	 * Check if this is an ARMv6 device
@@ -139,14 +171,13 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
+		connect();
+
 		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353);
 		dnsServer.setBasePath("/data/data/org.gaeproxy");
 		new Thread(dnsServer).start();
 
-		httpServer = new HTTPServer(proxy, port);
-		new Thread(httpServer).start();
-
-		if (httpServer.isInService() && dnsServer.isInService())
+		if (dnsServer.isInService())
 			finishConnection();
 		return true;
 	}
@@ -186,8 +217,10 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpServer != null)
-				httpServer.close();
+			if (httpOS != null)
+				httpOS.close();
+			if (httpProcess != null)
+				httpProcess.destroy();
 		} catch (Exception e) {
 			Log.e(TAG, "HTTP Server close unexpected");
 		}

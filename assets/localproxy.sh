@@ -5,4 +5,4 @@ export LD_LIBRARY_PATH=/data/data/org.gaeproxy/python/lib
 export PYTHONHOME=$PYTHONHOME:/data/data/org.gaeproxy/python
 export TEMP=/sdcard/tmp
 
-/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/localproxy/proxy.py
+/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/proxy.py

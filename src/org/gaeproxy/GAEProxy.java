@@ -1,21 +1,31 @@
 package org.gaeproxy;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,7 +33,9 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -45,6 +57,7 @@ public class GAEProxy extends PreferenceActivity implements
 	public static final String PREFS_NAME = "GAEProxy";
 	private static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
 	private static final int BUFF_SIZE = 1024 * 1024; // 1M Byte
+	public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 
 	private String proxy;
 	private int port;
@@ -58,6 +71,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private EditTextPreference proxyText;
 	private EditTextPreference portText;
 	private CheckBoxPreference isRunningCheck;
+
+	private ProgressDialog mProgressDialog;
 
 	public static boolean runRootCommand(String command) {
 		Process process = null;
@@ -83,47 +98,6 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * 解压缩一个文件
-	 * 
-	 * @param zipFile
-	 *            压缩文件
-	 * @param folderPath
-	 *            解压缩的目标目录
-	 * @throws IOException
-	 *             当解压缩过程出错时抛出
-	 */
-	public static void upZipFile(File zipFile, String folderPath)
-			throws ZipException, IOException {
-		File desDir = new File(folderPath);
-		if (!desDir.exists()) {
-			desDir.mkdirs();
-		}
-		ZipFile zf = new ZipFile(zipFile);
-		for (Enumeration<?> entries = zf.entries(); entries.hasMoreElements();) {
-			ZipEntry entry = ((ZipEntry) entries.nextElement());
-			InputStream in = zf.getInputStream(entry);
-			String str = folderPath + File.separator + entry.getName();
-			str = new String(str.getBytes("8859_1"), "GB2312");
-			File desFile = new File(str);
-			if (!desFile.exists()) {
-				File fileParentDir = desFile.getParentFile();
-				if (!fileParentDir.exists()) {
-					fileParentDir.mkdirs();
-				}
-				desFile.createNewFile();
-			}
-			OutputStream out = new FileOutputStream(desFile);
-			byte buffer[] = new byte[BUFF_SIZE];
-			int realLength;
-			while ((realLength = in.read(buffer)) > 0) {
-				out.write(buffer, 0, realLength);
-			}
-			in.close();
-			out.close();
-		}
 	}
 
 	private void CopyAssets(String path) {
@@ -190,21 +164,6 @@ public class GAEProxy extends PreferenceActivity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//
-		// File python = new File("/data/data/org.gaeproxy/python_r11.zip");
-		// File python_extras = new
-		// File("/data/data/org.gaeproxy/python_extras_r11.zip");
-		//
-		// try {
-		// upZipFile(python, "/data/data/org.gaeproxy/python/");
-		// upZipFile(python_extras, "/data/data/org.gaeproxy/");
-		// } catch (ZipException e1) {
-		// // TODO Auto-generated catch block
-		// e1.printStackTrace();
-		// } catch (IOException e1) {
-		// // TODO Auto-generated catch block
-		// e1.printStackTrace();
-		// }
 
 		addPreferencesFromResource(R.xml.gae_proxy_preference);
 
@@ -242,6 +201,8 @@ public class GAEProxy extends PreferenceActivity implements
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/iptables_n1");
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/python/bin/python");
 		}
 	}
 
@@ -262,7 +223,7 @@ public class GAEProxy extends PreferenceActivity implements
 	 * 
 	 * @throws Exception
 	 */
-	public void serviceStart() {
+	public boolean serviceStart() {
 
 		if (isWorked(SERVICE_NAME)) {
 			try {
@@ -270,7 +231,7 @@ public class GAEProxy extends PreferenceActivity implements
 			} catch (Exception e) {
 				// Nothing
 			}
-			return;
+			return false;
 		}
 
 		SharedPreferences settings = PreferenceManager
@@ -278,11 +239,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
-			return;
+			return false;
 
 		String portText = settings.getString("port", "");
 		if (isTextEmpty(portText, getString(R.string.port_empty)))
-			return;
+			return false;
 		port = Integer.valueOf(portText);
 		if (port <= 1024)
 			this.showAToast(getString(R.string.port_alert));
@@ -302,9 +263,10 @@ public class GAEProxy extends PreferenceActivity implements
 			startService(it);
 		} catch (Exception e) {
 			// Nothing
+			return false;
 		}
 
-		return;
+		return true;
 	}
 
 	private void showAToast(String msg) {
@@ -327,7 +289,33 @@ public class GAEProxy extends PreferenceActivity implements
 
 		if (preference.getKey() != null
 				&& preference.getKey().equals("isRunning")) {
-			serviceStart();
+			if (!isInstalledCheck.isChecked()) {
+				showAToast(getString(R.string.install_alert));
+				SharedPreferences settings = PreferenceManager
+						.getDefaultSharedPreferences(this);
+
+				Editor edit = settings.edit();
+
+				edit.putBoolean("isRunning", false);
+
+				edit.commit();
+
+				isRunningCheck.setChecked(false);
+				enableAll();
+			}
+			if (!serviceStart()) {
+				SharedPreferences settings = PreferenceManager
+						.getDefaultSharedPreferences(this);
+
+				Editor edit = settings.edit();
+
+				edit.putBoolean("isRunning", false);
+
+				edit.commit();
+
+				isRunningCheck.setChecked(false);
+				enableAll();
+			}
 		}
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
@@ -384,7 +372,7 @@ public class GAEProxy extends PreferenceActivity implements
 		// Let's do something a preference value changes
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		
+
 		if (key.equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
 				install();
@@ -394,7 +382,7 @@ public class GAEProxy extends PreferenceActivity implements
 				isInstalledCheck.setChecked(false);
 			}
 		}
-		
+
 		if (key.equals("isRunning")) {
 			if (settings.getBoolean("isRunning", false)) {
 				disableAll();
@@ -411,10 +399,16 @@ public class GAEProxy extends PreferenceActivity implements
 			else
 				portText.setSummary(settings.getString("port", ""));
 		else if (key.equals("proxy"))
-			if (settings.getString("proxy", "").equals(""))
+			if (settings.getString("proxy", "").equals("")) {
 				proxyText.setSummary(getString(R.string.proxy_summary));
-			else
-				proxyText.setSummary(settings.getString("host", ""));
+			} else {
+				if (!settings.getString("proxy", "").startsWith("http://")) {
+					String host = settings.getString("proxy", "");
+					Editor ed = settings.edit();
+					ed.putString("proxy", "http://" + host);
+				}
+				proxyText.setSummary(settings.getString("proxy", ""));
+			}
 	}
 
 	private void disableAll() {
@@ -434,27 +428,176 @@ public class GAEProxy extends PreferenceActivity implements
 		isAutoConnectCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 	}
-	
-	private void install() {
-		
-		 File python = new File("/data/data/org.gaeproxy/python_r11.zip");
-		 File python_extras = new
-		 File("/data/data/org.gaeproxy/python_extras_r11.zip");
-		
-		 try {
-		 upZipFile(python, "/data/data/org.gaeproxy/python/");
-		 upZipFile(python_extras, "/data/data/org.gaeproxy/");
-		 } catch (ZipException e1) {
-		 // TODO Auto-generated catch block
-		 e1.printStackTrace();
-		 } catch (IOException e1) {
-		 // TODO Auto-generated catch block
-		 e1.printStackTrace();
-		 }
+
+	private boolean install() {
+		if (!Environment.MEDIA_MOUNTED.equals(Environment
+				.getExternalStorageState()))
+			return false;
+
+		DownloadFileAsync progress = new DownloadFileAsync();
+		progress.execute("http://myhosts.sinaapp.com/python.zip",
+				"/sdcard/python.zip", "/data/data/org.gaeproxy/",
+				"http://myhosts.sinaapp.com/python-extras.zip",
+				"/sdcard/python-extras.zip", "/sdcard/");
+
+		return true;
 	}
-	
+
 	private void uninstall() {
-		
+
+	}
+
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		switch (id) {
+		case DIALOG_DOWNLOAD_PROGRESS:
+			mProgressDialog = new ProgressDialog(this);
+			mProgressDialog.setMessage("Downloading file..");
+			mProgressDialog.setProgressStyle
+
+			(ProgressDialog.STYLE_HORIZONTAL);
+			mProgressDialog.setCancelable(false);
+			mProgressDialog.show();
+			return mProgressDialog;
+		default:
+			return null;
+		}
+	}
+
+	class DownloadFileAsync extends AsyncTask<String, String, String> {
+
+		@Override
+		protected void onPreExecute() {
+			super.onPreExecute();
+			showDialog(DIALOG_DOWNLOAD_PROGRESS);
+		}
+
+		public void unzip(String file, String path) {
+			dirChecker(path);
+			try {
+				FileInputStream fin = new FileInputStream(file);
+				ZipInputStream zin = new ZipInputStream(fin);
+				ZipEntry ze = null;
+				while ((ze = zin.getNextEntry()) != null) {
+					if (ze.getName().contains("__MACOSX"))
+						continue;
+					Log.v("Decompress", "Unzipping " + ze.getName());
+					if (ze.isDirectory()) {
+						dirChecker(path + ze.getName());
+					} else {
+						FileOutputStream fout = new FileOutputStream(path
+								+ ze.getName());
+						byte data[] = new byte[1024];
+						int count;
+						while ((count = zin.read(data)) != -1) {
+							fout.write(data, 0, count);
+						}
+						zin.closeEntry();
+						fout.close();
+					}
+
+				}
+				zin.close();
+			} catch (Exception e) {
+				Log.e("Decompress", "unzip", e);
+			}
+
+		}
+
+		private void dirChecker(String dir) {
+			File f = new File(dir);
+
+			if (!f.isDirectory()) {
+				f.mkdirs();
+			}
+		}
+
+		@Override
+		protected String doInBackground(String... path) {
+			int count;
+
+			try {
+				URL url = new URL(path[0]);
+				URLConnection conexion = url.openConnection();
+				conexion.connect();
+
+				int lenghtOfFile = conexion.getContentLength();
+				Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+
+				InputStream input = new BufferedInputStream(url.openStream());
+				OutputStream output = new FileOutputStream(path[1]);
+
+				byte data[] = new byte[1024];
+
+				long total = 0;
+
+				while ((count = input.read(data)) != -1) {
+					total += count;
+					publishProgress("" + (int) ((total * 50) / lenghtOfFile));
+					output.write(data, 0, count);
+				}
+
+				output.flush();
+				output.close();
+				input.close();
+
+				// Unzip now
+				unzip(path[1], path[2]);
+
+			} catch (Exception e) {
+
+				Log.e("error", e.getMessage().toString());
+				System.out.println(e.getMessage().toString());
+			}
+
+			try {
+				URL url = new URL(path[3]);
+				URLConnection conexion = url.openConnection();
+				conexion.connect();
+
+				int lenghtOfFile = conexion.getContentLength();
+				Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+
+				InputStream input = new BufferedInputStream(url.openStream());
+				OutputStream output = new FileOutputStream(path[4]);
+
+				byte data[] = new byte[1024];
+
+				long total = 0;
+
+				while ((count = input.read(data)) != -1) {
+					total += count;
+					publishProgress(""
+							+ (int) (50 + (total * 50) / lenghtOfFile));
+					output.write(data, 0, count);
+				}
+
+				output.flush();
+				output.close();
+				input.close();
+
+				// Unzip File
+				unzip(path[4], path[5]);
+
+			} catch (Exception e) {
+
+				Log.e("error", e.getMessage().toString());
+				System.out.println(e.getMessage().toString());
+			}
+			return null;
+
+		}
+
+		protected void onProgressUpdate(String... progress) {
+			Log.d("ANDRO_ASYNC", progress[0]);
+			mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+		}
+
+		@Override
+		protected void onPostExecute(String unused) {
+			dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
+		}
+
 	}
 
 }

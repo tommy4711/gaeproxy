@@ -242,18 +242,6 @@ public class GAEProxyService extends Service {
 			i++;
 		}
 
-		try {
-			String[] url = proxy.split("/");
-			InetAddress ia;
-			ia = InetAddress.getByName(url[2]);
-			String ip = ia.getHostAddress();
-			if (ip != null && !ip.equals(""))
-				appHost = ip;
-		} catch (UnknownHostException e) {
-			Log.e(TAG, "cannot resolve the host name");
-			return false;
-		}
-
 		connect();
 		finishConnection();
 		return true;
@@ -262,6 +250,17 @@ public class GAEProxyService extends Service {
 	private void notifyAlert(String title, String info) {
 		notification.icon = R.drawable.icon;
 		notification.tickerText = title;
+		notification.flags = Notification.FLAG_ONGOING_EVENT;
+		notification.defaults = Notification.DEFAULT_SOUND;
+		notification.setLatestEventInfo(this, getString(R.string.app_name),
+				info, pendIntent);
+		notificationManager.notify(0, notification);
+	}
+
+	private void notifyAlert(String title, String info, int flags) {
+		notification.icon = R.drawable.icon;
+		notification.tickerText = title;
+		notification.flags = flags;
 		notification.setLatestEventInfo(this, getString(R.string.app_name),
 				info, pendIntent);
 		notificationManager.notify(0, notification);
@@ -289,7 +288,7 @@ public class GAEProxyService extends Service {
 	public void onDestroy() {
 
 		notifyAlert(getString(R.string.forward_stop),
-				getString(R.string.service_stopped));
+				getString(R.string.service_stopped), Notification.FLAG_AUTO_CANCEL);
 
 		// Make sure the connection is closed, important here
 		onDisconnect();

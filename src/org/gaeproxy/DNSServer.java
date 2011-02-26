@@ -485,7 +485,7 @@ public class DNSServer implements WrapServer {
 	@Override
 	public void run() {
 
-		// initOrgCache();
+		initOrgCache();
 		loadCache();
 
 		byte[] qbuffer = new byte[576];

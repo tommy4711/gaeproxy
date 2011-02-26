@@ -196,13 +196,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         request.add_header("Accept-Encoding", "identity, *;q=0")
         request.add_header("Connection", "close")
         # create new opener
-        if local_proxy != "":
-            proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
-        else:
-            proxy_handler = urllib2.ProxyHandler(google_proxy)
-        opener = urllib2.build_opener(proxy_handler)
+        #if local_proxy != "":
+        #    proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
+        #else:
+        #    proxy_handler = urllib2.ProxyHandler(google_proxy)
+        #opener = urllib2.build_opener(proxy_handler)
         # set the opener as the default opener
-        urllib2.install_opener(opener)
+        #urllib2.install_opener(opener)
         try:
             resp = urllib2.urlopen(request, params)
         except urllib2.HTTPError, e:
@@ -302,13 +302,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             request.add_header("Accept-Encoding", "identity, *;q=0")
             request.add_header("Connection", "close")
             # create new opener
-            if local_proxy != "":
-                proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
-            else:
-                proxy_handler = urllib2.ProxyHandler(google_proxy)
-            opener = urllib2.build_opener(proxy_handler)
+            #if local_proxy != "":
+            #    proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
+            #else:
+            #    proxy_handler = urllib2.ProxyHandler(google_proxy)
+            #opener = urllib2.build_opener(proxy_handler)
             # set the opener as the default opener
-            urllib2.install_opener(opener)
+            #urllib2.install_opener(opener)
             resp = urllib2.urlopen(request, params)
 
             # parse resp
@@ -467,11 +467,11 @@ def parseConf(confFile):
 if __name__ == "__main__":
     parseConf(common.DEF_CONF_FILE)
 
-    if local_proxy == "":
-        shallWeNeedGoogleProxy()
+    #if local_proxy == "":
+    #    shallWeNeedGoogleProxy()
 
-    if fetch_server == "":
-        fetch_server = getAvailableFetchServer()
+    #if fetch_server == "":
+    #    fetch_server = getAvailableFetchServer()
     if fetch_server == "":
         raise common.GAppProxyError("Invalid response from load balance server.")
     

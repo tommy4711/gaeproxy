@@ -126,9 +126,9 @@ public class DNSServer implements WrapServer {
 
 	private final String TAG = "CMWRAP->DNSServer";
 	private String homePath;
-	private final String CACHE_PATH = "/cache";
+	private final String CACHE_PATH = "cache/";
 
-	private final String CACHE_FILE = "/dnscache";
+	private final String CACHE_FILE = "dnscache";
 
 	private DatagramSocket srvSocket;
 
@@ -168,7 +168,6 @@ public class DNSServer implements WrapServer {
 		try {
 			srvSocket = new DatagramSocket(srvPort,
 					InetAddress.getByName("127.0.0.1"));
-			inService = true;
 			Log.e(TAG, this.name + "启动于端口： " + port);
 		} catch (SocketException e) {
 			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
@@ -477,9 +476,11 @@ public class DNSServer implements WrapServer {
 
 	public void run() {
 
-		initOrgCache();
+//		initOrgCache();
 		loadCache();
 
+		inService = true;
+		
 		byte[] qbuffer = new byte[576];
 		long starTime = System.currentTimeMillis();
 
@@ -500,8 +501,8 @@ public class DNSServer implements WrapServer {
 
 				Log.d(TAG, "解析" + questDomain);
 
-				if (questDomain.contains("appspot.com")) {
-					byte[] ips = parseIPString("72.14.203.141");
+				if (questDomain.toLowerCase().contains("appspot.com")) {
+					byte[] ips = parseIPString("203.208.39.104");
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 				}

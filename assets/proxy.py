@@ -474,6 +474,13 @@ if __name__ == "__main__":
         fetch_server = getAvailableFetchServer()
     if fetch_server == "":
         raise common.GAppProxyError("Invalid response from load balance server.")
+    
+    
+        
+    pid = str(os.getpid())
+    f = open('/data/data/org.gaeproxy/python.pid','w')
+    f.write(pid)
+    f.close()
 
     print "--------------------------------------------"
     print "HTTPS Enabled: %s" % (ssl_enabled and "YES" or "NO")
@@ -481,6 +488,10 @@ if __name__ == "__main__":
     print "Listen Addr  : 127.0.0.1:%d" % listen_port
     print "Local Proxy  : %s" % local_proxy
     print "Fetch Server : %s" % fetch_server
+    print "PID          : %s" % pid
     print "--------------------------------------------"
     httpd = ThreadingHTTPServer(("127.0.0.1", listen_port), LocalProxyHandler)
     httpd.serve_forever()
+    
+    
+    

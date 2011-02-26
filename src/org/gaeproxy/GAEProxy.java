@@ -414,6 +414,7 @@ public class GAEProxy extends PreferenceActivity implements
 					String host = settings.getString("proxy", "");
 					Editor ed = settings.edit();
 					ed.putString("proxy", "http://" + host);
+					ed.commit();
 				}
 				proxyText.setSummary(settings.getString("proxy", ""));
 			}

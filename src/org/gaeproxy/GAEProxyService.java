@@ -1,19 +1,27 @@
 package org.gaeproxy;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Map;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 public class GAEProxyService extends Service {
@@ -23,41 +31,56 @@ public class GAEProxyService extends Service {
 	private Intent intent;
 	private PendingIntent pendIntent;
 
+	private static final String BASE = "/data/data/org.gaeproxy/";
+
 	private static final String TAG = "GAEProxy";
 	public static final String PREFS_NAME = "GAEProxy";
 
 	private Process httpProcess = null;
-//	private DataOutputStream httpOS = null;
+	private DataOutputStream httpOS = null;
 
 	private String proxy;
+	private String hostIP = "127.0.0.1";
 	private int port;
 	private boolean isAutoSetProxy = false;
 	private DNSServer dnsServer = null;
+
+	private SharedPreferences settings = null;
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
 
 	public boolean connect() {
-		try {
+		Thread t = new Thread() {
+			public void run() {
+				try {
 
-			File conf = new File("data/data/org.gaeproxy/proxy.conf");
-			FileOutputStream is = new FileOutputStream(conf);
-			byte[] buffer = ("listen_port = " + port + "\n" + "fetch_server = "
-					+ proxy + "\n").getBytes();
-			is.write(buffer);
-			is.flush();
-			is.close();
-			
-			String cmd = "/data/data/org.gaeproxy/localproxy.sh";
-			Log.e(TAG, cmd);
+					File conf = new File(BASE + "proxy.conf");
+					FileOutputStream is = new FileOutputStream(conf);
+					byte[] buffer = ("listen_port = " + port + "\n"
+							+ "fetch_server = " + proxy + "\n").getBytes();
+					is.write(buffer);
+					is.flush();
+					is.close();
 
-			httpProcess = Runtime.getRuntime().exec(cmd);
+					String cmd = BASE + "localproxy.sh";
+					Log.e(TAG, cmd);
 
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		}
+					httpProcess = Runtime.getRuntime().exec("su");
+					httpOS = new DataOutputStream(httpProcess.getOutputStream());
+					httpOS.writeBytes("chmod 777 " + BASE + "proxy.conf\n");
+					httpOS.writeBytes(cmd + "\n");
+					httpOS.flush();
+					
+					httpProcess.waitFor();
 
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
 		return true;
 	}
 
@@ -130,21 +153,29 @@ public class GAEProxyService extends Service {
 		try {
 			Log.e(TAG, "Forward Successful");
 			if (isAutoSetProxy) {
-				runRootCommand("/data/data/org.gaeproxy/proxy.sh start " + port);
+				runRootCommand(BASE + "proxy.sh start " + port);
 
 				if (isARMv6()) {
-					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 72.14.203.141 --dport 80  -j REDIRECT --to-ports 8123");
-					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 72.14.203.141 --dport 443 -j REDIRECT --to-ports 8124");
-					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp "
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
+							+ "203.208.39.104"
+							+ " --dport 80  -j REDIRECT --to-ports 8123");
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
+							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
 				} else {
-					runRootCommand("/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 72.14.203.141 --dport 80 -j REDIRECT --to-ports 8123");
-					runRootCommand("/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
-							+ "-d ! 72.14.203.141 --dport 443 -j REDIRECT --to-ports 8124");
-					runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp "
+					runRootCommand(BASE
+							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
+							+ "203.208.39.104"
+							+ " --dport 80 -j REDIRECT --to-ports 8123");
+					runRootCommand(BASE
+							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
+							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
 				}
 			}
@@ -168,16 +199,34 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		
-
 		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353);
-		dnsServer.setBasePath("/data/data/org.gaeproxy");
+		dnsServer.setBasePath(BASE);
 		new Thread(dnsServer).start();
 
-		if (dnsServer.isInService()) {
-			finishConnection();
-			connect();
+		int i = 0;
+		while (!dnsServer.isInService() && i < 3) {
+			try {
+				Thread.sleep(5 * 1000);
+			} catch (InterruptedException e) {
+				// Nothing
+			}
+			i++;
 		}
+		
+		try {
+			String[] url = proxy.split("/");
+			InetAddress ia;
+			ia = InetAddress.getByName(url[2]);
+			String ip = ia.getHostAddress();
+			if (ip != null && !ip.equals(""))
+				hostIP = ip;
+		} catch (UnknownHostException e) {
+			Log.e(TAG, "cannot resolve the host name");
+			return false;
+		}
+		
+		connect();
+		finishConnection();
 		return true;
 	}
 
@@ -197,6 +246,7 @@ public class GAEProxyService extends Service {
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
 				.getSystemService(NOTIFICATION_SERVICE);
 
@@ -216,11 +266,12 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-//			if (httpOS != null) {
-//				httpOS.writeBytes("exit\n");
-//				httpOS.flush();
-//				httpOS.close();
-//			}
+			if (httpOS != null) {
+				httpOS.writeBytes("\\cC");
+				httpOS.writeBytes("exit\n");
+				httpOS.flush();
+				httpOS.close();
+			}
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {
@@ -240,12 +291,12 @@ public class GAEProxyService extends Service {
 
 		if (isAutoSetProxy) {
 			if (isARMv6()) {
-				runRootCommand("/data/data/org.gaeproxy/iptables_g1 -t nat -F OUTPUT");
+				runRootCommand(BASE + "iptables_g1 -t nat -F OUTPUT");
 			} else {
-				runRootCommand("/data/data/org.gaeproxy/iptables_n1 -t nat -F OUTPUT");
+				runRootCommand(BASE + "iptables_n1 -t nat -F OUTPUT");
 			}
 
-			runRootCommand("/data/data/org.gaeproxy/proxy.sh stop");
+			runRootCommand(BASE + "proxy.sh stop");
 		}
 
 	}
@@ -259,13 +310,18 @@ public class GAEProxyService extends Service {
 			// Connection and forward successful
 			notifyAlert(getString(R.string.forward_success),
 					getString(R.string.service_running));
-
+			Editor ed = settings.edit();
+			ed.putBoolean("isRunning", true);
+			ed.commit();
 			super.onStart(intent, startId);
 
 		} else {
 			// Connection or forward unsuccessful
 			notifyAlert(getString(R.string.forward_fail),
 					getString(R.string.service_failed));
+			Editor ed = settings.edit();
+			ed.putBoolean("isRunning", false);
+			ed.commit();
 			stopSelf();
 		}
 	}

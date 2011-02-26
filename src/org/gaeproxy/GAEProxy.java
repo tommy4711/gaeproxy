@@ -29,6 +29,7 @@ import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.Preference;
@@ -53,6 +54,13 @@ public class GAEProxy extends PreferenceActivity implements
 		@Override
 		protected String doInBackground(String... path) {
 			int count;
+
+			PowerManager.WakeLock mWakeLock;
+			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+			mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
+					| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
+
+			mWakeLock.acquire();
 
 			try {
 				File zip = new File(path[1]);
@@ -134,6 +142,9 @@ public class GAEProxy extends PreferenceActivity implements
 				Log.e("error", e.getMessage().toString());
 				System.out.println(e.getMessage().toString());
 			}
+
+			if (mWakeLock.isHeld())
+				mWakeLock.release();
 			return null;
 
 		}
@@ -188,6 +199,7 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 	}
+
 	private static final String TAG = "GAEProxy";
 	public static final String PREFS_NAME = "GAEProxy";
 	private static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
@@ -200,6 +212,7 @@ public class GAEProxy extends PreferenceActivity implements
 	public static boolean isAutoSetProxy = false;
 
 	public static boolean isRoot = false;
+
 	public static boolean runRootCommand(String command) {
 		Process process = null;
 		DataOutputStream os = null;
@@ -225,6 +238,7 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 		return true;
 	}
+
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isInstalledCheck;
 	private CheckBoxPreference isAutoSetProxyCheck;
@@ -294,6 +308,7 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	private boolean install() {
+
 		if (!Environment.MEDIA_MOUNTED.equals(Environment
 				.getExternalStorageState()))
 			return false;

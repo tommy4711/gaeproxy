@@ -19,8 +19,9 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
- 
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(context);
 
 		isSaved = settings.getBoolean("isSaved", false);
 		isAutoStart = settings.getBoolean("isAutoStart", false);
@@ -32,10 +33,9 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 				port = Integer.valueOf(portText);
 				if (port <= 1024)
 					port = 1984;
-			}
-			else 
+			} else
 				port = 1984;
-			
+
 			isAutoSetProxy = settings.getBoolean("isAutoSetProxy", false);
 
 			Intent it = new Intent(context, GAEProxyService.class);

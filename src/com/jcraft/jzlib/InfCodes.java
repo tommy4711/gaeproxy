@@ -131,7 +131,7 @@ final class InfCodes {
 
 		// do until not enough input or output space for fast loop
 		do { // assume called with m >= 258 && n >= 10
-			// get literal/length code
+				// get literal/length code
 			while (k < (20)) { // max bits for literal/length code
 				n--;
 				b |= (z.next_in[p++] & 0xff) << k;
@@ -157,7 +157,7 @@ final class InfCodes {
 
 				if ((e & 16) != 0) {
 					e &= 15;
-					c = tp[tp_index_t_3 + 2] + ((int) b & inflate_mask[e]);
+					c = tp[tp_index_t_3 + 2] + (b & inflate_mask[e]);
 
 					b >>= e;
 					k -= e;

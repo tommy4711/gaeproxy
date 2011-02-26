@@ -1,16 +1,16 @@
 package org.gaeproxy;
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.Map;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -33,14 +33,13 @@ public class GAEProxyService extends Service {
 
 	private static final String BASE = "/data/data/org.gaeproxy/";
 
-	private static final String TAG = "GAEProxy";
-	public static final String PREFS_NAME = "GAEProxy";
+	private static final String TAG = "GAEProxyService";
 
 	private Process httpProcess = null;
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String hostIP = "127.0.0.1";
+	private String appHost = "203.208.39.104";
 	private int port;
 	private boolean isAutoSetProxy = false;
 	private DNSServer dnsServer = null;
@@ -49,40 +48,6 @@ public class GAEProxyService extends Service {
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
-
-	public boolean connect() {
-		Thread t = new Thread() {
-			public void run() {
-				try {
-
-					File conf = new File(BASE + "proxy.conf");
-					FileOutputStream is = new FileOutputStream(conf);
-					byte[] buffer = ("listen_port = " + port + "\n"
-							+ "fetch_server = " + proxy + "\n").getBytes();
-					is.write(buffer);
-					is.flush();
-					is.close();
-
-					String cmd = BASE + "localproxy.sh";
-					Log.e(TAG, cmd);
-
-					httpProcess = Runtime.getRuntime().exec("su");
-					httpOS = new DataOutputStream(httpProcess.getOutputStream());
-					httpOS.writeBytes("chmod 777 " + BASE + "proxy.conf\n");
-					httpOS.writeBytes(cmd + "\n");
-					httpOS.flush();
-					
-					httpProcess.waitFor();
-
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
-			}
-		};
-		t.setDaemon(true);
-		t.start();
-		return true;
-	}
 
 	/**
 	 * Check if this is an ARMv6 device
@@ -144,6 +109,41 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
+	public boolean connect() {
+		Thread t = new Thread() {
+			@Override
+			public void run() {
+				try {
+
+					File conf = new File(BASE + "proxy.conf");
+					FileOutputStream is = new FileOutputStream(conf);
+					byte[] buffer = ("listen_port = " + port + "\n"
+							+ "fetch_server = " + proxy + "\n").getBytes();
+					is.write(buffer);
+					is.flush();
+					is.close();
+
+					String cmd = BASE + "localproxy.sh";
+					Log.e(TAG, cmd);
+
+					httpProcess = Runtime.getRuntime().exec("su");
+					httpOS = new DataOutputStream(httpProcess.getOutputStream());
+					httpOS.writeBytes("chmod 777 " + BASE + "proxy.conf\n");
+					httpOS.writeBytes(cmd + "\n");
+					httpOS.flush();
+
+					httpProcess.waitFor();
+
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
+		return true;
+	}
+
 	/**
 	 * Internal method to request actual PTY terminal once we've finished
 	 * authentication. If called before authenticated, it will just fail.
@@ -158,7 +158,7 @@ public class GAEProxyService extends Service {
 				if (isARMv6()) {
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
-							+ "203.208.39.104"
+							+ appHost
 							+ " --dport 80  -j REDIRECT --to-ports 8123");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
@@ -169,7 +169,7 @@ public class GAEProxyService extends Service {
 				} else {
 					runRootCommand(BASE
 							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
-							+ "203.208.39.104"
+							+ appHost
 							+ " --dport 80 -j REDIRECT --to-ports 8123");
 					runRootCommand(BASE
 							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
@@ -199,7 +199,36 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353);
+		try {
+			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
+			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.connect();
+			InputStream is = conn.getInputStream();
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(is));
+			String line = reader.readLine();
+			if (line == null)
+				return false;
+			if (!line.startsWith("#GAEPROXY"))
+				return false;
+			while (true) {
+				line = reader.readLine();
+				if (line == null)
+					break;
+				if (line.startsWith("#"))
+					continue;
+				line = line.trim().toLowerCase();
+				if (line.equals(""))
+					continue;
+				appHost = line;
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "cannot get remote host files", e);
+			return false;
+		}
+
+		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353,
+				appHost);
 		dnsServer.setBasePath(BASE);
 		new Thread(dnsServer).start();
 
@@ -212,19 +241,19 @@ public class GAEProxyService extends Service {
 			}
 			i++;
 		}
-		
+
 		try {
 			String[] url = proxy.split("/");
 			InetAddress ia;
 			ia = InetAddress.getByName(url[2]);
 			String ip = ia.getHostAddress();
 			if (ip != null && !ip.equals(""))
-				hostIP = ip;
+				appHost = ip;
 		} catch (UnknownHostException e) {
 			Log.e(TAG, "cannot resolve the host name");
 			return false;
 		}
-		
+
 		connect();
 		finishConnection();
 		return true;

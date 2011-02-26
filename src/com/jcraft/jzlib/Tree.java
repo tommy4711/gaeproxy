@@ -162,6 +162,7 @@ final class Tree {
 		return ((dist) < 256 ? _dist_code[dist]
 				: _dist_code[256 + ((dist) >>> 7)]);
 	}
+
 	// Generate the codes for a given tree and bit counts (which need not be
 	// optimal).
 	// IN assertion: the array bl_count contains the bit length statistics for
@@ -198,6 +199,7 @@ final class Tree {
 			tree[n * 2] = (short) (bi_reverse(next_code[len]++, len));
 		}
 	}
+
 	short[] dyn_tree; // the dynamic tree
 
 	int max_code; // largest code with non zero frequency
@@ -365,7 +367,7 @@ final class Tree {
 					continue;
 				if (tree[m * 2 + 1] != bits) {
 					s.opt_len += ((long) bits - (long) tree[m * 2 + 1])
-							* (long) tree[m * 2];
+							* tree[m * 2];
 					tree[m * 2 + 1] = (short) bits;
 				}
 				n--;

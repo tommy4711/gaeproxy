@@ -70,10 +70,10 @@ class DnsResponse implements Serializable {
 			return null;
 		}
 
-		ip = "" + (int) (dnsResponse[i] & 0xFF); /* Unsigned byte to int */
+		ip = "" + (dnsResponse[i] & 0xFF); /* Unsigned byte to int */
 
 		for (i++; i < dnsResponse.length; i++) {
-			ip += "." + (int) (dnsResponse[i] & 0xFF);
+			ip += "." + (dnsResponse[i] & 0xFF);
 		}
 
 		return ip;
@@ -156,11 +156,15 @@ public class DNSServer implements WrapServer {
 
 	private String target = "8.8.8.8:53";
 
-	public DNSServer(String name, int port, String dnsHost, int dnsPort) {
+	private String appHost = "203.208.39.104";
+
+	public DNSServer(String name, int port, String dnsHost, int dnsPort,
+			String appHost) {
 		this.name = name;
 		this.srvPort = port;
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
+		this.appHost = appHost;
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -169,6 +173,7 @@ public class DNSServer implements WrapServer {
 			srvSocket = new DatagramSocket(srvPort,
 					InetAddress.getByName("127.0.0.1"));
 			Log.e(TAG, this.name + "启动于端口： " + port);
+			inService = true;
 		} catch (SocketException e) {
 			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
 		} catch (UnknownHostException e) {
@@ -191,6 +196,7 @@ public class DNSServer implements WrapServer {
 		saveCache();
 	}
 
+	@Override
 	public void close() throws IOException {
 		inService = false;
 		srvSocket.close();
@@ -314,6 +320,7 @@ public class DNSServer implements WrapServer {
 		return requestDomain;
 	}
 
+	@Override
 	public int getServPort() {
 		return this.srvPort;
 	}
@@ -352,6 +359,7 @@ public class DNSServer implements WrapServer {
 
 	}
 
+	@Override
 	public boolean isClosed() {
 		return srvSocket.isClosed();
 	}
@@ -474,13 +482,12 @@ public class DNSServer implements WrapServer {
 		return result;
 	}
 
+	@Override
 	public void run() {
 
-//		initOrgCache();
+		// initOrgCache();
 		loadCache();
 
-		inService = true;
-		
 		byte[] qbuffer = new byte[576];
 		long starTime = System.currentTimeMillis();
 
@@ -502,11 +509,11 @@ public class DNSServer implements WrapServer {
 				Log.d(TAG, "解析" + questDomain);
 
 				if (questDomain.toLowerCase().contains("appspot.com")) {
-					byte[] ips = parseIPString("203.208.39.104");
+					byte[] ips = parseIPString(appHost);
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 				}
-				
+
 				if (dnsCache.containsKey(questDomain)) {
 
 					sendDns(dnsCache.get(questDomain).getDnsResponse(), dnsq,

@@ -64,6 +64,7 @@ final public class JZlib {
 	static final public int Z_MEM_ERROR = -4;
 	static final public int Z_BUF_ERROR = -5;
 	static final public int Z_VERSION_ERROR = -6;
+
 	public static String version() {
 		return version;
 	}

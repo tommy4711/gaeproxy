@@ -43,14 +43,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 	class DownloadFileAsync extends AsyncTask<String, String, String> {
 
-		private void dirChecker(String dir) {
-			File f = new File(dir);
-
-			if (!f.isDirectory()) {
-				f.mkdirs();
-			}
-		}
-
 		@Override
 		protected String doInBackground(String... path) {
 			int count;
@@ -61,6 +53,7 @@ public class GAEProxy extends PreferenceActivity implements
 					| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
 
 			mWakeLock.acquire();
+			
 
 			try {
 				File zip = new File(path[1]);
@@ -131,7 +124,7 @@ public class GAEProxy extends PreferenceActivity implements
 					output.close();
 					input.close();
 				} else {
-					publishProgress("" + 50);
+					publishProgress("" + 49);
 				}
 
 				// Unzip File
@@ -307,12 +300,23 @@ public class GAEProxy extends PreferenceActivity implements
 		isInstalledCheck.setEnabled(true);
 	}
 
+	private void dirChecker(String dir) {
+		File f = new File(dir);
+
+		if (!f.isDirectory()) {
+			f.mkdirs();
+		}
+	}
+	
 	private boolean install() {
 
 		if (!Environment.MEDIA_MOUNTED.equals(Environment
 				.getExternalStorageState()))
 			return false;
 
+		dirChecker("/data/data/org.gaeproxy/python");
+		dirChecker("/sdcard/python-extras");
+		
 		DownloadFileAsync progress = new DownloadFileAsync();
 		progress.execute("http://myhosts.sinaapp.com/python.zip",
 				"/sdcard/python.zip", "/data/data/org.gaeproxy/",

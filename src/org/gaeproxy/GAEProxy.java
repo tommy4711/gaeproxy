@@ -313,9 +313,6 @@ public class GAEProxy extends PreferenceActivity implements
 		if (!Environment.MEDIA_MOUNTED.equals(Environment
 				.getExternalStorageState()))
 			return false;
-
-		dirChecker("/data/data/org.gaeproxy/python");
-		dirChecker("/sdcard/python-extras");
 		
 		DownloadFileAsync progress = new DownloadFileAsync();
 		progress.execute("http://myhosts.sinaapp.com/python.zip",
@@ -389,7 +386,6 @@ public class GAEProxy extends PreferenceActivity implements
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runRootCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-			runRootCommand("chmod 777 /data/data/org.gaeproxy/python/bin/python");
 		}
 	}
 
@@ -576,6 +572,8 @@ public class GAEProxy extends PreferenceActivity implements
 			return false;
 		}
 
+		runRootCommand("chmod 777 /data/data/org.gaeproxy/python/bin/python");
+		
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
@@ -627,7 +625,12 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	private void uninstall() {
-
+		File f = new File("/sdcard/python.zip");
+		if (f.exists())
+			f.delete();
+		f = new File("/sdcard/python-extras.zip");
+		if (f.exists())
+			f.delete();
 	}
 
 }

@@ -31,7 +31,7 @@ public class GAEProxyService extends Service {
 	private Intent intent;
 	private PendingIntent pendIntent;
 
-	private static final String BASE = "/data/data/org.gaeproxy/";
+	public static final String BASE = "/data/data/org.gaeproxy/";
 
 	private static final String TAG = "GAEProxyService";
 
@@ -54,7 +54,7 @@ public class GAEProxyService extends Service {
 	 * 
 	 * @return true if this is ARMv6
 	 */
-	private static boolean isARMv6() {
+	public static boolean isARMv6() {
 		if (isARMv6 == -1) {
 			BufferedReader r = null;
 			try {

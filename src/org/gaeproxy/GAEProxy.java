@@ -585,9 +585,16 @@ public class GAEProxy extends PreferenceActivity implements
 		String portText = settings.getString("port", "");
 		if (isTextEmpty(portText, getString(R.string.port_empty)))
 			return false;
-		port = Integer.valueOf(portText);
-		if (port <= 1024)
+		try {
+			port = Integer.valueOf(portText);
+			if (port <= 1024) {
+				this.showAToast(getString(R.string.port_alert));
+				return false;
+			}
+		} catch (Exception e) {
 			this.showAToast(getString(R.string.port_alert));
+			return false;
+		}
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
 		isAutoSetProxy = settings.getBoolean("isAutoSetProxy", false);

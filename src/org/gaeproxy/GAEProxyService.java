@@ -110,37 +110,31 @@ public class GAEProxyService extends Service {
 	}
 
 	public boolean connect() {
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				try {
 
-					File conf = new File(BASE + "proxy.conf");
-					FileOutputStream is = new FileOutputStream(conf);
-					byte[] buffer = ("listen_port = " + port + "\n"
-							+ "fetch_server = " + proxy + "\n").getBytes();
-					is.write(buffer);
-					is.flush();
-					is.close();
+		try {
 
-					String cmd = BASE + "localproxy.sh";
-					Log.e(TAG, cmd);
+			File conf = new File(BASE + "proxy.conf");
+			if (!conf.exists())
+				conf.createNewFile();
+			FileOutputStream is = new FileOutputStream(conf);
+			byte[] buffer = ("listen_port = " + port + "\n" + "fetch_server = "
+					+ proxy + "\n").getBytes();
+			is.write(buffer);
+			is.flush();
+			is.close();
 
-					httpProcess = Runtime.getRuntime().exec("su");
-					httpOS = new DataOutputStream(httpProcess.getOutputStream());
-					httpOS.writeBytes("chmod 777 " + BASE + "proxy.conf\n");
-					httpOS.writeBytes(cmd + "\n");
-					httpOS.flush();
+			String cmd = BASE + "localproxy.sh";
+			Log.e(TAG, cmd);
 
-					httpProcess.waitFor();
+			httpProcess = Runtime.getRuntime().exec("/system/bin/sh");
+			httpOS = new DataOutputStream(httpProcess.getOutputStream());
+			httpOS.writeBytes(cmd + "\n");
+			httpOS.flush();
 
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-				}
-			}
-		};
-		t.setDaemon(true);
-		t.start();
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+		}
+
 		return true;
 	}
 
@@ -288,7 +282,8 @@ public class GAEProxyService extends Service {
 	public void onDestroy() {
 
 		notifyAlert(getString(R.string.forward_stop),
-				getString(R.string.service_stopped), Notification.FLAG_AUTO_CANCEL);
+				getString(R.string.service_stopped),
+				Notification.FLAG_AUTO_CANCEL);
 
 		// Make sure the connection is closed, important here
 		onDisconnect();

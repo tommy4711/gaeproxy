@@ -430,13 +430,29 @@ public class GAEProxy extends PreferenceActivity implements
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
 			Preference preference) {
-
+		SharedPreferences settings = PreferenceManager
+		.getDefaultSharedPreferences(this);
+		
 		if (preference.getKey() != null
+				&& preference.getKey().equals("isInstalled")) {
+			if (settings.getBoolean("isInstalled", false)) {
+				if (install()) {
+					isInstalledCheck.setChecked(true);
+				} else {
+					showAToast(getString(R.string.sdcard_alert));
+					Editor ed = settings.edit();
+					ed.putBoolean("isInstalled", false);
+					ed.commit();
+					isInstalledCheck.setChecked(false);
+				}
+			} else {
+				uninstall();
+				isInstalledCheck.setChecked(false);
+			}
+		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isRunning")) {
 			if (!isInstalledCheck.isChecked()) {
 				showAToast(getString(R.string.install_alert));
-				SharedPreferences settings = PreferenceManager
-						.getDefaultSharedPreferences(this);
 
 				Editor edit = settings.edit();
 
@@ -449,8 +465,6 @@ public class GAEProxy extends PreferenceActivity implements
 				return false;
 			}
 			if (!serviceStart()) {
-				SharedPreferences settings = PreferenceManager
-						.getDefaultSharedPreferences(this);
 
 				Editor edit = settings.edit();
 
@@ -509,23 +523,6 @@ public class GAEProxy extends PreferenceActivity implements
 		// Let's do something a preference value changes
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
-
-		if (key.equals("isInstalled")) {
-			if (settings.getBoolean("isInstalled", false)) {
-				if (install()) {
-					isInstalledCheck.setChecked(true);
-				} else {
-					showAToast(getString(R.string.sdcard_alert));
-					Editor ed = settings.edit();
-					ed.putBoolean("isInstalled", false);
-					ed.commit();
-					isInstalledCheck.setChecked(false);
-				}
-			} else {
-				uninstall();
-				isInstalledCheck.setChecked(false);
-			}
-		}
 
 		if (key.equals("isRunning")) {
 			if (settings.getBoolean("isRunning", false)) {

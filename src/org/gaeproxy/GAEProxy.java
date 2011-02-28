@@ -197,7 +197,6 @@ public class GAEProxy extends PreferenceActivity implements
 	private static final String TAG = "GAEProxy";
 	public static final String PREFS_NAME = "GAEProxy";
 	private static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
-	private static final int BUFF_SIZE = 1024 * 1024; // 1M Byte
 
 	public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 	private String proxy;

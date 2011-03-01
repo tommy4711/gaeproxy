@@ -152,9 +152,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80  -j REDIRECT --to-ports 8123");
-					runRootCommand(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
-							+ "--dport 443 -j REDIRECT --to-ports 8124");
+//					runRootCommand(BASE
+//							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
+//							+ "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -163,9 +163,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80 -j REDIRECT --to-ports 8123");
-					runRootCommand(BASE
-							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
-							+ "--dport 443 -j REDIRECT --to-ports 8124");
+//					runRootCommand(BASE
+//							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
+//							+ "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");

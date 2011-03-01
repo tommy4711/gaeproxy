@@ -35,9 +35,10 @@
 <string name="proxy_empty">Proxy should not be empty</string>
 <string name="install_cat">Package configure</string>
 <string name="isInstalled">Install / Uninstall</string>
-<string name="download">Downloading file..</string>
+<string name="download">Downloading, Please Be Patient...</string>
 <string name="isInstalled_summary">Install / Uninstall extra packages (need SD CARD)</string>
 <string name="install_alert">Please install dependent module first!</string>
 <string name="sdcard_alert">Please make sure you have a SD CARD!</string>
 <string name="recovery">Recover the status</string>
+<string name="unzip">Unzipping...</string>
 </resources>

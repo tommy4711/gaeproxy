@@ -87,6 +87,7 @@ public class GAEProxy extends PreferenceActivity implements
 				} else {
 					publishProgress("" + 50);
 				}
+				
 				// Unzip now
 				unzip(path[1], path[2]);
 
@@ -95,7 +96,7 @@ public class GAEProxy extends PreferenceActivity implements
 				Log.e("error", e.getMessage().toString());
 				System.out.println(e.getMessage().toString());
 			}
-
+			
 			try {
 				File zip = new File(path[4]);
 				if (!zip.exists()) {
@@ -125,9 +126,9 @@ public class GAEProxy extends PreferenceActivity implements
 					output.close();
 					input.close();
 				} else {
-					publishProgress("" + 49);
+					publishProgress("" + 100);
 				}
-
+				
 				// Unzip File
 				unzip(path[4], path[5]);
 

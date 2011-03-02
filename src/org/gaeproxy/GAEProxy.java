@@ -245,7 +245,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private ProgressDialog mProgressDialog;
 
 	private void CopyAssets(String path) {
-
+		
 		AssetManager assetManager = getAssets();
 		String[] files = null;
 		try {

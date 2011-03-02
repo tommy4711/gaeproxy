@@ -194,6 +194,7 @@ public class GAEProxyService extends Service {
 		try {
 			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setReadTimeout(10 * 1000);
 			conn.connect();
 			InputStream is = conn.getInputStream();
 			BufferedReader reader = new BufferedReader(

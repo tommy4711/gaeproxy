@@ -156,7 +156,7 @@ public class GAEProxyService extends Service {
 					process = Runtime.getRuntime().exec("/system/bin/sh");
 					os = new DataOutputStream(process.getOutputStream());
 					is = new DataInputStream(process.getInputStream());
-					os.writeBytes("/data/data/org.sshtunnel/iptables_g1 --version" + "\n");
+					os.writeBytes(BASE + "iptables_g1 --version" + "\n");
 					os.flush();
 					isARMv6 = 0;
 					while (true) {

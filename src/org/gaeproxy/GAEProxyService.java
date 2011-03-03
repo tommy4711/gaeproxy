@@ -49,28 +49,27 @@ public class GAEProxyService extends Service {
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
-	
+
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
-	    int.class, Notification.class};
-	private static final Class<?>[] mStopForegroundSignature = new Class[] {
-	    boolean.class};
+			int.class, Notification.class };
+	private static final Class<?>[] mStopForegroundSignature = new Class[] { boolean.class };
 
 	private Method mStartForeground;
 	private Method mStopForeground;
-	
+
 	private Object[] mStartForegroundArgs = new Object[2];
 	private Object[] mStopForegroundArgs = new Object[1];
 
 	void invokeMethod(Method method, Object[] args) {
-	    try {
-	        method.invoke(this, mStartForegroundArgs);
-	    } catch (InvocationTargetException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    } catch (IllegalAccessException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    }
+		try {
+			method.invoke(this, mStartForegroundArgs);
+		} catch (InvocationTargetException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		} catch (IllegalAccessException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		}
 	}
 
 	/**
@@ -78,17 +77,17 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void startForegroundCompat(int id, Notification notification) {
-	    // If we have the new startForeground API, then use it.
-	    if (mStartForeground != null) {
-	        mStartForegroundArgs[0] = Integer.valueOf(id);
-	        mStartForegroundArgs[1] = notification;
-	        invokeMethod(mStartForeground, mStartForegroundArgs);
-	        return;
-	    }
+		// If we have the new startForeground API, then use it.
+		if (mStartForeground != null) {
+			mStartForegroundArgs[0] = Integer.valueOf(id);
+			mStartForegroundArgs[1] = notification;
+			invokeMethod(mStartForeground, mStartForegroundArgs);
+			return;
+		}
 
-	    // Fall back on the old API.
-	    setForeground(true);
-	    notificationManager.notify(id, notification);
+		// Fall back on the old API.
+		setForeground(true);
+		notificationManager.notify(id, notification);
 	}
 
 	/**
@@ -96,25 +95,25 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void stopForegroundCompat(int id) {
-	    // If we have the new stopForeground API, then use it.
-	    if (mStopForeground != null) {
-	        mStopForegroundArgs[0] = Boolean.TRUE;
-	        try {
-	            mStopForeground.invoke(this, mStopForegroundArgs);
-	        } catch (InvocationTargetException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        } catch (IllegalAccessException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        }
-	        return;
-	    }
+		// If we have the new stopForeground API, then use it.
+		if (mStopForeground != null) {
+			mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				mStopForeground.invoke(this, mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			}
+			return;
+		}
 
-	    // Fall back on the old API.  Note to cancel BEFORE changing the
-	    // foreground state, since we could be killed at that point.
-	    notificationManager.cancel(id);
-	    setForeground(false);
+		// Fall back on the old API. Note to cancel BEFORE changing the
+		// foreground state, since we could be killed at that point.
+		notificationManager.cancel(id);
+		setForeground(false);
 	}
 
 	/**
@@ -146,44 +145,6 @@ public class GAEProxyService extends Service {
 						r.close();
 					} catch (Exception ex) {
 					}
-			}
-			if (isARMv6 == 1)
-			{
-				Process process = null;
-				DataOutputStream os = null;
-				DataInputStream is = null;
-				try {
-					process = Runtime.getRuntime().exec("/system/bin/sh");
-					os = new DataOutputStream(process.getOutputStream());
-					is = new DataInputStream(process.getInputStream());
-					os.writeBytes(BASE + "iptables_g1 --version" + "\n");
-					os.flush();
-					isARMv6 = 0;
-					while (true) {
-						String line = is.readLine();
-						if (line == null || line.equals(""))
-							break;
-						if (line.contains("1.4.7")) {
-							isARMv6 = 1;
-							break;
-						}
-					}
-					os.writeBytes("exit\n");
-					os.flush();
-					process.waitFor();
-				} catch (Exception e) {
-					Log.e(TAG, e.getMessage());
-					return false;
-				} finally {
-					try {
-						if (os != null) {
-							os.close();
-						}
-						process.destroy();
-					} catch (Exception e) {
-						// nothing
-					}
-				}
 			}
 		}
 		Log.d(TAG, "isARMv6: " + isARMv6);
@@ -261,9 +222,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80  -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					// runRootCommand(BASE
+					// + "iptables_g1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -272,9 +233,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80 -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					// runRootCommand(BASE
+					// + "iptables_n1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -383,24 +344,24 @@ public class GAEProxyService extends Service {
 		intent = new Intent(this, GAEProxy.class);
 		pendIntent = PendingIntent.getActivity(this, 0, intent, 0);
 		notification = new Notification();
-		
-        try {
-            mStartForeground = getClass().getMethod("startForeground",
-                    mStartForegroundSignature);
-            mStopForeground = getClass().getMethod("stopForeground",
-                    mStopForegroundSignature);
-        } catch (NoSuchMethodException e) {
-            // Running on an older platform.
-            mStartForeground = mStopForeground = null;
-        }
+
+		try {
+			mStartForeground = getClass().getMethod("startForeground",
+					mStartForegroundSignature);
+			mStopForeground = getClass().getMethod("stopForeground",
+					mStopForegroundSignature);
+		} catch (NoSuchMethodException e) {
+			// Running on an older platform.
+			mStartForeground = mStopForeground = null;
+		}
 	}
 
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
-		
+
 		stopForegroundCompat(1);
-		
+
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);

@@ -179,34 +179,35 @@ public class GAEProxyService extends Service {
 
 		Thread t = new Thread() {
 			public void run() {
-				synchronized (httpProcess) {
-					try {
-						File conf = new File(BASE + "proxy.conf");
-						if (!conf.exists())
-							conf.createNewFile();
-						FileOutputStream is = new FileOutputStream(conf);
-						byte[] buffer = ("listen_port = " + port + "\n"
-								+ "fetch_server = " + proxy + "\n").getBytes();
-						is.write(buffer);
-						is.flush();
-						is.close();
+				try {
+					File conf = new File(BASE + "proxy.conf");
+					if (!conf.exists())
+						conf.createNewFile();
+					FileOutputStream is = new FileOutputStream(conf);
+					byte[] buffer = ("listen_port = " + port + "\n"
+							+ "fetch_server = " + proxy + "\n").getBytes();
+					is.write(buffer);
+					is.flush();
+					is.close();
 
-						while (settings.getBoolean("isRunning", false)) {
-							String cmd = BASE + "localproxy.sh";
-							Log.e(TAG, cmd);
-
-							httpProcess = Runtime.getRuntime().exec(
-									"/system/bin/sh");
-							httpOS = new DataOutputStream(
-									httpProcess.getOutputStream());
-							httpOS.writeBytes(cmd + "\n");
-							httpOS.flush();
-							httpProcess.waitFor();
-						}
-					} catch (Exception e) {
-						Log.e(TAG, e.getMessage());
-					}
+					httpProcess = Runtime.getRuntime().exec("/system/bin/sh");
+					httpOS = new DataOutputStream(httpProcess.getOutputStream());
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+					return;
 				}
+				try {
+					while (true) {
+						String cmd = BASE + "localproxy.sh";
+						Log.e(TAG, cmd);
+						httpOS.writeBytes(cmd + "\n");
+						httpOS.flush();
+						httpProcess.waitFor();
+					}
+				} catch (Exception ignore) {
+					// Nothing
+				}
+
 			}
 		};
 		t.setDaemon(true);
@@ -369,35 +370,33 @@ public class GAEProxyService extends Service {
 	@Override
 	public void onDestroy() {
 
-		synchronized (httpProcess) {
-			stopForegroundCompat(1);
+		stopForegroundCompat(1);
 
-			notifyAlert(getString(R.string.forward_stop),
-					getString(R.string.service_stopped),
-					Notification.FLAG_AUTO_CANCEL);
+		notifyAlert(getString(R.string.forward_stop),
+				getString(R.string.service_stopped),
+				Notification.FLAG_AUTO_CANCEL);
 
-			// Make sure the connection is closed, important here
-			onDisconnect();
+		// Make sure the connection is closed, important here
+		onDisconnect();
 
-			try {
-				if (httpOS != null) {
-					httpOS.writeBytes("\\cC");
-					httpOS.writeBytes("exit\n");
-					httpOS.flush();
-					httpOS.close();
-				}
-				if (httpProcess != null)
-					httpProcess.destroy();
-			} catch (Exception e) {
-				Log.e(TAG, "HTTP Server close unexpected");
+		try {
+			if (httpOS != null) {
+				httpOS.writeBytes("\\cC");
+				httpOS.writeBytes("exit\n");
+				httpOS.flush();
+				httpOS.close();
 			}
+			if (httpProcess != null)
+				httpProcess.destroy();
+		} catch (Exception e) {
+			Log.e(TAG, "HTTP Server close unexpected");
+		}
 
-			try {
-				if (dnsServer != null)
-					dnsServer.close();
-			} catch (Exception e) {
-				Log.e(TAG, "DNS Server close unexpected");
-			}
+		try {
+			if (dnsServer != null)
+				dnsServer.close();
+		} catch (Exception e) {
+			Log.e(TAG, "DNS Server close unexpected");
 		}
 		super.onDestroy();
 	}

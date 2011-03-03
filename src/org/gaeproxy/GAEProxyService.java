@@ -1,6 +1,7 @@
 package org.gaeproxy;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -146,7 +147,46 @@ public class GAEProxyService extends Service {
 					} catch (Exception ex) {
 					}
 			}
+			if (isARMv6 == 1)
+			{
+				Process process = null;
+				DataOutputStream os = null;
+				DataInputStream is = null;
+				try {
+					process = Runtime.getRuntime().exec("/system/bin/sh");
+					os = new DataOutputStream(process.getOutputStream());
+					is = new DataInputStream(process.getInputStream());
+					os.writeBytes("/data/data/org.sshtunnel/iptables_g1 --version" + "\n");
+					os.flush();
+					isARMv6 = 0;
+					while (true) {
+						String line = is.readLine();
+						if (line == null || line.equals(""))
+							break;
+						if (line.contains("1.4.7")) {
+							isARMv6 = 1;
+							break;
+						}
+					}
+					os.writeBytes("exit\n");
+					os.flush();
+					process.waitFor();
+				} catch (Exception e) {
+					Log.e(TAG, e.getMessage());
+					return false;
+				} finally {
+					try {
+						if (os != null) {
+							os.close();
+						}
+						process.destroy();
+					} catch (Exception e) {
+						// nothing
+					}
+				}
+			}
 		}
+		Log.d(TAG, "isARMv6: " + isARMv6);
 		return (isARMv6 == 1);
 	}
 

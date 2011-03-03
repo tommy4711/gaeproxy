@@ -48,28 +48,27 @@ public class GAEProxyService extends Service {
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
-	
+
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
-	    int.class, Notification.class};
-	private static final Class<?>[] mStopForegroundSignature = new Class[] {
-	    boolean.class};
+			int.class, Notification.class };
+	private static final Class<?>[] mStopForegroundSignature = new Class[] { boolean.class };
 
 	private Method mStartForeground;
 	private Method mStopForeground;
-	
+
 	private Object[] mStartForegroundArgs = new Object[2];
 	private Object[] mStopForegroundArgs = new Object[1];
 
 	void invokeMethod(Method method, Object[] args) {
-	    try {
-	        method.invoke(this, mStartForegroundArgs);
-	    } catch (InvocationTargetException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    } catch (IllegalAccessException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    }
+		try {
+			method.invoke(this, mStartForegroundArgs);
+		} catch (InvocationTargetException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		} catch (IllegalAccessException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		}
 	}
 
 	/**
@@ -77,17 +76,17 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void startForegroundCompat(int id, Notification notification) {
-	    // If we have the new startForeground API, then use it.
-	    if (mStartForeground != null) {
-	        mStartForegroundArgs[0] = Integer.valueOf(id);
-	        mStartForegroundArgs[1] = notification;
-	        invokeMethod(mStartForeground, mStartForegroundArgs);
-	        return;
-	    }
+		// If we have the new startForeground API, then use it.
+		if (mStartForeground != null) {
+			mStartForegroundArgs[0] = Integer.valueOf(id);
+			mStartForegroundArgs[1] = notification;
+			invokeMethod(mStartForeground, mStartForegroundArgs);
+			return;
+		}
 
-	    // Fall back on the old API.
-	    setForeground(true);
-	    notificationManager.notify(id, notification);
+		// Fall back on the old API.
+		setForeground(true);
+		notificationManager.notify(id, notification);
 	}
 
 	/**
@@ -95,25 +94,25 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void stopForegroundCompat(int id) {
-	    // If we have the new stopForeground API, then use it.
-	    if (mStopForeground != null) {
-	        mStopForegroundArgs[0] = Boolean.TRUE;
-	        try {
-	            mStopForeground.invoke(this, mStopForegroundArgs);
-	        } catch (InvocationTargetException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        } catch (IllegalAccessException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        }
-	        return;
-	    }
+		// If we have the new stopForeground API, then use it.
+		if (mStopForeground != null) {
+			mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				mStopForeground.invoke(this, mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			}
+			return;
+		}
 
-	    // Fall back on the old API.  Note to cancel BEFORE changing the
-	    // foreground state, since we could be killed at that point.
-	    notificationManager.cancel(id);
-	    setForeground(false);
+		// Fall back on the old API. Note to cancel BEFORE changing the
+		// foreground state, since we could be killed at that point.
+		notificationManager.cancel(id);
+		setForeground(false);
 	}
 
 	/**
@@ -178,29 +177,40 @@ public class GAEProxyService extends Service {
 
 	public boolean connect() {
 
-		try {
+		Thread t = new Thread() {
+			public void run() {
+				synchronized (httpProcess) {
+					try {
+						File conf = new File(BASE + "proxy.conf");
+						if (!conf.exists())
+							conf.createNewFile();
+						FileOutputStream is = new FileOutputStream(conf);
+						byte[] buffer = ("listen_port = " + port + "\n"
+								+ "fetch_server = " + proxy + "\n").getBytes();
+						is.write(buffer);
+						is.flush();
+						is.close();
 
-			File conf = new File(BASE + "proxy.conf");
-			if (!conf.exists())
-				conf.createNewFile();
-			FileOutputStream is = new FileOutputStream(conf);
-			byte[] buffer = ("listen_port = " + port + "\n" + "fetch_server = "
-					+ proxy + "\n").getBytes();
-			is.write(buffer);
-			is.flush();
-			is.close();
+						while (settings.getBoolean("isRunning", false)) {
+							String cmd = BASE + "localproxy.sh";
+							Log.e(TAG, cmd);
 
-			String cmd = BASE + "localproxy.sh";
-			Log.e(TAG, cmd);
-
-			httpProcess = Runtime.getRuntime().exec("/system/bin/sh");
-			httpOS = new DataOutputStream(httpProcess.getOutputStream());
-			httpOS.writeBytes(cmd + "\n");
-			httpOS.flush();
-
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-		}
+							httpProcess = Runtime.getRuntime().exec(
+									"/system/bin/sh");
+							httpOS = new DataOutputStream(
+									httpProcess.getOutputStream());
+							httpOS.writeBytes(cmd + "\n");
+							httpOS.flush();
+							httpProcess.waitFor();
+						}
+					} catch (Exception e) {
+						Log.e(TAG, e.getMessage());
+					}
+				}
+			}
+		};
+		t.setDaemon(true);
+		t.start();
 
 		return true;
 	}
@@ -221,9 +231,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80  -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					// runRootCommand(BASE
+					// + "iptables_g1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -232,9 +242,9 @@ public class GAEProxyService extends Service {
 							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
 							+ appHost
 							+ " --dport 80 -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
+					// runRootCommand(BASE
+					// + "iptables_n1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
 					runRootCommand(BASE
 							+ "iptables_g1 -t nat -A OUTPUT -p udp "
 							+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -343,49 +353,51 @@ public class GAEProxyService extends Service {
 		intent = new Intent(this, GAEProxy.class);
 		pendIntent = PendingIntent.getActivity(this, 0, intent, 0);
 		notification = new Notification();
-		
-        try {
-            mStartForeground = getClass().getMethod("startForeground",
-                    mStartForegroundSignature);
-            mStopForeground = getClass().getMethod("stopForeground",
-                    mStopForegroundSignature);
-        } catch (NoSuchMethodException e) {
-            // Running on an older platform.
-            mStartForeground = mStopForeground = null;
-        }
+
+		try {
+			mStartForeground = getClass().getMethod("startForeground",
+					mStartForegroundSignature);
+			mStopForeground = getClass().getMethod("stopForeground",
+					mStopForegroundSignature);
+		} catch (NoSuchMethodException e) {
+			// Running on an older platform.
+			mStartForeground = mStopForeground = null;
+		}
 	}
 
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
-		
-		stopForegroundCompat(1);
-		
-		notifyAlert(getString(R.string.forward_stop),
-				getString(R.string.service_stopped),
-				Notification.FLAG_AUTO_CANCEL);
 
-		// Make sure the connection is closed, important here
-		onDisconnect();
+		synchronized (httpProcess) {
+			stopForegroundCompat(1);
 
-		try {
-			if (httpOS != null) {
-				httpOS.writeBytes("\\cC");
-				httpOS.writeBytes("exit\n");
-				httpOS.flush();
-				httpOS.close();
+			notifyAlert(getString(R.string.forward_stop),
+					getString(R.string.service_stopped),
+					Notification.FLAG_AUTO_CANCEL);
+
+			// Make sure the connection is closed, important here
+			onDisconnect();
+
+			try {
+				if (httpOS != null) {
+					httpOS.writeBytes("\\cC");
+					httpOS.writeBytes("exit\n");
+					httpOS.flush();
+					httpOS.close();
+				}
+				if (httpProcess != null)
+					httpProcess.destroy();
+			} catch (Exception e) {
+				Log.e(TAG, "HTTP Server close unexpected");
 			}
-			if (httpProcess != null)
-				httpProcess.destroy();
-		} catch (Exception e) {
-			Log.e(TAG, "HTTP Server close unexpected");
-		}
 
-		try {
-			if (dnsServer != null)
-				dnsServer.close();
-		} catch (Exception e) {
-			Log.e(TAG, "DNS Server close unexpected");
+			try {
+				if (dnsServer != null)
+					dnsServer.close();
+			} catch (Exception e) {
+				Log.e(TAG, "DNS Server close unexpected");
+			}
 		}
 		super.onDestroy();
 	}

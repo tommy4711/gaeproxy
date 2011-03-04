@@ -405,7 +405,7 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-			runCommand("chmod 777 /data/data/org.gaeproxy/sethosts.sh");
+			runCommand("chmod 777 /data/data/org.gaeproxy/host.sh");
 		}
 	}
 

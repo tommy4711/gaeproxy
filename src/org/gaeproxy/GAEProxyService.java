@@ -334,7 +334,7 @@ public class GAEProxyService extends Service {
 			return false;
 		
 		// Add hosts here
-		runRootCommand(BASE + "sethosts.sh add " + appHost + " " + host);
+		runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 		
 		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353,
 				appHost);
@@ -408,7 +408,7 @@ public class GAEProxyService extends Service {
 		
 		stopForegroundCompat(1);
 		
-		runRootCommand(BASE + "sethosts.sh remove");
+		runRootCommand(BASE + "host.sh remove");
 		
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
@@ -466,7 +466,7 @@ public class GAEProxyService extends Service {
 			ed.putBoolean("isRunning", true);
 			ed.commit();
 			super.onStart(intent, startId);
-
+			
 		} else {
 			// Connection or forward unsuccessful
 			notifyAlert(getString(R.string.forward_fail),

@@ -382,11 +382,11 @@ public class GAEProxy extends PreferenceActivity implements
 		if (!isWorked(SERVICE_NAME)) {
 			CopyAssets("");
 
-			runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/iptables_g1");
-			runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/iptables_n1");
-			runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/redsocks");
-			runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/proxy.sh");
-			runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/localproxy.sh");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/iptables_g1");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/iptables_n1");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+			runRootCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		}
 	}
 
@@ -570,7 +570,7 @@ public class GAEProxy extends PreferenceActivity implements
 			return false;
 		}
 
-		runRootCommand("/system/bin/chmod 777 /data/data/org.gaeproxy/python/bin/python");
+		runRootCommand("chmod 777 /data/data/org.gaeproxy/python/bin/python");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);

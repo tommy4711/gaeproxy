@@ -461,6 +461,18 @@ public class GAEProxyService extends Service {
 			Editor ed = settings.edit();
 			ed.putBoolean("isRunning", true);
 			ed.commit();
+			
+			// for widget, maybe exception here
+			try {
+				RemoteViews views = new RemoteViews(getPackageName(),
+						R.layout.gaeproxy_appwidget);
+				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
+				AppWidgetManager.getInstance(this).updateAppWidget(
+						GAEProxyWidgetProvider.widgets, views);
+			} catch (Exception ignore) {
+				// Nothing
+			}
+			
 			super.onStart(intent, startId);
 
 		} else {

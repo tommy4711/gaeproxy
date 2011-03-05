@@ -81,8 +81,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 
-			RemoteViews views = new RemoteViews(context.getPackageName(),
-					R.layout.gaeproxy_appwidget);
 
 			Log.d(TAG, "Proxy switch action");
 			// do some really cool stuff here
@@ -94,8 +92,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				} catch (Exception e) {
 					// Nothing
 				}
-
-				views.setImageViewResource(R.id.serviceToggle, R.drawable.off);
 
 			} else {
 
@@ -121,13 +117,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				it.putExtras(bundle);
 				context.startService(it);
 
-				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
-			}
-			
-			try {
-				AppWidgetManager.getInstance(context).updateAppWidget(widgets, views);
-			} catch (Exception ignore) {
-				// Nothing
 			}
 
 		}

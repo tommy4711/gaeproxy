@@ -508,11 +508,17 @@ public class DNSServer implements WrapServer {
 
 				Log.d(TAG, "解析" + questDomain);
 
-//				if (questDomain.toLowerCase().contains("appspot.com")) {
-//					byte[] ips = parseIPString(appHost);
-//					byte[] answer = createDNSResponse(udpreq, ips);
-//					addToCache(questDomain, answer);
-//				}
+				// if (questDomain.toLowerCase().contains("appspot.com")) {
+				// byte[] ips = parseIPString(appHost);
+				// byte[] answer = createDNSResponse(udpreq, ips);
+				// addToCache(questDomain, answer);
+				// }
+
+				if (questDomain.toLowerCase().contains("google.cn")) {
+					byte[] ips = parseIPString(appHost);
+					byte[] answer = createDNSResponse(udpreq, ips);
+					addToCache(questDomain, answer);
+				}
 
 				if (dnsCache.containsKey(questDomain)) {
 

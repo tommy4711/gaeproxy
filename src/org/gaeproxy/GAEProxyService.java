@@ -234,7 +234,7 @@ public class GAEProxyService extends Service {
 			String cmd = BASE + "localproxy.sh";
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec("/system/bin/sh");
+			httpProcess = Runtime.getRuntime().exec("su");
 			httpOS = new DataOutputStream(httpProcess.getOutputStream());
 			httpOS.writeBytes(cmd + "\n");
 			httpOS.flush();

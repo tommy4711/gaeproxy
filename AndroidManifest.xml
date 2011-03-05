@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="org.gaeproxy" android:versionName="0.3" android:versionCode="13">
+	package="org.gaeproxy" android:versionName="0.4.1" android:versionCode="15">
 	<uses-sdk android:minSdkVersion="4" />
 	<uses-permission android:name="android.permission.INTERNET"></uses-permission>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"></uses-permission>
@@ -20,6 +20,14 @@
 			<intent-filter>
 				<action android:name="android.intent.action.BOOT_COMPLETED" />
 			</intent-filter>
+		</receiver>
+		<receiver android:name=".GAEProxyWidgetProvider">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+				<action android:name="org.gaeproxy.GAEProxyWidgetProvider.PROXY_SWITCH_ACTION" />
+			</intent-filter>
+			<meta-data android:name="android.appwidget.provider"
+				android:resource="@xml/gaeproxy_appwidget_provider" />
 		</receiver>
 	</application>
 </manifest>

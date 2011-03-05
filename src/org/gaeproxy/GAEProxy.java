@@ -203,7 +203,6 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	public static boolean isAutoStart = false;
-	public static boolean isAutoSetProxy = false;
 
 	public static boolean isRoot = false;
 
@@ -253,7 +252,6 @@ public class GAEProxy extends PreferenceActivity implements
 	
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isInstalledCheck;
-	private CheckBoxPreference isAutoSetProxyCheck;
 	private EditTextPreference proxyText;
 
 	private EditTextPreference portText;
@@ -305,7 +303,6 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyText.setEnabled(false);
 		portText.setEnabled(false);
 
-		isAutoSetProxyCheck.setEnabled(false);
 		isAutoConnectCheck.setEnabled(false);
 		isInstalledCheck.setEnabled(false);
 	}
@@ -314,7 +311,6 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
 
-		isAutoSetProxyCheck.setEnabled(true);
 		isAutoConnectCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 	}
@@ -374,7 +370,6 @@ public class GAEProxy extends PreferenceActivity implements
 		portText = (EditTextPreference) findPreference("port");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
-		isAutoSetProxyCheck = (CheckBoxPreference) findPreference("isAutoSetProxy");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 
@@ -391,12 +386,6 @@ public class GAEProxy extends PreferenceActivity implements
 			isRoot = true;
 		}
 
-		if (!isRoot) {
-			final CheckBoxPreference isAutoSetProxyCheck = (CheckBoxPreference) findPreference("isAutoSetProxy");
-			isAutoSetProxyCheck.setChecked(false);
-			isAutoSetProxyCheck.setEnabled(false);
-		}
-
 		if (!isWorked(SERVICE_NAME)) {
 			CopyAssets("");
 
@@ -405,7 +394,6 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-			//runCommand("chmod 777 /data/data/org.gaeproxy/host.sh");
 		}
 	}
 
@@ -613,7 +601,6 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
-		isAutoSetProxy = settings.getBoolean("isAutoSetProxy", false);
 
 		try {
 
@@ -621,7 +608,6 @@ public class GAEProxy extends PreferenceActivity implements
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);
 			bundle.putInt("port", port);
-			bundle.putBoolean("isAutoSetProxy", isAutoSetProxy);
 
 			it.putExtras(bundle);
 			startService(it);

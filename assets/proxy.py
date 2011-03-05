@@ -196,13 +196,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         request.add_header("Accept-Encoding", "identity, *;q=0")
         request.add_header("Connection", "close")
         # create new opener
-        #if local_proxy != "":
-        #    proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
-        #else:
-        #    proxy_handler = urllib2.ProxyHandler(google_proxy)
-        #opener = urllib2.build_opener(proxy_handler)
+        if local_proxy != "":
+            proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
+        else:
+            proxy_handler = urllib2.ProxyHandler(google_proxy)
+        opener = urllib2.build_opener(proxy_handler)
         # set the opener as the default opener
-        #urllib2.install_opener(opener)
+        urllib2.install_opener(opener)
         try:
             resp = urllib2.urlopen(request, params)
         except urllib2.HTTPError, e:
@@ -302,13 +302,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             request.add_header("Accept-Encoding", "identity, *;q=0")
             request.add_header("Connection", "close")
             # create new opener
-            #if local_proxy != "":
-            #    proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
-            #else:
-            #    proxy_handler = urllib2.ProxyHandler(google_proxy)
-            #opener = urllib2.build_opener(proxy_handler)
+            if local_proxy != "":
+                proxy_handler = urllib2.ProxyHandler({"http": local_proxy})
+            else:
+                proxy_handler = urllib2.ProxyHandler(google_proxy)
+            opener = urllib2.build_opener(proxy_handler)
             # set the opener as the default opener
-            #urllib2.install_opener(opener)
+            urllib2.install_opener(opener)
             resp = urllib2.urlopen(request, params)
 
             # parse resp
@@ -404,16 +404,16 @@ def shallWeNeedGoogleProxy():
     global google_proxy
 
     # send http request directly
-    request = urllib2.Request(common.LOAD_BALANCE)
-    try:
+    #request = urllib2.Request(common.LOAD_BALANCE)
+    #try:
         # avoid wait too long at startup, timeout argument need py2.6 or later.
-        if sys.hexversion >= 0x20600f0:
-            resp = urllib2.urlopen(request, timeout=3)
-        else:
-            resp = urllib2.urlopen(request)
-        resp.read()
-    except:
-        google_proxy = {"http": common.GOOGLE_PROXY}
+    #    if sys.hexversion >= 0x20600f0:
+    #        resp = urllib2.urlopen(request, timeout=3)
+    #    else:
+    #        resp = urllib2.urlopen(request)
+    #    resp.read()
+    #except:
+    google_proxy = {"http": common.GOOGLE_PROXY}
 
 def getAvailableFetchServer():
     request = urllib2.Request(common.LOAD_BALANCE)
@@ -466,9 +466,10 @@ def parseConf(confFile):
 
 if __name__ == "__main__":
     parseConf(common.DEF_CONF_FILE)
+    socket.setdefaulttimeout(10)
 
-    #if local_proxy == "":
-    #    shallWeNeedGoogleProxy()
+    if local_proxy == "":
+        shallWeNeedGoogleProxy()
 
     #if fetch_server == "":
     #    fetch_server = getAvailableFetchServer()

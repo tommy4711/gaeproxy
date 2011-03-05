@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 
 import android.app.Notification;
@@ -40,7 +41,7 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "203.208.39.104";
+	private String appHost = "203.208.39.99";
 	private int port;
 	private boolean isAutoSetProxy = false;
 	private DNSServer dnsServer = null;
@@ -301,6 +302,13 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "Local Port: " + port);
 
 		try {
+			InetAddress addr = InetAddress.getByName("www.google.cn");
+			appHost = addr.getHostAddress();
+		} catch (Exception ignore) {
+			return false;
+		}
+		
+/*		try {
 			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
 			conn.setReadTimeout(10 * 1000);
@@ -327,14 +335,14 @@ public class GAEProxyService extends Service {
 		} catch (Exception e) {
 			Log.e(TAG, "cannot get remote host files", e);
 			return false;
-		}
+		}*/
 
-		String host = proxy.trim().toLowerCase().split("/")[2];
-		if (host == null || host.equals(""))
-			return false;
+//		String host = proxy.trim().toLowerCase().split("/")[2];
+//		if (host == null || host.equals(""))
+//			return false;
 		
 		// Add hosts here
-		runRootCommand(BASE + "host.sh add " + appHost + " " + host);
+//		runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 		
 		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353,
 				appHost);
@@ -408,7 +416,7 @@ public class GAEProxyService extends Service {
 		
 		stopForegroundCompat(1);
 		
-		runRootCommand(BASE + "host.sh remove");
+//		runRootCommand(BASE + "host.sh remove");
 		
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),

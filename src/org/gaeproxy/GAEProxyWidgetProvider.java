@@ -80,7 +80,11 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		super.onReceive(context, intent);
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
-
+			
+			RemoteViews views = new RemoteViews(context.getPackageName(),
+					R.layout.gaeproxy_appwidget);
+			views.setImageViewResource(R.id.serviceToggle, R.drawable.ing);
+			AppWidgetManager.getInstance(context).updateAppWidget(widgets, views);
 
 			Log.d(TAG, "Proxy switch action");
 			// do some really cool stuff here
@@ -92,7 +96,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				} catch (Exception e) {
 					// Nothing
 				}
-
+				
 			} else {
 
 				// Service is not working, then start it

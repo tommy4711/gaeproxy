@@ -329,7 +329,7 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353,
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53,
 				appHost);
 		dnsServer.setBasePath(BASE);
 		new Thread(dnsServer).start();

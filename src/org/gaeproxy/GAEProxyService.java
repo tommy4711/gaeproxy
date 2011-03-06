@@ -294,18 +294,11 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		appHost = settings.getString("appHost", "");
-
-		if (appHost.equals("")) {
-			try {
-				InetAddress addr = InetAddress.getByName("www.google.cn");
-				appHost = addr.getHostAddress();
-				Editor ed = settings.edit();
-				ed.putString("appHost", appHost);
-				ed.commit();
-			} catch (Exception ignore) {
-				return false;
-			}
+		try {
+			InetAddress addr = InetAddress.getByName("www.google.cn");
+			appHost = addr.getHostAddress();
+		} catch (Exception ignore) {
+			return false;
 		}
 
 		/*
@@ -329,8 +322,7 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53,
-				appHost);
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
 		dnsServer.setBasePath(BASE);
 		new Thread(dnsServer).start();
 
@@ -343,7 +335,7 @@ public class GAEProxyService extends Service {
 			}
 			i++;
 		}
-		
+
 		if (i >= 3)
 			return false;
 

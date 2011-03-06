@@ -258,7 +258,7 @@ public class GAEProxyService extends Service {
 
 			if (isARMv6()) {
 				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-						+ "-d ! " + appHost
+						+ "-d ! " + "203.208.0.0/16"
 						+ " --dport 80  -j REDIRECT --to-ports 8123");
 				// runRootCommand(BASE
 				// + "iptables_g1 -t nat -A OUTPUT -p tcp "
@@ -267,7 +267,7 @@ public class GAEProxyService extends Service {
 						+ "--dport 53 -j REDIRECT --to-ports 8153");
 			} else {
 				runRootCommand(BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-						+ "-d ! " + appHost
+						+ "-d ! " + "203.208.0.0/16"
 						+ " --dport 80 -j REDIRECT --to-ports 8123");
 				// runRootCommand(BASE
 				// + "iptables_n1 -t nat -A OUTPUT -p tcp "

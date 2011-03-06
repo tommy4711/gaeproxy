@@ -294,11 +294,18 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		try {
-			InetAddress addr = InetAddress.getByName("www.google.cn");
-			appHost = addr.getHostAddress();
-		} catch (Exception ignore) {
-			return false;
+		appHost = settings.getString("appHost", "");
+
+		if (appHost.equals("")) {
+			try {
+				InetAddress addr = InetAddress.getByName("www.google.cn");
+				appHost = addr.getHostAddress();
+				Editor ed = settings.edit();
+				ed.putString("appHost", appHost);
+				ed.commit();
+			} catch (Exception ignore) {
+				return false;
+			}
 		}
 
 		/*
@@ -336,6 +343,9 @@ public class GAEProxyService extends Service {
 			}
 			i++;
 		}
+		
+		if (i >= 3)
+			return false;
 
 		connect();
 		finishConnection();
@@ -461,7 +471,7 @@ public class GAEProxyService extends Service {
 			Editor ed = settings.edit();
 			ed.putBoolean("isRunning", true);
 			ed.commit();
-			
+
 			// for widget, maybe exception here
 			try {
 				RemoteViews views = new RemoteViews(getPackageName(),
@@ -472,7 +482,7 @@ public class GAEProxyService extends Service {
 			} catch (Exception ignore) {
 				// Nothing
 			}
-			
+
 			super.onStart(intent, startId);
 
 		} else {

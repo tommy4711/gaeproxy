@@ -12,6 +12,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 	private String proxy;
 	private int port;
 	private boolean isAutoStart = false;
+	private boolean isInstalled = false;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -20,8 +21,9 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 				.getDefaultSharedPreferences(context);
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
+		isInstalled = settings.getBoolean("isInstalled", false);
 
-		if (isAutoStart) {
+		if (isAutoStart && isInstalled) {
 			proxy = settings.getString("proxy", "");
 			String portText = settings.getString("port", "");
 			if (portText != null && portText.length() > 0) {

@@ -80,11 +80,12 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		super.onReceive(context, intent);
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
-			
+
 			RemoteViews views = new RemoteViews(context.getPackageName(),
 					R.layout.gaeproxy_appwidget);
 			views.setImageViewResource(R.id.serviceToggle, R.drawable.ing);
-			AppWidgetManager.getInstance(context).updateAppWidget(widgets, views);
+			AppWidgetManager.getInstance(context).updateAppWidget(widgets,
+					views);
 
 			Log.d(TAG, "Proxy switch action");
 			// do some really cool stuff here
@@ -96,30 +97,44 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				} catch (Exception e) {
 					// Nothing
 				}
-				
+
 			} else {
 
 				// Service is not working, then start it
 				SharedPreferences settings = PreferenceManager
 						.getDefaultSharedPreferences(context);
 
-				proxy = settings.getString("proxy", "");
-				String portText = settings.getString("port", "");
-				if (portText != null && portText.length() > 0) {
-					port = Integer.valueOf(portText);
-					if (port <= 1024)
+				boolean isInstalled = settings.getBoolean("isInstalled", false);
+
+				if (isInstalled) {
+					proxy = settings.getString("proxy", "");
+					String portText = settings.getString("port", "");
+					if (portText != null && portText.length() > 0) {
+						port = Integer.valueOf(portText);
+						if (port <= 1024)
+							port = 1984;
+					} else {
 						port = 1984;
+					}
+
+					Intent it = new Intent(context, GAEProxyService.class);
+					Bundle bundle = new Bundle();
+					bundle.putString("proxy", proxy);
+					bundle.putInt("port", port);
+
+					it.putExtras(bundle);
+					context.startService(it);
 				} else {
-					port = 1984;
+					try {
+						Thread.sleep(500);
+					} catch (InterruptedException ignore) {
+						//Nothing
+					}
+					views.setImageViewResource(R.id.serviceToggle,
+							R.drawable.off);
+					AppWidgetManager.getInstance(context).updateAppWidget(
+							widgets, views);
 				}
-
-				Intent it = new Intent(context, GAEProxyService.class);
-				Bundle bundle = new Bundle();
-				bundle.putString("proxy", proxy);
-				bundle.putInt("port", port);
-
-				it.putExtras(bundle);
-				context.startService(it);
 
 			}
 

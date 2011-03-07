@@ -38,6 +38,7 @@ import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.provider.Contacts.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -324,6 +325,19 @@ public class GAEProxy extends PreferenceActivity implements
 		if (!f.isDirectory()) {
 			f.mkdirs();
 		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) { // 按下的如果是BACK，同时没有重复
+			try {
+				finish();
+			} catch (Exception ignore) {
+				// Nothing
+			}
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	private boolean install() {

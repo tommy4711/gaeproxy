@@ -274,7 +274,7 @@ public class GAEProxyService extends Service {
 	 * Internal method to request actual PTY terminal once we've finished
 	 * authentication. If called before authenticated, it will just fail.
 	 */
-	private void finishConnection() {
+	private void preConnection() {
 
 		try {
 			Log.e(TAG, "Forward Successful");
@@ -364,7 +364,7 @@ public class GAEProxyService extends Service {
 		int i = 0;
 		while (!dnsServer.isInService() && i < 3) {
 			try {
-				Thread.sleep(5 * 1000);
+				Thread.sleep(3 * 1000);
 			} catch (InterruptedException e) {
 				// Nothing
 			}
@@ -373,9 +373,17 @@ public class GAEProxyService extends Service {
 
 		if (i >= 3)
 			return false;
-
+		
+		preConnection();
+		
+		try {
+			Thread.sleep(1 * 1000);
+		} catch (InterruptedException e) {
+			// Nothing
+		}
+		
 		connect();
-		finishConnection();
+		
 		return true;
 	}
 

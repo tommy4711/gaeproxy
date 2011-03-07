@@ -329,12 +329,12 @@ public class GAEProxyService extends Service {
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
-		try {
-			InetAddress addr = InetAddress.getByName("www.google.cn");
-			appHost = addr.getHostAddress();
-		} catch (Exception ignore) {
-			return false;
-		}
+//		try {
+//			InetAddress addr = InetAddress.getByName("www.google.cn");
+//			appHost = addr.getHostAddress();
+//		} catch (Exception ignore) {
+//			return false;
+//		}
 
 		/*
 		 * try { URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");

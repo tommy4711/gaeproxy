@@ -513,14 +513,15 @@ public class DNSServer implements WrapServer {
 				// byte[] answer = createDNSResponse(udpreq, ips);
 				// addToCache(questDomain, answer);
 				// }
-
-				if (questDomain.toLowerCase().contains("google.cn")) {
-					
-					byte[] ips = parseIPString(appHost);
-					byte[] answer = createDNSResponse(udpreq, ips);
-					sendDns(answer, dnsq, srvSocket);
-					
-				} else if (dnsCache.containsKey(questDomain)) {
+				//
+				// if (questDomain.toLowerCase().contains("google.cn")) {
+				//
+				// byte[] ips = parseIPString(appHost);
+				// byte[] answer = createDNSResponse(udpreq, ips);
+				// sendDns(answer, dnsq, srvSocket);
+				//
+				// } else
+				if (dnsCache.containsKey(questDomain)) {
 
 					sendDns(dnsCache.get(questDomain).getDnsResponse(), dnsq,
 							srvSocket);

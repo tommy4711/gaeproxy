@@ -156,7 +156,7 @@ public class DNSServer implements WrapServer {
 
 	private String target = "8.8.8.8:53";
 
-	private String appHost = "203.208.39.104";
+	private String appHost = "203.208.39.99";
 
 	public DNSServer(String name, int port, String dnsHost, int dnsPort,
 			String appHost) {
@@ -508,13 +508,19 @@ public class DNSServer implements WrapServer {
 
 				Log.d(TAG, "解析" + questDomain);
 
-				if (questDomain.toLowerCase().contains("appspot.com")) {
+				// if (questDomain.toLowerCase().contains("appspot.com")) {
+				// byte[] ips = parseIPString(appHost);
+				// byte[] answer = createDNSResponse(udpreq, ips);
+				// addToCache(questDomain, answer);
+				// }
+
+				if (questDomain.toLowerCase().contains("google.cn")) {
+					
 					byte[] ips = parseIPString(appHost);
 					byte[] answer = createDNSResponse(udpreq, ips);
-					addToCache(questDomain, answer);
-				}
-
-				if (dnsCache.containsKey(questDomain)) {
+					sendDns(answer, dnsq, srvSocket);
+					
+				} else if (dnsCache.containsKey(questDomain)) {
 
 					sendDns(dnsCache.get(questDomain).getDnsResponse(), dnsq,
 							srvSocket);

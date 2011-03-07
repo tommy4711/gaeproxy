@@ -11,12 +11,14 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.appwidget.AppWidgetManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -24,6 +26,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 public class GAEProxyService extends Service {
 
@@ -40,37 +43,35 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "203.208.39.104";
+	private String appHost = "203.208.39.99";
 	private int port;
-	private boolean isAutoSetProxy = false;
 	private DNSServer dnsServer = null;
 
 	private SharedPreferences settings = null;
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
-	
+
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
-	    int.class, Notification.class};
-	private static final Class<?>[] mStopForegroundSignature = new Class[] {
-	    boolean.class};
+			int.class, Notification.class };
+	private static final Class<?>[] mStopForegroundSignature = new Class[] { boolean.class };
 
 	private Method mStartForeground;
 	private Method mStopForeground;
-	
+
 	private Object[] mStartForegroundArgs = new Object[2];
 	private Object[] mStopForegroundArgs = new Object[1];
 
 	void invokeMethod(Method method, Object[] args) {
-	    try {
-	        method.invoke(this, mStartForegroundArgs);
-	    } catch (InvocationTargetException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    } catch (IllegalAccessException e) {
-	        // Should not happen.
-	        Log.w("ApiDemos", "Unable to invoke method", e);
-	    }
+		try {
+			method.invoke(this, mStartForegroundArgs);
+		} catch (InvocationTargetException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		} catch (IllegalAccessException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		}
 	}
 
 	/**
@@ -78,17 +79,17 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void startForegroundCompat(int id, Notification notification) {
-	    // If we have the new startForeground API, then use it.
-	    if (mStartForeground != null) {
-	        mStartForegroundArgs[0] = Integer.valueOf(id);
-	        mStartForegroundArgs[1] = notification;
-	        invokeMethod(mStartForeground, mStartForegroundArgs);
-	        return;
-	    }
+		// If we have the new startForeground API, then use it.
+		if (mStartForeground != null) {
+			mStartForegroundArgs[0] = Integer.valueOf(id);
+			mStartForegroundArgs[1] = notification;
+			invokeMethod(mStartForeground, mStartForegroundArgs);
+			return;
+		}
 
-	    // Fall back on the old API.
-	    setForeground(true);
-	    notificationManager.notify(id, notification);
+		// Fall back on the old API.
+		setForeground(true);
+		notificationManager.notify(id, notification);
 	}
 
 	/**
@@ -96,25 +97,25 @@ public class GAEProxyService extends Service {
 	 * APIs if it is not available.
 	 */
 	void stopForegroundCompat(int id) {
-	    // If we have the new stopForeground API, then use it.
-	    if (mStopForeground != null) {
-	        mStopForegroundArgs[0] = Boolean.TRUE;
-	        try {
-	            mStopForeground.invoke(this, mStopForegroundArgs);
-	        } catch (InvocationTargetException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        } catch (IllegalAccessException e) {
-	            // Should not happen.
-	            Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-	        }
-	        return;
-	    }
+		// If we have the new stopForeground API, then use it.
+		if (mStopForeground != null) {
+			mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				mStopForeground.invoke(this, mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			}
+			return;
+		}
 
-	    // Fall back on the old API.  Note to cancel BEFORE changing the
-	    // foreground state, since we could be killed at that point.
-	    notificationManager.cancel(id);
-	    setForeground(false);
+		// Fall back on the old API. Note to cancel BEFORE changing the
+		// foreground state, since we could be killed at that point.
+		notificationManager.cancel(id);
+		setForeground(false);
 	}
 
 	/**
@@ -147,8 +148,7 @@ public class GAEProxyService extends Service {
 					} catch (Exception ex) {
 					}
 			}
-			if (isARMv6 == 1)
-			{
+			if (isARMv6 == 1) {
 				Process process = null;
 				DataOutputStream os = null;
 				DataInputStream is = null;
@@ -156,7 +156,8 @@ public class GAEProxyService extends Service {
 					process = Runtime.getRuntime().exec("/system/bin/sh");
 					os = new DataOutputStream(process.getOutputStream());
 					is = new DataInputStream(process.getInputStream());
-					os.writeBytes("/data/data/org.sshtunnel/iptables_g1 --version" + "\n");
+					os.writeBytes("/data/data/org.sshtunnel/iptables_g1 --version"
+							+ "\n");
 					os.flush();
 					isARMv6 = 0;
 					while (true) {
@@ -233,7 +234,7 @@ public class GAEProxyService extends Service {
 			String cmd = BASE + "localproxy.sh";
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec("/system/bin/sh");
+			httpProcess = Runtime.getRuntime().exec("su");
 			httpOS = new DataOutputStream(httpProcess.getOutputStream());
 			httpOS.writeBytes(cmd + "\n");
 			httpOS.flush();
@@ -253,32 +254,26 @@ public class GAEProxyService extends Service {
 
 		try {
 			Log.e(TAG, "Forward Successful");
-			if (isAutoSetProxy) {
-				runRootCommand(BASE + "proxy.sh start " + port);
+			runRootCommand(BASE + "proxy.sh start " + port);
 
-				if (isARMv6()) {
-					runRootCommand(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
-							+ appHost
-							+ " --dport 80  -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_g1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
-					runRootCommand(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p udp "
-							+ "--dport 53 -j REDIRECT --to-ports 8153");
-				} else {
-					runRootCommand(BASE
-							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
-							+ appHost
-							+ " --dport 80 -j REDIRECT --to-ports 8123");
-//					runRootCommand(BASE
-//							+ "iptables_n1 -t nat -A OUTPUT -p tcp "
-//							+ "--dport 443 -j REDIRECT --to-ports 8124");
-					runRootCommand(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p udp "
-							+ "--dport 53 -j REDIRECT --to-ports 8153");
-				}
+			if (isARMv6()) {
+				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
+						+ "-d ! " + "203.208.0.0/16"
+						+ " --dport 80  -j REDIRECT --to-ports 8123");
+				// runRootCommand(BASE
+				// + "iptables_g1 -t nat -A OUTPUT -p tcp "
+				// + "--dport 443 -j REDIRECT --to-ports 8124");
+				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p udp "
+						+ "--dport 53 -j REDIRECT --to-ports 8153");
+			} else {
+				runRootCommand(BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
+						+ "-d ! " + "203.208.0.0/16"
+						+ " --dport 80 -j REDIRECT --to-ports 8123");
+				// runRootCommand(BASE
+				// + "iptables_n1 -t nat -A OUTPUT -p tcp "
+				// + "--dport 443 -j REDIRECT --to-ports 8124");
+				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p udp "
+						+ "--dport 53 -j REDIRECT --to-ports 8153");
 			}
 
 		} catch (Exception e) {
@@ -295,49 +290,39 @@ public class GAEProxyService extends Service {
 		Bundle bundle = it.getExtras();
 		proxy = bundle.getString("proxy");
 		port = bundle.getInt("port");
-		isAutoSetProxy = bundle.getBoolean("isAutoSetProxy");
 
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
 
 		try {
-			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
-			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-			conn.setReadTimeout(10 * 1000);
-			conn.connect();
-			InputStream is = conn.getInputStream();
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(is));
-			String line = reader.readLine();
-			if (line == null)
-				return false;
-			if (!line.startsWith("#GAEPROXY"))
-				return false;
-			while (true) {
-				line = reader.readLine();
-				if (line == null)
-					break;
-				if (line.startsWith("#"))
-					continue;
-				line = line.trim().toLowerCase();
-				if (line.equals(""))
-					continue;
-				appHost = line;
-			}
-		} catch (Exception e) {
-			Log.e(TAG, "cannot get remote host files", e);
+			InetAddress addr = InetAddress.getByName("www.google.cn");
+			appHost = addr.getHostAddress();
+		} catch (Exception ignore) {
 			return false;
 		}
 
-		String host = proxy.trim().toLowerCase().split("/")[2];
-		if (host == null || host.equals(""))
-			return false;
-		
+		/*
+		 * try { URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
+		 * HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+		 * conn.setReadTimeout(10 * 1000); conn.connect(); InputStream is =
+		 * conn.getInputStream(); BufferedReader reader = new BufferedReader(
+		 * new InputStreamReader(is)); String line = reader.readLine(); if (line
+		 * == null) return false; if (!line.startsWith("#GAEPROXY")) return
+		 * false; while (true) { line = reader.readLine(); if (line == null)
+		 * break; if (line.startsWith("#")) continue; line =
+		 * line.trim().toLowerCase(); if (line.equals("")) continue; appHost =
+		 * line; } } catch (Exception e) { Log.e(TAG,
+		 * "cannot get remote host files", e); return false; }
+		 */
+
+		// String host = proxy.trim().toLowerCase().split("/")[2];
+		// if (host == null || host.equals(""))
+		// return false;
+
 		// Add hosts here
-		runRootCommand(BASE + "host.sh add " + appHost + " " + host);
-		
-		dnsServer = new DNSServer("DNS Server", 8153, "208.67.222.222", 5353,
-				appHost);
+		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
+
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
 		dnsServer.setBasePath(BASE);
 		new Thread(dnsServer).start();
 
@@ -350,6 +335,9 @@ public class GAEProxyService extends Service {
 			}
 			i++;
 		}
+
+		if (i >= 3)
+			return false;
 
 		connect();
 		finishConnection();
@@ -390,26 +378,26 @@ public class GAEProxyService extends Service {
 		intent = new Intent(this, GAEProxy.class);
 		pendIntent = PendingIntent.getActivity(this, 0, intent, 0);
 		notification = new Notification();
-		
-        try {
-            mStartForeground = getClass().getMethod("startForeground",
-                    mStartForegroundSignature);
-            mStopForeground = getClass().getMethod("stopForeground",
-                    mStopForegroundSignature);
-        } catch (NoSuchMethodException e) {
-            // Running on an older platform.
-            mStartForeground = mStopForeground = null;
-        }
+
+		try {
+			mStartForeground = getClass().getMethod("startForeground",
+					mStartForegroundSignature);
+			mStopForeground = getClass().getMethod("stopForeground",
+					mStopForegroundSignature);
+		} catch (NoSuchMethodException e) {
+			// Running on an older platform.
+			mStartForeground = mStopForeground = null;
+		}
 	}
 
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
-		
+
 		stopForegroundCompat(1);
-		
-		runRootCommand(BASE + "host.sh remove");
-		
+
+		// runRootCommand(BASE + "host.sh remove");
+
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);
@@ -436,20 +424,30 @@ public class GAEProxyService extends Service {
 		} catch (Exception e) {
 			Log.e(TAG, "DNS Server close unexpected");
 		}
+
+		// for widget, maybe exception here
+		try {
+			RemoteViews views = new RemoteViews(getPackageName(),
+					R.layout.gaeproxy_appwidget);
+			views.setImageViewResource(R.id.serviceToggle, R.drawable.off);
+			AppWidgetManager.getInstance(this).updateAppWidget(
+					GAEProxyWidgetProvider.widgets, views);
+		} catch (Exception ignore) {
+			// Nothing
+		}
+
 		super.onDestroy();
 	}
 
 	private void onDisconnect() {
 
-		if (isAutoSetProxy) {
-			if (isARMv6()) {
-				runRootCommand(BASE + "iptables_g1 -t nat -F OUTPUT");
-			} else {
-				runRootCommand(BASE + "iptables_n1 -t nat -F OUTPUT");
-			}
-
-			runRootCommand(BASE + "proxy.sh stop");
+		if (isARMv6()) {
+			runRootCommand(BASE + "iptables_g1 -t nat -F OUTPUT");
+		} else {
+			runRootCommand(BASE + "iptables_n1 -t nat -F OUTPUT");
 		}
+
+		runRootCommand(BASE + "proxy.sh stop");
 
 	}
 
@@ -465,8 +463,20 @@ public class GAEProxyService extends Service {
 			Editor ed = settings.edit();
 			ed.putBoolean("isRunning", true);
 			ed.commit();
+
+			// for widget, maybe exception here
+			try {
+				RemoteViews views = new RemoteViews(getPackageName(),
+						R.layout.gaeproxy_appwidget);
+				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
+				AppWidgetManager.getInstance(this).updateAppWidget(
+						GAEProxyWidgetProvider.widgets, views);
+			} catch (Exception ignore) {
+				// Nothing
+			}
+
 			super.onStart(intent, startId);
-			
+
 		} else {
 			// Connection or forward unsuccessful
 			notifyAlert(getString(R.string.forward_fail),

@@ -36,7 +36,9 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.provider.Contacts.Settings;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -58,12 +60,13 @@ public class GAEProxy extends PreferenceActivity implements
 
 			try {
 				File zip = new File(path[1]);
-				if (!zip.exists()) {
-					URL url = new URL(path[0]);
-					URLConnection conexion = url.openConnection();
-					conexion.connect();
+				URL url = new URL(path[0]);
+				URLConnection conexion = url.openConnection();
+				conexion.connect();
+				int lenghtOfFile = conexion.getContentLength();
 
-					int lenghtOfFile = conexion.getContentLength();
+				if (!zip.exists() || lenghtOfFile != zip.length()) {
+
 					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
 					InputStream input = new BufferedInputStream(
@@ -87,24 +90,21 @@ public class GAEProxy extends PreferenceActivity implements
 				} else {
 					publishProgress("" + 50);
 				}
-				
+
 				// Unzip now
 				unzip(path[1], path[2]);
 
-			} catch (Exception e) {
+				// Unzip another file
+				zip = new File(path[4]);
 
-				Log.e("error", e.getMessage().toString());
-				System.out.println(e.getMessage().toString());
-			}
-			
-			try {
-				File zip = new File(path[4]);
-				if (!zip.exists()) {
-					URL url = new URL(path[3]);
-					URLConnection conexion = url.openConnection();
-					conexion.connect();
+				url = new URL(path[3]);
+				conexion = url.openConnection();
+				conexion.connect();
 
-					int lenghtOfFile = conexion.getContentLength();
+				lenghtOfFile = conexion.getContentLength();
+
+				if (!zip.exists() || zip.length() != lenghtOfFile) {
+
 					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
 					InputStream input = new BufferedInputStream(
@@ -128,7 +128,7 @@ public class GAEProxy extends PreferenceActivity implements
 				} else {
 					publishProgress("" + 100);
 				}
-				
+
 				// Unzip File
 				unzip(path[4], path[5]);
 
@@ -146,7 +146,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 		@Override
 		protected void onPostExecute(String unused) {
-			dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
+			try {
+				dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
+			} catch (Exception ignore) {
+				// Nothing
+			}
 		}
 
 		@Override
@@ -176,7 +180,7 @@ public class GAEProxy extends PreferenceActivity implements
 					} else {
 						FileOutputStream fout = new FileOutputStream(path
 								+ ze.getName());
-						byte data[] = new byte[1024];
+						byte data[] = new byte[2048];
 						int count;
 						while ((count = zin.read(data)) != -1) {
 							fout.write(data, 0, count);
@@ -203,7 +207,6 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	public static boolean isAutoStart = false;
-	public static boolean isAutoSetProxy = false;
 
 	public static boolean isRoot = false;
 
@@ -250,10 +253,9 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 		return true;
 	}
-	
+
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isInstalledCheck;
-	private CheckBoxPreference isAutoSetProxyCheck;
 	private EditTextPreference proxyText;
 
 	private EditTextPreference portText;
@@ -263,7 +265,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private ProgressDialog mProgressDialog;
 
 	private void CopyAssets(String path) {
-		
+
 		AssetManager assetManager = getAssets();
 		String[] files = null;
 		try {
@@ -305,7 +307,6 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyText.setEnabled(false);
 		portText.setEnabled(false);
 
-		isAutoSetProxyCheck.setEnabled(false);
 		isAutoConnectCheck.setEnabled(false);
 		isInstalledCheck.setEnabled(false);
 	}
@@ -314,7 +315,6 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
 
-		isAutoSetProxyCheck.setEnabled(true);
 		isAutoConnectCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 	}
@@ -325,6 +325,19 @@ public class GAEProxy extends PreferenceActivity implements
 		if (!f.isDirectory()) {
 			f.mkdirs();
 		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) { // 按下的如果是BACK，同时没有重复
+			try {
+				finish();
+			} catch (Exception ignore) {
+				// Nothing
+			}
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	private boolean install() {
@@ -374,7 +387,6 @@ public class GAEProxy extends PreferenceActivity implements
 		portText = (EditTextPreference) findPreference("port");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
-		isAutoSetProxyCheck = (CheckBoxPreference) findPreference("isAutoSetProxy");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 
@@ -391,12 +403,6 @@ public class GAEProxy extends PreferenceActivity implements
 			isRoot = true;
 		}
 
-		if (!isRoot) {
-			final CheckBoxPreference isAutoSetProxyCheck = (CheckBoxPreference) findPreference("isAutoSetProxy");
-			isAutoSetProxyCheck.setChecked(false);
-			isAutoSetProxyCheck.setEnabled(false);
-		}
-
 		if (!isWorked(SERVICE_NAME)) {
 			CopyAssets("");
 
@@ -405,7 +411,6 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-			runCommand("chmod 777 /data/data/org.gaeproxy/host.sh");
 		}
 	}
 
@@ -451,8 +456,8 @@ public class GAEProxy extends PreferenceActivity implements
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
 			Preference preference) {
 		SharedPreferences settings = PreferenceManager
-		.getDefaultSharedPreferences(this);
-		
+				.getDefaultSharedPreferences(this);
+
 		if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
@@ -613,7 +618,6 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
-		isAutoSetProxy = settings.getBoolean("isAutoSetProxy", false);
 
 		try {
 
@@ -621,7 +625,6 @@ public class GAEProxy extends PreferenceActivity implements
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);
 			bundle.putInt("port", port);
-			bundle.putBoolean("isAutoSetProxy", isAutoSetProxy);
 
 			it.putExtras(bundle);
 			startService(it);

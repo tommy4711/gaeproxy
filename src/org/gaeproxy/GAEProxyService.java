@@ -37,6 +37,18 @@ public class GAEProxyService extends Service {
 
 	public static final String BASE = "/data/data/org.gaeproxy/";
 
+	final static String CMD_IPTABLES_DNAT_ADD_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp "
+			+ "-d ! "
+			+ "203.208.0.0/16"
+			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153";
+
+	final static String CMD_IPTABLES_DNAT_ADD_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp "
+			+ "-d ! "
+			+ "203.208.0.0/16"
+			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153";
+
 	private static final String TAG = "GAEProxyService";
 
 	private Process httpProcess = null;
@@ -51,6 +63,7 @@ public class GAEProxyService extends Service {
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
 	private static int isARMv6 = -1;
+	private boolean hasRedirectSupport = true;
 
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
 			int.class, Notification.class };
@@ -72,6 +85,54 @@ public class GAEProxyService extends Service {
 			// Should not happen.
 			Log.w("ApiDemos", "Unable to invoke method", e);
 		}
+	}
+
+	private void initHasRedirectSupported() {
+		Process process = null;
+		DataOutputStream os = null;
+		DataInputStream es = null;
+
+		String command;
+		String line = null;
+
+		if (isARMv6()) {
+			command = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153";
+		} else
+			command = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153";
+
+		try {
+			process = Runtime.getRuntime().exec("su");
+			es = new DataInputStream(process.getErrorStream());
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+
+			while (null != (line = es.readLine())) {
+				Log.d(TAG, line);
+				if (line.contains("No chain/target/match")) {
+					this.hasRedirectSupport = false;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (es != null)
+					es.close();
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+
+		// flush the check command
+		runRootCommand(command.replace("-A", "-D"));
 	}
 
 	/**
@@ -257,23 +318,34 @@ public class GAEProxyService extends Service {
 			runRootCommand(BASE + "proxy.sh start " + port);
 
 			if (isARMv6()) {
-				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-						+ "-d ! " + "203.208.0.0/16"
-						+ " --dport 80  -j REDIRECT --to-ports 8123");
-				// runRootCommand(BASE
-				// + "iptables_g1 -t nat -A OUTPUT -p tcp "
-				// + "--dport 443 -j REDIRECT --to-ports 8124");
-				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p udp "
-						+ "--dport 53 -j REDIRECT --to-ports 8153");
+				if (this.hasRedirectSupport) {
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! "
+							+ "203.208.0.0/16"
+							+ " --dport 80  -j REDIRECT --to-ports 8123");
+					// runRootCommand(BASE
+					// + "iptables_g1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp "
+							+ "--dport 53 -j REDIRECT --to-ports 8153");
+				} else
+					runRootCommand(CMD_IPTABLES_DNAT_ADD_G1);
+
 			} else {
-				runRootCommand(BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-						+ "-d ! " + "203.208.0.0/16"
-						+ " --dport 80 -j REDIRECT --to-ports 8123");
-				// runRootCommand(BASE
-				// + "iptables_n1 -t nat -A OUTPUT -p tcp "
-				// + "--dport 443 -j REDIRECT --to-ports 8124");
-				runRootCommand(BASE + "iptables_g1 -t nat -A OUTPUT -p udp "
-						+ "--dport 53 -j REDIRECT --to-ports 8153");
+				if (this.hasRedirectSupport) {
+					runRootCommand(BASE
+							+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! "
+							+ "203.208.0.0/16"
+							+ " --dport 80 -j REDIRECT --to-ports 8123");
+					// runRootCommand(BASE
+					// + "iptables_n1 -t nat -A OUTPUT -p tcp "
+					// + "--dport 443 -j REDIRECT --to-ports 8124");
+					runRootCommand(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp "
+							+ "--dport 53 -j REDIRECT --to-ports 8153");
+				} else
+					runRootCommand(CMD_IPTABLES_DNAT_ADD_N1);
 			}
 
 		} catch (Exception e) {
@@ -374,7 +446,9 @@ public class GAEProxyService extends Service {
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
 				.getSystemService(NOTIFICATION_SERVICE);
-
+		
+		this.initHasRedirectSupported();
+		
 		intent = new Intent(this, GAEProxy.class);
 		pendIntent = PendingIntent.getActivity(this, 0, intent, 0);
 		notification = new Notification();

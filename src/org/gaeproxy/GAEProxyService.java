@@ -301,7 +301,7 @@ public class GAEProxyService extends Service {
 								+ "-d ! " + "203.208.0.0/16"
 								+ " --dport 80 -j REDIRECT --to-ports 8123");
 						runRootCommand(BASE
-								+ "iptables_g1 -t nat -A OUTPUT -p udp "
+								+ "iptables_n1 -t nat -A OUTPUT -p udp "
 								+ "--dport 53 -j REDIRECT --to-ports 8153");
 					} else
 						runRootCommand(CMD_IPTABLES_DNAT_ADD_N1);

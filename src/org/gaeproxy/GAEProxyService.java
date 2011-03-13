@@ -41,13 +41,13 @@ public class GAEProxyService extends Service {
 			+ "-d ! "
 			+ "203.208.0.0/16"
 			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153";
+			+ "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n";
 
 	final static String CMD_IPTABLES_DNAT_ADD_N1 = "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! "
 			+ "203.208.0.0/16"
 			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153";
+			+ "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n";
 
 	private static final String TAG = "GAEProxyService";
 
@@ -288,9 +288,6 @@ public class GAEProxyService extends Service {
 								+ "iptables_g1 -t nat -A OUTPUT -p tcp "
 								+ "-d ! " + "203.208.0.0/16"
 								+ " --dport 80  -j REDIRECT --to-ports 8123");
-						// runRootCommand(BASE
-						// + "iptables_g1 -t nat -A OUTPUT -p tcp "
-						// + "--dport 443 -j REDIRECT --to-ports 8124");
 						runRootCommand(BASE
 								+ "iptables_g1 -t nat -A OUTPUT -p udp "
 								+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -303,9 +300,6 @@ public class GAEProxyService extends Service {
 								+ "iptables_n1 -t nat -A OUTPUT -p tcp "
 								+ "-d ! " + "203.208.0.0/16"
 								+ " --dport 80 -j REDIRECT --to-ports 8123");
-						// runRootCommand(BASE
-						// + "iptables_n1 -t nat -A OUTPUT -p tcp "
-						// + "--dport 443 -j REDIRECT --to-ports 8124");
 						runRootCommand(BASE
 								+ "iptables_g1 -t nat -A OUTPUT -p udp "
 								+ "--dport 53 -j REDIRECT --to-ports 8153");
@@ -313,54 +307,58 @@ public class GAEProxyService extends Service {
 						runRootCommand(CMD_IPTABLES_DNAT_ADD_N1);
 				}
 			} else {
+				// for proxy specified apps
 				ProxyedApp[] apps = AppManager.getApps(this);
+				StringBuffer cmd = new StringBuffer();
 				for (int i = 0; i < apps.length; i++) {
-					if (isARMv6()) {
-						if (this.hasRedirectSupport) {
-							runRootCommand(BASE
-									+ "iptables_g1 -t nat "
-									+ "-m owner --uid-owner "
-									+ apps[i].getUid()
-									+ " -A OUTPUT -p tcp "
-									+ "-d ! "
-									+ "203.208.0.0/16"
-									+ " --dport 80  -j REDIRECT --to-ports 8123");
-							// runRootCommand(BASE
-							// + "iptables_g1 -t nat -A OUTPUT -p tcp "
-							// + "--dport 443 -j REDIRECT --to-ports 8124");
-							runRootCommand(BASE + "iptables_g1 -t nat "
-									+ "-m owner --uid-owner "
-									+ apps[i].getUid() + " -A OUTPUT -p udp "
-									+ "--dport 53 -j REDIRECT --to-ports 8153");
-						} else
-							runRootCommand(CMD_IPTABLES_DNAT_ADD_G1.replace(
-									"-t nat", "-t nat -m owner --uid-owner "
-											+ apps[i].getUid()));
+					if (apps[i].isProxyed()) {
+						if (isARMv6()) {
+							if (this.hasRedirectSupport) {
+								cmd.append(BASE
+										+ "iptables_g1 -t nat "
+										+ "-m owner --uid-owner "
+										+ apps[i].getUid()
+										+ " -A OUTPUT -p tcp "
+										+ "-d ! "
+										+ "203.208.0.0/16"
+										+ " --dport 80  -j REDIRECT --to-ports 8123\n");
+								cmd.append(BASE
+										+ "iptables_g1 -t nat "
+										+ "-m owner --uid-owner "
+										+ apps[i].getUid()
+										+ " -A OUTPUT -p udp "
+										+ "--dport 53 -j REDIRECT --to-ports 8153\n");
+							} else
+								cmd.append(CMD_IPTABLES_DNAT_ADD_G1.replace(
+										"-t nat",
+										"-t nat -m owner --uid-owner "
+												+ apps[i].getUid()));
 
-					} else {
-						if (this.hasRedirectSupport) {
-							runRootCommand(BASE
-									+ "iptables_n1 -t nat "
-									+ "-m owner --uid-owner "
-									+ apps[i].getUid()
-									+ " -A OUTPUT -p tcp "
-									+ "-d ! "
-									+ "203.208.0.0/16"
-									+ " --dport 80 -j REDIRECT --to-ports 8123");
-							// runRootCommand(BASE
-							// + "iptables_n1 -t nat -A OUTPUT -p tcp "
-							// + "--dport 443 -j REDIRECT --to-ports 8124");
-							runRootCommand(BASE + "iptables_n1 -t nat "
-									+ "-m owner --uid-owner "
-									+ apps[i].getUid() + " -A OUTPUT -p udp "
-									+ "--dport 53 -j REDIRECT --to-ports 8153");
-						} else
-							runRootCommand(CMD_IPTABLES_DNAT_ADD_N1.replace(
-									"-t nat", "-t nat -m owner --uid-owner "
-											+ apps[i].getUid()));
+						} else {
+							if (this.hasRedirectSupport) {
+								cmd.append(BASE
+										+ "iptables_n1 -t nat "
+										+ "-m owner --uid-owner "
+										+ apps[i].getUid()
+										+ " -A OUTPUT -p tcp "
+										+ "-d ! "
+										+ "203.208.0.0/16"
+										+ " --dport 80 -j REDIRECT --to-ports 8123\n");
+								cmd.append(BASE
+										+ "iptables_n1 -t nat "
+										+ "-m owner --uid-owner "
+										+ apps[i].getUid()
+										+ " -A OUTPUT -p udp "
+										+ "--dport 53 -j REDIRECT --to-ports 8153\n");
+							} else
+								cmd.append(CMD_IPTABLES_DNAT_ADD_N1.replace(
+										"-t nat",
+										"-t nat -m owner --uid-owner "
+												+ apps[i].getUid()));
+						}
 					}
-				}
-
+				}				
+				runRootCommand(cmd.toString());
 			}
 
 		} catch (Exception e) {

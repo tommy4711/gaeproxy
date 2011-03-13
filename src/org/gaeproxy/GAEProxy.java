@@ -207,6 +207,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	public static boolean isAutoStart = false;
+	public static boolean isGlobalProxy = false;
 
 	public static boolean isRoot = false;
 
@@ -255,6 +256,8 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	private CheckBoxPreference isAutoConnectCheck;
+	private CheckBoxPreference isGlobalProxyCheck;
+	private Preference proxyedApps;
 	private CheckBoxPreference isInstalledCheck;
 	private EditTextPreference proxyText;
 
@@ -306,16 +309,21 @@ public class GAEProxy extends PreferenceActivity implements
 	private void disableAll() {
 		proxyText.setEnabled(false);
 		portText.setEnabled(false);
+		proxyedApps.setEnabled(false);
 
 		isAutoConnectCheck.setEnabled(false);
+		isGlobalProxyCheck.setEnabled(false);
 		isInstalledCheck.setEnabled(false);
 	}
 
 	private void enableAll() {
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
-
+		if (!isGlobalProxyCheck.isChecked())
+			proxyedApps.setEnabled(true);
+		
 		isAutoConnectCheck.setEnabled(true);
+		isGlobalProxyCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 	}
 
@@ -385,9 +393,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 		proxyText = (EditTextPreference) findPreference("proxy");
 		portText = (EditTextPreference) findPreference("port");
+		proxyedApps = (Preference) findPreference("proxyedApps");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
+		isGlobalProxyCheck = (CheckBoxPreference) findPreference("isGlobalProxy");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
@@ -459,6 +469,10 @@ public class GAEProxy extends PreferenceActivity implements
 				.getDefaultSharedPreferences(this);
 
 		if (preference.getKey() != null
+				&& preference.getKey().equals("proxyedApps")) {
+			Intent intent = new Intent(this, AppManager.class);
+			startActivity(intent);
+		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
 				if (install()) {
@@ -549,6 +563,13 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
+		if (key.equals("isGlobalProxy")) {
+			if (settings.getBoolean("isGlobalProxy", false))
+				proxyedApps.setEnabled(false);
+			else
+				proxyedApps.setEnabled(true);
+		}
+
 		if (key.equals("isRunning")) {
 			if (settings.getBoolean("isRunning", false)) {
 				disableAll();
@@ -618,6 +639,7 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
+		isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
 
 		try {
 
@@ -625,6 +647,7 @@ public class GAEProxy extends PreferenceActivity implements
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);
 			bundle.putInt("port", port);
+			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
 
 			it.putExtras(bundle);
 			startService(it);
@@ -703,8 +726,8 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		runRootCommand(GAEProxyService.BASE + "proxy.sh stop");
-		
-		File cache = new File (GAEProxyService.BASE + "cache/dnscache");
+
+		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
 			cache.delete();
 	}

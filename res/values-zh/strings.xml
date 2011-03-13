@@ -17,7 +17,7 @@
 <string name="port">本地端口</string>
 <string name="auto_connect">启动时连接</string>
 <string name="auto_reconnect">自动恢复连接</string>
-<string name="auto_set_proxy">自动配置代理</string>
+<string name="auto_set_proxy">全局代理</string>
 <string name="disconnect">关闭服务</string>
 <string name="connect">启动服务</string>
 <string name="feedback">反馈 @ofmax</string>
@@ -30,7 +30,7 @@
 <string name="port_summary">本地代理服务器监听端口，任意大于1024的数字</string>
 <string name="port_alert">端口必需是大于1024的数字</string>
 <string name="auto_connect_summary">启动时自动打开代理服务</string>
-<string name="auto_set_proxy_summary">自动配置全局代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
+<string name="auto_set_proxy_summary">配置全局代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
 <string name="port_empty">端口不能为空</string>
 <string name="proxy_empty">代理地址不能为空</string>
 <string name="install_cat">模块管理</string>
@@ -41,4 +41,5 @@
 <string name="sdcard_alert">请确认SD卡已插入</string>
 <string name="recovery">清除连接状态</string>
 <string name="unzip">解压缩中...</string>
+<string name="proxyed_apps">为应用分别设置代理</string>
 </resources>

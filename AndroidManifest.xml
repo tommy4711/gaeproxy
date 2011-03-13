@@ -15,6 +15,7 @@
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
+		<activity android:name=".AppManager" android:label="@string/app_name" />
 		<service android:enabled="true" android:name=".GAEProxyService" />
 		<receiver android:name=".GAEProxyReceiver">
 			<intent-filter>

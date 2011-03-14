@@ -19,6 +19,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -357,7 +358,7 @@ public class GAEProxyService extends Service {
 												+ apps[i].getUid()));
 						}
 					}
-				}				
+				}
 				runRootCommand(cmd.toString());
 			}
 
@@ -472,6 +473,7 @@ public class GAEProxyService extends Service {
 		this.initHasRedirectSupported();
 
 		intent = new Intent(this, GAEProxy.class);
+		intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 		pendIntent = PendingIntent.getActivity(this, 0, intent, 0);
 		notification = new Notification();
 
@@ -526,8 +528,15 @@ public class GAEProxyService extends Service {
 			RemoteViews views = new RemoteViews(getPackageName(),
 					R.layout.gaeproxy_appwidget);
 			views.setImageViewResource(R.id.serviceToggle, R.drawable.off);
-			AppWidgetManager.getInstance(this).updateAppWidget(
-					GAEProxyWidgetProvider.widgets, views);
+			AppWidgetManager awm = AppWidgetManager.getInstance(this);
+			awm.updateAppWidget(awm.getAppWidgetIds(new ComponentName(this,
+					GAEProxyWidgetProvider.class)), views);
+		} catch (Exception ignore) {
+			// Nothing
+		}
+
+		try {
+			notificationManager.cancel(0);
 		} catch (Exception ignore) {
 			// Nothing
 		}
@@ -565,8 +574,9 @@ public class GAEProxyService extends Service {
 				RemoteViews views = new RemoteViews(getPackageName(),
 						R.layout.gaeproxy_appwidget);
 				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
-				AppWidgetManager.getInstance(this).updateAppWidget(
-						GAEProxyWidgetProvider.widgets, views);
+				AppWidgetManager awm = AppWidgetManager.getInstance(this);
+				awm.updateAppWidget(awm.getAppWidgetIds(new ComponentName(this,
+						GAEProxyWidgetProvider.class)), views);
 			} catch (Exception ignore) {
 				// Nothing
 			}

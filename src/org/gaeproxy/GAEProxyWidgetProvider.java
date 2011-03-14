@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -20,7 +21,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	public static final String PROXY_SWITCH_ACTION = "org.gaeproxy.GAEProxyWidgetProvider.PROXY_SWITCH_ACTION";
 	public static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
 	public static final String TAG = "GAEProxyWidgetProvider";
-	public static int[] widgets;
 
 	private String proxy;
 	private int port;
@@ -28,7 +28,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
 			int[] appWidgetIds) {
 		final int N = appWidgetIds.length;
-		widgets = appWidgetIds.clone();
 
 		// Perform this loop procedure for each App Widget that belongs to this
 		// provider
@@ -80,12 +79,17 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		super.onReceive(context, intent);
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
-
 			RemoteViews views = new RemoteViews(context.getPackageName(),
 					R.layout.gaeproxy_appwidget);
-			views.setImageViewResource(R.id.serviceToggle, R.drawable.ing);
-			AppWidgetManager.getInstance(context).updateAppWidget(widgets,
-					views);
+			try {
+				views.setImageViewResource(R.id.serviceToggle, R.drawable.ing);
+
+				AppWidgetManager awm = AppWidgetManager.getInstance(context);
+				awm.updateAppWidget(awm.getAppWidgetIds(new ComponentName(
+						context, GAEProxyWidgetProvider.class)), views);
+			} catch (Exception ignore) {
+				// Nothing
+			}
 
 			Log.d(TAG, "Proxy switch action");
 			// do some really cool stuff here
@@ -128,12 +132,20 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					try {
 						Thread.sleep(500);
 					} catch (InterruptedException ignore) {
-						//Nothing
+						// Nothing
 					}
-					views.setImageViewResource(R.id.serviceToggle,
-							R.drawable.off);
-					AppWidgetManager.getInstance(context).updateAppWidget(
-							widgets, views);
+					try {
+						views.setImageViewResource(R.id.serviceToggle,
+								R.drawable.off);
+
+						AppWidgetManager awm = AppWidgetManager
+								.getInstance(context);
+						awm.updateAppWidget(awm
+								.getAppWidgetIds(new ComponentName(context,
+										GAEProxyWidgetProvider.class)), views);
+					} catch (Exception ignore) {
+						// Nothing
+					}
 				}
 
 			}

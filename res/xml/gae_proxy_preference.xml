@@ -16,8 +16,10 @@
 	<PreferenceCategory android:title="@string/fearute_cat">
 		<CheckBoxPreference android:key="isAutoConnect"
 			android:title="@string/auto_connect" android:summary="@string/auto_connect_summary"></CheckBoxPreference>
-		<CheckBoxPreference android:summary="@string/auto_set_proxy_summary" android:key="isGlobalProxy" android:title="@string/auto_set_proxy"></CheckBoxPreference><Preference android:key="proxyedApps" android:title="@string/proxyed_apps"></Preference>
-		
+		<CheckBoxPreference android:summary="@string/auto_set_proxy_summary"
+			android:key="isGlobalProxy" android:title="@string/auto_set_proxy"></CheckBoxPreference>
+		<Preference android:key="proxyedApps" android:title="@string/proxyed_apps"></Preference>
+
 	</PreferenceCategory>
 
 

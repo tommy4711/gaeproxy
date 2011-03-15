@@ -524,7 +524,7 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 		
-		if (settings.getBoolean("isAutoSetProxy", false))
+		if (settings.getBoolean("isGlobalProxy", false))
 			proxyedApps.setEnabled(false);
 		else
 			proxyedApps.setEnabled(true);

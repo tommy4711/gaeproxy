@@ -42,4 +42,5 @@
 <string name="recovery">清除连接状态</string>
 <string name="unzip">解压缩中...</string>
 <string name="proxyed_apps">为应用分别设置代理</string>
+<string name="proxyed_help">选择使用GAE代理的应用:</string>
 </resources>

@@ -523,7 +523,12 @@ public class GAEProxy extends PreferenceActivity implements
 		super.onResume();
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
-
+		
+		if (settings.getBoolean("isAutoSetProxy", false))
+			proxyedApps.setEnabled(false);
+		else
+			proxyedApps.setEnabled(true);
+		
 		Editor edit = settings.edit();
 
 		if (this.isWorked(SERVICE_NAME)) {

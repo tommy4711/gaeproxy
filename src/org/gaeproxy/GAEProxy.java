@@ -321,7 +321,7 @@ public class GAEProxy extends PreferenceActivity implements
 		portText.setEnabled(true);
 		if (!isGlobalProxyCheck.isChecked())
 			proxyedApps.setEnabled(true);
-		
+
 		isAutoConnectCheck.setEnabled(true);
 		isGlobalProxyCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
@@ -404,6 +404,12 @@ public class GAEProxy extends PreferenceActivity implements
 		if (this.isWorked(SERVICE_NAME)) {
 			isRunningCheck.setChecked(true);
 		} else {
+			SharedPreferences settings = PreferenceManager
+					.getDefaultSharedPreferences(this);
+			if (settings.getBoolean("isRunning", false)) {
+				showAToast(getString(R.string.crash_alert));
+				recovery();
+			}
 			isRunningCheck.setChecked(false);
 		}
 
@@ -523,17 +529,21 @@ public class GAEProxy extends PreferenceActivity implements
 		super.onResume();
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		
+
 		if (settings.getBoolean("isGlobalProxy", false))
 			proxyedApps.setEnabled(false);
 		else
 			proxyedApps.setEnabled(true);
-		
+
 		Editor edit = settings.edit();
 
 		if (this.isWorked(SERVICE_NAME)) {
 			edit.putBoolean("isRunning", true);
 		} else {
+			if (settings.getBoolean("isRunning", false)) {
+				showAToast(getString(R.string.crash_alert));
+				recovery();
+			}
 			edit.putBoolean("isRunning", false);
 		}
 
@@ -698,6 +708,8 @@ public class GAEProxy extends PreferenceActivity implements
 		 */
 		menu.add(Menu.NONE, Menu.FIRST + 1, 1, getString(R.string.recovery))
 				.setIcon(android.R.drawable.ic_menu_delete);
+		menu.add(Menu.NONE, Menu.FIRST + 2, 2, getString(R.string.about))
+				.setIcon(android.R.drawable.ic_menu_info_details);
 		// return true才会起作用
 		return true;
 
@@ -709,6 +721,9 @@ public class GAEProxy extends PreferenceActivity implements
 		switch (item.getItemId()) {
 		case Menu.FIRST + 1:
 			recovery();
+			break;
+		case Menu.FIRST + 2:
+			showAToast(getString(R.string.copy_rights));
 			break;
 		}
 

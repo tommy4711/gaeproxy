@@ -20,9 +20,12 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -435,10 +438,31 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
+	private void initSoundVibrateLights(Notification notification) {
+		final String ringtone = settings.getString(
+				"settings_key_notif_ringtone", null);
+		AudioManager audioManager = (AudioManager) this
+				.getSystemService(Context.AUDIO_SERVICE);
+		if (audioManager.getStreamVolume(AudioManager.STREAM_RING) == 0) {
+			notification.sound = null;
+		} else if (ringtone != null)
+			notification.sound = Uri.parse(ringtone);
+		else
+			notification.defaults |= Notification.DEFAULT_SOUND;
+
+		if (settings.getBoolean("settings_key_notif_vibrate", false)) {
+			long[] vibrate = { 0, 1000, 500, 1000, 500, 1000 };
+			notification.vibrate = vibrate;
+		}
+
+		notification.defaults |= Notification.DEFAULT_LIGHTS;
+	}
+	
 	private void notifyAlert(String title, String info) {
 		notification.icon = R.drawable.icon;
 		notification.tickerText = title;
 		notification.flags = Notification.FLAG_ONGOING_EVENT;
+		initSoundVibrateLights(notification);
 //		notification.defaults = Notification.DEFAULT_SOUND;
 		notification.setLatestEventInfo(this, getString(R.string.app_name),
 				info, pendIntent);
@@ -449,6 +473,7 @@ public class GAEProxyService extends Service {
 		notification.icon = R.drawable.icon;
 		notification.tickerText = title;
 		notification.flags = flags;
+		initSoundVibrateLights(notification);
 		notification.setLatestEventInfo(this, getString(R.string.app_name),
 				info, pendIntent);
 		notificationManager.notify(0, notification);

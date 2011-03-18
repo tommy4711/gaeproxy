@@ -22,6 +22,14 @@
 
 	</PreferenceCategory>
 
+	<PreferenceCategory android:title="@string/notif_cat">
+		<RingtonePreference android:key="settings_key_notif_ringtone"
+			android:title="@string/notif_ringtone_title" android:ringtoneType="notification"
+			android:showDefault="true" android:showSilent="true" />
+		<CheckBoxPreference android:key="settings_key_notif_vibrate"
+			android:title="@string/notif_vibrate_title" android:summary="@string/notif_vibrate_summary"
+			android:defaultValue="true" />
+	</PreferenceCategory>
 
 	<PreferenceCategory android:title="@string/install_cat">
 		<CheckBoxPreference android:key="isInstalled"

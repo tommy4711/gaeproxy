@@ -225,6 +225,7 @@ public class GAEProxyService extends Service {
 	public static boolean runRootCommand(String command) {
 		Process process = null;
 		DataOutputStream os = null;
+		Log.d(TAG, command);
 		try {
 			process = Runtime.getRuntime().exec("su");
 			os = new DataOutputStream(process.getOutputStream());
@@ -314,8 +315,10 @@ public class GAEProxyService extends Service {
 				}
 			} else {
 				// for proxy specified apps
+				
 				if (apps == null || apps.length <= 0)
 					apps = AppManager.getApps(this);
+				
 				StringBuffer cmd = new StringBuffer();
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {

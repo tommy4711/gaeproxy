@@ -143,24 +143,6 @@ public class AppManager extends Activity implements OnCheckedChangeListener, OnC
 		//Log.d(getClass().getName(),"Exiting Preferences");
 	}
 
-	public static String[] getProxyedApps (Context context)
-	{
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-
-		String tordAppString = prefs.getString(PREFS_KEY_PROXYED, "");
-		String[] tordApps;
-		
-		StringTokenizer st = new StringTokenizer(tordAppString,"|");
-		tordApps = new String[st.countTokens()];
-		int tordIdx = 0;
-		while (st.hasMoreTokens())
-		{
-			tordApps[tordIdx++] = st.nextToken();
-		}
-		
-		return tordApps;
-	}
-
 	public static ProxyedApp[] getApps (Context context)
 	{
 

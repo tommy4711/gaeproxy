@@ -69,6 +69,8 @@ public class GAEProxyService extends Service {
 	private static int isARMv6 = -1;
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
+	
+	private ProxyedApp apps[];
 
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
 			int.class, Notification.class };
@@ -312,7 +314,8 @@ public class GAEProxyService extends Service {
 				}
 			} else {
 				// for proxy specified apps
-				String[] apps = AppManager.getProxyedApps(this);
+				if (apps == null || apps.length <= 0)
+					apps = AppManager.getApps(this);
 				StringBuffer cmd = new StringBuffer();
 				for (int i = 0; i < apps.length; i++) {
 					if (isARMv6()) {

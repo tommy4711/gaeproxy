@@ -339,7 +339,7 @@ public class GAEProxyService extends Service {
 								cmd.append(CMD_IPTABLES_DNAT_ADD_G1.replace(
 										"-t nat",
 										"-t nat -m owner --uid-owner "
-												+ apps[i]));
+												+ apps[i].getUid()));
 
 						} else {
 							if (this.hasRedirectSupport) {
@@ -361,7 +361,7 @@ public class GAEProxyService extends Service {
 								cmd.append(CMD_IPTABLES_DNAT_ADD_N1.replace(
 										"-t nat",
 										"-t nat -m owner --uid-owner "
-												+ apps[i]));
+												+ apps[i].getUid()));
 						}
 					}
 				}

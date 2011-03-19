@@ -284,7 +284,7 @@ public class GAEProxyService extends Service {
 			httpOS.flush();
 
 		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
+			Log.e(TAG, "Cannot connect");
 		}
 
 		return true;

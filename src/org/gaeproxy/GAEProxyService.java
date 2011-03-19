@@ -265,7 +265,7 @@ public class GAEProxyService extends Service {
 			is.close();
 
 			String cmd = BASE;
-			if (proxyType.equals("GAppPorxy")) {
+			if (proxyType.equals("GAppProxy")) {
 				cmd += "localproxy.sh gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
 				cmd += "localproxy.sh wallproxy " + proxy + " " + port;

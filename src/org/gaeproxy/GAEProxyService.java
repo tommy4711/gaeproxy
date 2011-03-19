@@ -263,7 +263,12 @@ public class GAEProxyService extends Service {
 			is.flush();
 			is.close();
 
-			String cmd = BASE + "localproxy.sh";
+			String cmd = BASE;
+//			if (true) {
+//				cmd += "localproxy.sh gappproxy";
+//			} else {
+				cmd += "localproxy.sh wallproxy " + port;
+//			}
 			Log.e(TAG, cmd);
 
 			httpProcess = Runtime.getRuntime().exec("su");
@@ -315,10 +320,10 @@ public class GAEProxyService extends Service {
 				}
 			} else {
 				// for proxy specified apps
-				
+
 				if (apps == null || apps.length <= 0)
 					apps = AppManager.getApps(this);
-				
+
 				StringBuffer cmd = new StringBuffer();
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {

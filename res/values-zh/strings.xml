@@ -51,6 +51,12 @@
 		\n\n(gaeproxy.googlecode.com)</string>
 	<string name="about">关于</string>
 
+	<string name="proxy_type">代理类型选择</string>
+	<array name="proxy_type_entry">
+		<item>GAppProxy</item>
+		<item>WallProxy</item>
+	</array>
+
 	<!-- settings notification category -->
 	<string name="notif_cat">通知设置</string>
 	<string name="notif_ringtone_title">选择铃声</string>

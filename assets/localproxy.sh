@@ -19,11 +19,11 @@ case $1 in
  wallproxy)
  
  echo "
- server['listen'] = ('127.0.0.1', $2)
+server['listen'] = ('127.0.0.1', $3)
 server['log_file'] = None 
 
 gaeproxy = [{
-    'url': 'http://wallproxyofmax.appspot.com/fetch.php',
+    'url': '$2',
     'key': '',
     'crypto':'XOR--0'
 }]
@@ -47,7 +47,7 @@ plugins['plugins.fakehttps'] = 'fakehttps'
 def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf
- /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/gappproxy.py
+ /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/wallproxy.py
  
  ;;
  

@@ -5,12 +5,14 @@
 			android:title="@string/service_controller" android:summary="@string/service_summary"></CheckBoxPreference>
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/proxy_cat">
-		<EditTextPreference android:title="@string/proxy"
+
+		<ListPreference android:key="proxyType" android:title="@string/proxy_type" android:entryValues="@array/proxy_type_entry" android:entries="@array/proxy_type_entry" android:defaultValue="GAppProxy"></ListPreference><EditTextPreference android:title="@string/proxy"
 			android:summary="@string/proxy_summary" android:key="proxy"
 			android:defaultValue="http://proxyofmax.appspot.com/fetch.py"></EditTextPreference>
 		<EditTextPreference android:title="@string/port"
 			android:summary="@string/port_summary" android:key="port"
 			android:defaultValue="1984"></EditTextPreference>
+		
 	</PreferenceCategory>
 
 	<PreferenceCategory android:title="@string/fearute_cat">

@@ -61,6 +61,7 @@ public class GAEProxyService extends Service {
 	private String proxy;
 	private String appHost = "203.208.39.99";
 	private int port;
+	private String proxyType = "GAppProxy";
 	private DNSServer dnsServer = null;
 
 	private SharedPreferences settings = null;
@@ -264,11 +265,11 @@ public class GAEProxyService extends Service {
 			is.close();
 
 			String cmd = BASE;
-//			if (true) {
-//				cmd += "localproxy.sh gappproxy";
-//			} else {
-				cmd += "localproxy.sh wallproxy " + port;
-//			}
+			if (proxyType.equals("GAppPorxy")) {
+				cmd += "localproxy.sh gappproxy";
+			} else if (proxyType.equals("WallProxy")) {
+				cmd += "localproxy.sh wallproxy " + proxy + " " + port;
+			}
 			Log.e(TAG, cmd);
 
 			httpProcess = Runtime.getRuntime().exec("su");
@@ -389,6 +390,7 @@ public class GAEProxyService extends Service {
 
 		Bundle bundle = it.getExtras();
 		proxy = bundle.getString("proxy");
+		proxyType = bundle.getString("proxyType");
 		port = bundle.getInt("port");
 		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
 

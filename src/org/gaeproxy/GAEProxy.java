@@ -32,6 +32,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
@@ -206,6 +207,7 @@ public class GAEProxy extends PreferenceActivity implements
 	public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 	private String proxy;
 	private int port;
+	private String proxyType = "GAppProxy";
 	public static boolean isAutoStart = false;
 	public static boolean isGlobalProxy = false;
 
@@ -260,8 +262,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private Preference proxyedApps;
 	private CheckBoxPreference isInstalledCheck;
 	private EditTextPreference proxyText;
-
 	private EditTextPreference portText;
+	private ListPreference proxyTypeList;
 
 	private CheckBoxPreference isRunningCheck;
 
@@ -314,6 +316,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isAutoConnectCheck.setEnabled(false);
 		isGlobalProxyCheck.setEnabled(false);
 		isInstalledCheck.setEnabled(false);
+		proxyTypeList.setEnabled(false);
 	}
 
 	private void enableAll() {
@@ -325,6 +328,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isAutoConnectCheck.setEnabled(true);
 		isGlobalProxyCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
+		proxyTypeList.setEnabled(true);
 	}
 
 	private void dirChecker(String dir) {
@@ -399,6 +403,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
 		isGlobalProxyCheck = (CheckBoxPreference) findPreference("isGlobalProxy");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
+		proxyTypeList = (ListPreference) findPreference("proxyType");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		if (this.isWorked(SERVICE_NAME)) {
@@ -559,6 +564,9 @@ public class GAEProxy extends PreferenceActivity implements
 
 		// Setup the initial values
 
+		if (!settings.getString("proxyType","").equals(""))
+			proxyTypeList.setSummary(settings.getString("proxyType",""));
+		
 		if (!settings.getString("port", "").equals(""))
 			portText.setSummary(settings.getString("port",
 					getString(R.string.port_summary)));
@@ -595,7 +603,9 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		}
 
-		if (key.equals("port"))
+		if (key.equals("proxyType"))
+			proxyTypeList.setSummary(settings.getString("proxyType", ""));
+		else if (key.equals("port"))
 			if (settings.getString("port", "").equals(""))
 				portText.setSummary(getString(R.string.port_summary));
 			else
@@ -635,6 +645,8 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
+		proxyType = settings.getString("proxyType", "GAppProxy");
+		
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
@@ -663,6 +675,7 @@ public class GAEProxy extends PreferenceActivity implements
 			bundle.putString("proxy", proxy);
 			bundle.putInt("port", port);
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
+			bundle.putString("proxyType", proxyType);
 
 			it.putExtras(bundle);
 			startService(it);

@@ -45,7 +45,7 @@
 	<string name="sdcard_alert">Please make sure you have a SD CARD!</string>
 	<string name="recovery">Recover the status</string>
 	<string name="unzip">Unzipping...</string>
-	<string name="proxyed_apps">Choose Apps through proxy</string>
+	<string name="proxyed_apps">Choose apps through proxy</string>
 	<string name="proxyed_help">Select apps to use with GAEProxy:</string>
 
 	<string name="crash_alert">You are recovering from a crash. \n\nplease report
@@ -58,6 +58,12 @@
 		our project page on
 		googlecode. \n\n(gaeproxy.googlecode.com)</string>
 	<string name="about">About</string>
+
+	<string name="proxy_type">Choose your proxy type</string>
+	<array name="proxy_type_entry">
+		<item>GAppProxy</item>
+		<item>WallProxy</item>
+	</array>
 
 	<!-- settings notification category -->
 	<string name="notif_cat">Notification settings</string>

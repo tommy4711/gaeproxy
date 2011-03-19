@@ -44,6 +44,10 @@ def find_http_handler(method, url, headers):
 fakehttps = None
 plugins['plugins.fakehttps'] = 'fakehttps'
 
+def find_sock_handler(reqtype, ip, port, cmd):
+    if reqtype == 'https': return fakehttps
+    return None
+
 def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf

@@ -361,7 +361,7 @@ public class GAEProxy extends PreferenceActivity implements
 			return false;
 
 		DownloadFileAsync progress = new DownloadFileAsync();
-		progress.execute("http://gaeproxy.googlecode.com/files/python.zip",
+		progress.execute("http://gaeproxy.googlecode.com/files/python_r1.zip",
 				"/sdcard/python.zip", "/data/data/org.gaeproxy/",
 				"http://gaeproxy.googlecode.com/files/python-extras.zip",
 				"/sdcard/python-extras.zip", "/sdcard/");

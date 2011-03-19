@@ -10,6 +10,7 @@ import android.preference.PreferenceManager;
 public class GAEProxyReceiver extends BroadcastReceiver {
 
 	private String proxy;
+	private String proxyType;
 	private int port;
 	private boolean isAutoStart = false;
 	private boolean isInstalled = false;
@@ -25,6 +26,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 
 		if (isAutoStart && isInstalled) {
 			proxy = settings.getString("proxy", "");
+			proxyType = settings.getString("proxyType", "GAppProxy");
 			String portText = settings.getString("port", "");
 			if (portText != null && portText.length() > 0) {
 				port = Integer.valueOf(portText);
@@ -37,6 +39,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			Intent it = new Intent(context, GAEProxyService.class);
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);
+			bundle.putString("proxyType", proxyType);
 			bundle.putInt("port", port);
 
 			it.putExtras(bundle);

@@ -23,6 +23,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	public static final String TAG = "GAEProxyWidgetProvider";
 
 	private String proxy;
+	private String proxyType;
 	private int port;
 
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
@@ -112,6 +113,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
 				if (isInstalled) {
 					proxy = settings.getString("proxy", "");
+					proxyType = settings.getString("proxyType", "GAppProxy");
 					String portText = settings.getString("port", "");
 					if (portText != null && portText.length() > 0) {
 						port = Integer.valueOf(portText);
@@ -125,6 +127,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					Bundle bundle = new Bundle();
 					bundle.putString("proxy", proxy);
 					bundle.putInt("port", port);
+					bundle.putString("proxyType", proxyType);
 
 					it.putExtras(bundle);
 					context.startService(it);

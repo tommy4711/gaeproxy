@@ -210,6 +210,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxyType = "GAppProxy";
 	public static boolean isAutoStart = false;
 	public static boolean isGlobalProxy = false;
+	
+	private ProgressDialog pd = null;
 
 	public static boolean isRoot = false;
 
@@ -586,6 +588,20 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
+		if (key.equals("isConnecting")) {
+			if (settings.getBoolean("isConnecting", false)) {
+				Log.d(TAG, "Connecting start");
+				pd = ProgressDialog.show(this, "",
+						getString(R.string.connecting), true, false);
+			} else {
+				Log.d(TAG, "Connecting finish");
+				if (pd != null) {
+					pd.dismiss();
+					pd = null;
+				}
+			}
+		}
+		
 		if (key.equals("isGlobalProxy")) {
 			if (settings.getBoolean("isGlobalProxy", false))
 				proxyedApps.setEnabled(false);

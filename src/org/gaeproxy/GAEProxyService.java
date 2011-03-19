@@ -27,7 +27,9 @@ import android.content.SharedPreferences.Editor;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -40,6 +42,10 @@ public class GAEProxyService extends Service {
 	private PendingIntent pendIntent;
 
 	public static final String BASE = "/data/data/org.gaeproxy/";
+	private static final int MSG_CONNECT_START = 0;
+	private static final int MSG_CONNECT_FINISH = 1;
+	private static final int MSG_CONNECT_SUCCESS = 2;
+	private static final int MSG_CONNECT_FAIL = 3;
 
 	final static String CMD_IPTABLES_DNAT_ADD_G1 = "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! "
@@ -384,18 +390,7 @@ public class GAEProxyService extends Service {
 	}
 
 	/** Called when the activity is first created. */
-	public boolean handleCommand(Intent it) {
-
-		Log.e(TAG, "Service Start");
-
-		Bundle bundle = it.getExtras();
-		proxy = bundle.getString("proxy");
-		proxyType = bundle.getString("proxyType");
-		port = bundle.getInt("port");
-		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
-
-		Log.e(TAG, "GAE Proxy: " + proxy);
-		Log.e(TAG, "Local Port: " + port);
+	public boolean handleCommand() {
 
 		// try {
 		// InetAddress addr = InetAddress.getByName("www.google.cn");
@@ -594,42 +589,86 @@ public class GAEProxyService extends Service {
 
 	}
 
+	final Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			Editor ed = settings.edit();
+			switch (msg.what) {
+			case MSG_CONNECT_START:
+				ed.putBoolean("isConnecting", true);
+				break;
+			case MSG_CONNECT_FINISH:
+				ed.putBoolean("isConnecting", false);
+				break;
+			case MSG_CONNECT_SUCCESS:
+				ed.putBoolean("isRunning", true);
+				break;
+			case MSG_CONNECT_FAIL:
+				ed.putBoolean("isRunning", false);
+				break;
+			}
+			ed.commit();
+			super.handleMessage(msg);
+		}
+	};
+
 	// This is the old onStart method that will be called on the pre-2.0
 	// platform. On 2.0 or later we override onStartCommand() so this
 	// method will not be called.
 	@Override
 	public void onStart(Intent intent, int startId) {
-		if (handleCommand(intent)) {
-			// Connection and forward successful
-			notifyAlert(getString(R.string.forward_success),
-					getString(R.string.service_running));
-			Editor ed = settings.edit();
-			ed.putBoolean("isRunning", true);
-			ed.commit();
+		
+		super.onStart(intent, startId);
+		
+		Log.e(TAG, "Service Start");
 
-			// for widget, maybe exception here
-			try {
-				RemoteViews views = new RemoteViews(getPackageName(),
-						R.layout.gaeproxy_appwidget);
-				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
-				AppWidgetManager awm = AppWidgetManager.getInstance(this);
-				awm.updateAppWidget(awm.getAppWidgetIds(new ComponentName(this,
-						GAEProxyWidgetProvider.class)), views);
-			} catch (Exception ignore) {
-				// Nothing
+		Bundle bundle = intent.getExtras();
+		proxy = bundle.getString("proxy");
+		proxyType = bundle.getString("proxyType");
+		port = bundle.getInt("port");
+		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
+
+		Log.e(TAG, "GAE Proxy: " + proxy);
+		Log.e(TAG, "Local Port: " + port);
+
+		new Thread(new Runnable() {
+			public void run() {
+				
+				handler.sendEmptyMessage(MSG_CONNECT_START);
+				
+				if (handleCommand()) {
+					// Connection and forward successful
+					notifyAlert(getString(R.string.forward_success),
+							getString(R.string.service_running));
+					
+					handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
+
+					// for widget, maybe exception here
+					try {
+						RemoteViews views = new RemoteViews(getPackageName(),
+								R.layout.gaeproxy_appwidget);
+						views.setImageViewResource(R.id.serviceToggle,
+								R.drawable.on);
+						AppWidgetManager awm = AppWidgetManager
+								.getInstance(GAEProxyService.this);
+						awm.updateAppWidget(awm
+								.getAppWidgetIds(new ComponentName(GAEProxyService.this,
+										GAEProxyWidgetProvider.class)), views);
+					} catch (Exception ignore) {
+						// Nothing
+					}
+
+				} else {
+					// Connection or forward unsuccessful
+					notifyAlert(getString(R.string.forward_fail),
+							getString(R.string.service_failed));
+					handler.sendEmptyMessage(MSG_CONNECT_FAIL);
+					stopSelf();
+				}
+				
+				handler.sendEmptyMessage(MSG_CONNECT_FINISH);
 			}
-
-			super.onStart(intent, startId);
-
-		} else {
-			// Connection or forward unsuccessful
-			notifyAlert(getString(R.string.forward_fail),
-					getString(R.string.service_failed));
-			Editor ed = settings.edit();
-			ed.putBoolean("isRunning", false);
-			ed.commit();
-			stopSelf();
-		}
+		}).start();
 	}
 
 }

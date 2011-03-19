@@ -57,6 +57,8 @@
 		<item>WallProxy</item>
 	</array>
 
+	<string name="connecting">正在连接</string>
+
 	<!-- settings notification category -->
 	<string name="notif_cat">通知设置</string>
 	<string name="notif_ringtone_title">选择铃声</string>

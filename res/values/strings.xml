@@ -50,7 +50,7 @@
 
 	<string name="crash_alert">You are recovering from a crash. \n\nplease report
 		your
-		problem to the project page. \n\n(sshtunnel.googlecode.com)
+		problem to the project page. \n\n(gaeproxy.googlecode.com)
 	</string>
 	<string name="copy_rights">About:\n\nGAEProxy is an open source project
 		published under

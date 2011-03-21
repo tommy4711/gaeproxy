@@ -642,6 +642,7 @@ public class GAEProxyService extends Service {
 							getString(R.string.service_running));
 					
 					handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
+					handler.sendEmptyMessage(MSG_CONNECT_FINISH);
 
 					// for widget, maybe exception here
 					try {
@@ -663,10 +664,11 @@ public class GAEProxyService extends Service {
 					notifyAlert(getString(R.string.forward_fail),
 							getString(R.string.service_failed));
 					handler.sendEmptyMessage(MSG_CONNECT_FAIL);
+					handler.sendEmptyMessage(MSG_CONNECT_FINISH);
 					stopSelf();
 				}
 				
-				handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+				
 			}
 		}).start();
 	}

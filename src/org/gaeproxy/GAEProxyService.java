@@ -568,6 +568,10 @@ public class GAEProxyService extends Service {
 			// Nothing
 		}
 
+		Editor ed = settings.edit();
+		ed.putBoolean("isRunning", false);
+		ed.commit();
+		
 		try {
 			notificationManager.cancel(0);
 		} catch (Exception ignore) {

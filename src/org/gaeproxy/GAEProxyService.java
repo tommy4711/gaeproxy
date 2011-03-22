@@ -47,17 +47,29 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_SUCCESS = 2;
 	private static final int MSG_CONNECT_FAIL = 3;
 
-	final static String CMD_IPTABLES_DNAT_ADD_G1 = "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! "
-			+ "203.208.0.0/16"
-			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n";
+	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp --dport 80 -j REDIRECT --to-ports 8123\n"
+			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_N1 = "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! "
-			+ "203.208.0.0/16"
-			+ " --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n";
+	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-ports 8123\n"
+			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 8124\n";
+
+	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp --dport 80 -j REDIRECT --to-ports 8123\n"
+			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 8124\n";
+
+	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp --dport 80 -j REDIRECT --to-ports 8123\n"
+			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports 8124\n";
+
+	final static String CMD_IPTABLES_DNAT_DEL_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
+
+	final static String CMD_IPTABLES_DNAT_ADD_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
+
+	final static String CMD_IPTABLES_DNAT_DEL_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
+
+	final static String CMD_IPTABLES_DNAT_ADD_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp --dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
+			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp --dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
 
@@ -300,88 +312,53 @@ public class GAEProxyService extends Service {
 			Log.e(TAG, "Forward Successful");
 			runRootCommand(BASE + "proxy.sh start " + port);
 
+			StringBuffer cmd = new StringBuffer();
+
+			if (hasRedirectSupport) {
+				if (isARMv6()) {
+					cmd.append("/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+				} else {
+					cmd.append("/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+				}
+			} else {
+				if (isARMv6()) {
+					cmd.append("/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+				} else {
+					cmd.append("/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+				}
+			}
+
 			if (isGlobalProxy) {
 				if (isARMv6()) {
-					if (this.hasRedirectSupport) {
-						runRootCommand(BASE
-								+ "iptables_g1 -t nat -A OUTPUT -p tcp "
-								+ "-d ! " + "203.208.0.0/16"
-								+ " --dport 80  -j REDIRECT --to-ports 8123");
-						runRootCommand(BASE
-								+ "iptables_g1 -t nat -A OUTPUT -p udp "
-								+ "--dport 53 -j REDIRECT --to-ports 8153");
-					} else
-						runRootCommand(CMD_IPTABLES_DNAT_ADD_G1);
-
+					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1
+							: CMD_IPTABLES_DNAT_ADD_G1);
 				} else {
-					if (this.hasRedirectSupport) {
-						runRootCommand(BASE
-								+ "iptables_n1 -t nat -A OUTPUT -p tcp "
-								+ "-d ! " + "203.208.0.0/16"
-								+ " --dport 80 -j REDIRECT --to-ports 8123");
-						runRootCommand(BASE
-								+ "iptables_n1 -t nat -A OUTPUT -p udp "
-								+ "--dport 53 -j REDIRECT --to-ports 8153");
-					} else
-						runRootCommand(CMD_IPTABLES_DNAT_ADD_N1);
+					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1
+							: CMD_IPTABLES_DNAT_ADD_N1);
 				}
 			} else {
 				// for proxy specified apps
-
 				if (apps == null || apps.length <= 0)
 					apps = AppManager.getApps(this);
 
-				StringBuffer cmd = new StringBuffer();
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {
 						if (isARMv6()) {
-							if (this.hasRedirectSupport) {
-								cmd.append(BASE
-										+ "iptables_g1 -t nat "
-										+ "-m owner --uid-owner "
-										+ apps[i].getUid()
-										+ " -A OUTPUT -p tcp "
-										+ "-d ! "
-										+ "203.208.0.0/16"
-										+ " --dport 80  -j REDIRECT --to-ports 8123\n");
-								cmd.append(BASE
-										+ "iptables_g1 -t nat "
-										+ "-m owner --uid-owner "
-										+ apps[i].getUid()
-										+ " -A OUTPUT -p udp "
-										+ "--dport 53 -j REDIRECT --to-ports 8153\n");
-							} else
-								cmd.append(CMD_IPTABLES_DNAT_ADD_G1.replace(
-										"-t nat",
-										"-t nat -m owner --uid-owner "
-												+ apps[i].getUid()));
-
+							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1
+									: CMD_IPTABLES_DNAT_DEL_G1).replace(
+									"-t nat", "-t nat -m owner --uid-owner "
+											+ apps[i].getUid()));
 						} else {
-							if (this.hasRedirectSupport) {
-								cmd.append(BASE
-										+ "iptables_n1 -t nat "
-										+ "-m owner --uid-owner "
-										+ apps[i].getUid()
-										+ " -A OUTPUT -p tcp "
-										+ "-d ! "
-										+ "203.208.0.0/16"
-										+ " --dport 80 -j REDIRECT --to-ports 8123\n");
-								cmd.append(BASE
-										+ "iptables_n1 -t nat "
-										+ "-m owner --uid-owner "
-										+ apps[i].getUid()
-										+ " -A OUTPUT -p udp "
-										+ "--dport 53 -j REDIRECT --to-ports 8153\n");
-							} else
-								cmd.append(CMD_IPTABLES_DNAT_ADD_N1.replace(
-										"-t nat",
-										"-t nat -m owner --uid-owner "
-												+ apps[i].getUid()));
+							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1
+									: CMD_IPTABLES_DNAT_DEL_N1).replace(
+									"-t nat", "-t nat -m owner --uid-owner "
+											+ apps[i].getUid()));
 						}
 					}
 				}
-				runRootCommand(cmd.toString());
 			}
+
+			runRootCommand(cmd.toString());
 
 		} catch (Exception e) {
 			Log.e(TAG, "Error setting up port forward during connect", e);
@@ -571,7 +548,7 @@ public class GAEProxyService extends Service {
 		Editor ed = settings.edit();
 		ed.putBoolean("isRunning", false);
 		ed.commit();
-		
+
 		try {
 			notificationManager.cancel(0);
 		} catch (Exception ignore) {
@@ -621,9 +598,9 @@ public class GAEProxyService extends Service {
 	// method will not be called.
 	@Override
 	public void onStart(Intent intent, int startId) {
-		
+
 		super.onStart(intent, startId);
-		
+
 		Log.e(TAG, "Service Start");
 
 		Bundle bundle = intent.getExtras();
@@ -637,16 +614,15 @@ public class GAEProxyService extends Service {
 
 		new Thread(new Runnable() {
 			public void run() {
-				
+
 				handler.sendEmptyMessage(MSG_CONNECT_START);
-				
+
 				if (handleCommand()) {
 					// Connection and forward successful
 					notifyAlert(getString(R.string.forward_success),
 							getString(R.string.service_running));
-					
+
 					handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
-					handler.sendEmptyMessage(MSG_CONNECT_FINISH);
 
 					// for widget, maybe exception here
 					try {
@@ -657,7 +633,8 @@ public class GAEProxyService extends Service {
 						AppWidgetManager awm = AppWidgetManager
 								.getInstance(GAEProxyService.this);
 						awm.updateAppWidget(awm
-								.getAppWidgetIds(new ComponentName(GAEProxyService.this,
+								.getAppWidgetIds(new ComponentName(
+										GAEProxyService.this,
 										GAEProxyWidgetProvider.class)), views);
 					} catch (Exception ignore) {
 						// Nothing
@@ -667,12 +644,13 @@ public class GAEProxyService extends Service {
 					// Connection or forward unsuccessful
 					notifyAlert(getString(R.string.forward_fail),
 							getString(R.string.service_failed));
-					handler.sendEmptyMessage(MSG_CONNECT_FAIL);
-					handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+					
 					stopSelf();
+					handler.sendEmptyMessage(MSG_CONNECT_FAIL);
 				}
 				
-				
+				handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+
 			}
 		}).start();
 	}

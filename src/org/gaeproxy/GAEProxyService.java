@@ -47,59 +47,59 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_SUCCESS = 2;
 	private static final int MSG_CONNECT_FAIL = 3;
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp "
+	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp "
+			+ BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp "
+	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp "
+			+ BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp "
+	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp "
+			+ BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp "
+	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp "
+			+ BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp "
+	final static String CMD_IPTABLES_DNAT_DEL_G1 = BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -D OUTPUT -p tcp "
+			+ BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_G1 = "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp "
+	final static String CMD_IPTABLES_DNAT_ADD_G1 = BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p tcp "
+			+ BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp "
+	final static String CMD_IPTABLES_DNAT_DEL_N1 = BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -D OUTPUT -p tcp "
+			+ BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_N1 = "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp "
+	final static String CMD_IPTABLES_DNAT_ADD_N1 = BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ "/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p tcp "
+			+ BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
 			+ "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
@@ -348,15 +348,15 @@ public class GAEProxyService extends Service {
 
 			if (hasRedirectSupport) {
 				if (isARMv6()) {
-					cmd.append("/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+					cmd.append(BASE + "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
 				} else {
-					cmd.append("/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+					cmd.append(BASE + "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
 				}
 			} else {
 				if (isARMv6()) {
-					cmd.append("/data/data/org.sshtunnel/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					cmd.append(BASE + "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 				} else {
-					cmd.append("/data/data/org.sshtunnel/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					cmd.append(BASE + "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 				}
 			}
 

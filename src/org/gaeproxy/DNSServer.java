@@ -529,13 +529,13 @@ public class DNSServer implements WrapServer {
 					Log.d(TAG, "命中缓存");
 
 				} else if (orgCache.containsKey(questDomain)) { // 如果为自定义域名解析
-					byte[] ips = parseIPString(appHost);
+					byte[] ips = parseIPString(orgCache.get(questDomain));
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "自定义解析" + orgCache);
 				} else if (questDomain.toLowerCase().contains("apphost")) { // 如果为apphost域名解析
-					byte[] ips = parseIPString(orgCache.get(questDomain));
+					byte[] ips = parseIPString(appHost);
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);

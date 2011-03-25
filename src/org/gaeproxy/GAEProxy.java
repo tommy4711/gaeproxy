@@ -14,6 +14,10 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
+
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
@@ -42,6 +46,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
 
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -207,10 +212,11 @@ public class GAEProxy extends PreferenceActivity implements
 	public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 	private String proxy;
 	private int port;
+	private String sitekey = "";
 	private String proxyType = "GAppProxy";
 	public static boolean isAutoStart = false;
 	public static boolean isGlobalProxy = false;
-	
+
 	private ProgressDialog pd = null;
 
 	public static boolean isRoot = false;
@@ -265,6 +271,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private CheckBoxPreference isInstalledCheck;
 	private EditTextPreference proxyText;
 	private EditTextPreference portText;
+	private EditTextPreference sitekeyText;
 	private ListPreference proxyTypeList;
 
 	private CheckBoxPreference isRunningCheck;
@@ -313,6 +320,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private void disableAll() {
 		proxyText.setEnabled(false);
 		portText.setEnabled(false);
+		sitekeyText.setEnabled(false);
 		proxyedApps.setEnabled(false);
 
 		isAutoConnectCheck.setEnabled(false);
@@ -324,6 +332,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private void enableAll() {
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
+		if (proxyTypeList.getValue().equals("WallProxy"))
+			sitekeyText.setEnabled(true);
 		if (!isGlobalProxyCheck.isChecked())
 			proxyedApps.setEnabled(true);
 
@@ -395,10 +405,23 @@ public class GAEProxy extends PreferenceActivity implements
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.gae_proxy_preference);
+		// Create the adView
+		AdView adView = new AdView(this, AdSize.BANNER, "a14d8be8a284afc");
+		// Lookup your LinearLayout assuming it’s been given
+		// the attribute android:id="@+id/mainLayout"
+		LinearLayout layout = (LinearLayout) findViewById(R.id.ad);
+		// Add the adView to it
+		layout.addView(adView);
+		// Initiate a generic request to load it with an ad
+		AdRequest aq = new AdRequest();
+		aq.setTesting(true);
+		adView.loadAd(aq);
 
 		proxyText = (EditTextPreference) findPreference("proxy");
 		portText = (EditTextPreference) findPreference("port");
+		sitekeyText = (EditTextPreference) findPreference("sitekey");
 		proxyedApps = (Preference) findPreference("proxyedApps");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
@@ -565,13 +588,17 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		// Setup the initial values
-
-		if (!settings.getString("proxyType","").equals(""))
-			proxyTypeList.setSummary(settings.getString("proxyType",""));
 		
+		if (!settings.getString("sitekey", "").equals(""))
+			sitekeyText.setSummary(settings.getString("sitekey", ""));
+
+		if (!settings.getString("proxyType", "").equals(""))
+			proxyTypeList.setSummary(settings.getString("proxyType", ""));
+
 		if (!settings.getString("port", "").equals(""))
 			portText.setSummary(settings.getString("port",
 					getString(R.string.port_summary)));
+
 		if (!settings.getString("proxy", "").equals(""))
 			proxyText.setSummary(settings.getString("proxy",
 					getString(R.string.proxy_summary)));
@@ -601,7 +628,7 @@ public class GAEProxy extends PreferenceActivity implements
 				}
 			}
 		}
-		
+
 		if (key.equals("isGlobalProxy")) {
 			if (settings.getBoolean("isGlobalProxy", false))
 				proxyedApps.setEnabled(false);
@@ -619,19 +646,30 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		}
 
-		if (key.equals("proxyType"))
+		if (key.equals("proxyType")) {
 			proxyTypeList.setSummary(settings.getString("proxyType", ""));
+			if (settings.getString("proxyType", "").equals("WallProxy"))
+				sitekeyText.setEnabled(true);
+			else
+				sitekeyText.setEnabled(false);
+		}
 		else if (key.equals("port"))
 			if (settings.getString("port", "").equals(""))
 				portText.setSummary(getString(R.string.port_summary));
 			else
 				portText.setSummary(settings.getString("port", ""));
+		else if (key.equals("sitekey"))
+			if (settings.getString("sitekey", "").equals(""))
+				sitekeyText.setSummary(getString(R.string.sitekey_summary));
+			else
+				sitekeyText.setSummary(settings.getString("sitekey", ""));
 		else if (key.equals("proxy"))
 			if (settings.getString("proxy", "").equals("")) {
 				proxyText.setSummary(getString(R.string.proxy_summary));
 			} else {
-				if (!settings.getString("proxy", "").startsWith("http://") &&
-						!settings.getString("proxy", "").startsWith("https://")) {
+				if (!settings.getString("proxy", "").startsWith("http://")
+						&& !settings.getString("proxy", "").startsWith(
+								"https://")) {
 					String host = settings.getString("proxy", "");
 					Editor ed = settings.edit();
 					ed.putString("proxy", "http://" + host);
@@ -663,7 +701,7 @@ public class GAEProxy extends PreferenceActivity implements
 				.getDefaultSharedPreferences(this);
 
 		proxyType = settings.getString("proxyType", "GAppProxy");
-		
+
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
@@ -681,6 +719,8 @@ public class GAEProxy extends PreferenceActivity implements
 			this.showAToast(getString(R.string.port_alert));
 			return false;
 		}
+		
+		sitekey = settings.getString("sitekey", "");
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
 		isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
@@ -691,6 +731,7 @@ public class GAEProxy extends PreferenceActivity implements
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);
 			bundle.putInt("port", port);
+			bundle.putString("sitekey", sitekey);
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
 			bundle.putString("proxyType", proxyType);
 

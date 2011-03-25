@@ -16,6 +16,7 @@
 	<string name="ok_iknow">OK, I know</string>
 	<string name="proxy">Proxy</string>
 	<string name="port">Local Port</string>
+	<string name="sitekey">Site Key</string>
 	<string name="auto_connect">Connect at boot</string>
 	<string name="auto_reconnect">Auto reconnect</string>
 	<string name="auto_set_proxy">Global proxy</string>
@@ -29,6 +30,7 @@
 	<string name="service_summary">Enable / Disable Proxy</string>
 	<string name="proxy_summary">GAE Proxy URL</string>
 	<string name="port_summary">Listening port</string>
+	<string name="sitekey_summary">Site key for WallProxy (XOR--0 only)</string>
 	<string name="port_alert">The port number should be greater than 1024
 	</string>
 	<string name="auto_connect_summary">Start GAE Proxy at the startup</string>

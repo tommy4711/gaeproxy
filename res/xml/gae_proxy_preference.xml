@@ -6,13 +6,19 @@
 	</PreferenceCategory>
 	<PreferenceCategory android:title="@string/proxy_cat">
 
-		<ListPreference android:key="proxyType" android:title="@string/proxy_type" android:entryValues="@array/proxy_type_entry" android:entries="@array/proxy_type_entry" android:defaultValue="GAppProxy"></ListPreference><EditTextPreference android:title="@string/proxy"
+		<ListPreference android:key="proxyType" android:title="@string/proxy_type"
+			android:entryValues="@array/proxy_type_entry" android:entries="@array/proxy_type_entry"
+			android:defaultValue="GAppProxy"></ListPreference>
+		<EditTextPreference android:title="@string/proxy"
 			android:summary="@string/proxy_summary" android:key="proxy"
 			android:defaultValue="http://proxyofmax.appspot.com/fetch.py"></EditTextPreference>
 		<EditTextPreference android:title="@string/port"
 			android:summary="@string/port_summary" android:key="port"
 			android:defaultValue="1984"></EditTextPreference>
-		
+		<EditTextPreference android:title="@string/sitekey"
+			android:summary="@string/sitekey_summary" android:key="sitekey"
+			android:defaultValue=""></EditTextPreference>
+
 	</PreferenceCategory>
 
 	<PreferenceCategory android:title="@string/fearute_cat">

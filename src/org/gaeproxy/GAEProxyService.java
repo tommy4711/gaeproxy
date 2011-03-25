@@ -47,60 +47,52 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_SUCCESS = 2;
 	private static final int MSG_CONNECT_FAIL = 3;
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = BASE
+			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = BASE
+			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = BASE
+			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n"
-			+ BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = BASE
+			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_G1 = BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ BASE + "iptables_g1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_DEL_G1 = BASE
+			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_G1 = BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ BASE + "iptables_g1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_G1 = BASE
+			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_N1 = BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ BASE + "iptables_n1 -t nat -D OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_DEL_N1 = BASE
+			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_N1 = BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n"
-			+ BASE + "iptables_n1 -t nat -A OUTPUT -p tcp "
-			+ "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_N1 = BASE
+			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
@@ -109,8 +101,9 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "203.208.39.99";
+	private String appHost = "";
 	private int port;
+	private String sitekey;
 	private String proxyType = "GAppProxy";
 	private DNSServer dnsServer = null;
 
@@ -318,7 +311,8 @@ public class GAEProxyService extends Service {
 			if (proxyType.equals("GAppProxy")) {
 				cmd += "localproxy.sh gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += "localproxy.sh wallproxy " + proxy + " " + port;
+				cmd += "localproxy.sh wallproxy " + proxy + " " + port + " "
+						+ sitekey;
 			}
 			Log.e(TAG, cmd);
 
@@ -348,15 +342,19 @@ public class GAEProxyService extends Service {
 
 			if (hasRedirectSupport) {
 				if (isARMv6()) {
-					cmd.append(BASE + "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+					cmd.append(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
 				} else {
-					cmd.append(BASE + "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+					cmd.append(BASE
+							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
 				}
 			} else {
 				if (isARMv6()) {
-					cmd.append(BASE + "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					cmd.append(BASE
+							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 				} else {
-					cmd.append(BASE + "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					cmd.append(BASE
+							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 				}
 			}
 
@@ -390,7 +388,10 @@ public class GAEProxyService extends Service {
 				}
 			}
 
-			runRootCommand(cmd.toString());
+			String iptables_rules = cmd.toString().replace("203.208.0.0",
+					appHost);
+
+			runRootCommand(iptables_rules);
 
 		} catch (Exception e) {
 			Log.e(TAG, "Error setting up port forward during connect", e);
@@ -401,12 +402,20 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleCommand() {
 
-		// try {
-		// InetAddress addr = InetAddress.getByName("www.google.cn");
-		// appHost = addr.getHostAddress();
-		// } catch (Exception ignore) {
-		// return false;
-		// }
+		try {
+			InetAddress addr = InetAddress.getByName("www.google.cn");
+			appHost = addr.getHostAddress();
+			
+			if (appHost.length() > 8) {
+				String[] ips = appHost.split("\\.");
+				if (ips.length == 4)
+					appHost = ips[0] + "." + ips[1] + ".0.0";
+				Log.d(TAG, appHost);
+			}
+			
+		} catch (Exception ignore) {
+			return false;
+		}
 
 		/*
 		 * try { URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
@@ -639,6 +648,7 @@ public class GAEProxyService extends Service {
 		proxy = bundle.getString("proxy");
 		proxyType = bundle.getString("proxyType");
 		port = bundle.getInt("port");
+		sitekey = bundle.getString("sitekey");
 		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
 
 		Log.e(TAG, "GAE Proxy: " + proxy);

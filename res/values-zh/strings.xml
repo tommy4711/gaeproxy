@@ -15,6 +15,7 @@
 	<string name="ok_iknow">我知道了</string>
 	<string name="proxy">代理地址</string>
 	<string name="port">本地端口</string>
+	<string name="sitekey">密钥</string>
 	<string name="auto_connect">启动时连接</string>
 	<string name="auto_reconnect">自动恢复连接</string>
 	<string name="auto_set_proxy">全局代理</string>
@@ -28,6 +29,7 @@
 	<string name="service_summary">开启 / 关闭后台服务</string>
 	<string name="proxy_summary">GAE代理服务地址</string>
 	<string name="port_summary">本地代理服务器监听端口，任意大于1024的数字</string>
+	<string name="sitekey_summary">WallProxy 加密密钥 (只支持 XOR--0 加密方式)</string>
 	<string name="port_alert">端口必需是大于1024的数字</string>
 	<string name="auto_connect_summary">启动时自动打开代理服务</string>
 	<string name="auto_set_proxy_summary">配置全局代理，需要 ROOT 权限以及 IPTABLES 的支持</string>

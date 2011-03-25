@@ -564,7 +564,12 @@ public class GAEProxy extends PreferenceActivity implements
 			proxyedApps.setEnabled(false);
 		else
 			proxyedApps.setEnabled(true);
-
+		
+		if (proxyTypeList.getValue().equals("WallProxy"))
+			sitekeyText.setEnabled(true);
+		else 
+			sitekeyText.setEnabled(false);
+		
 		Editor edit = settings.edit();
 
 		if (this.isWorked(SERVICE_NAME)) {

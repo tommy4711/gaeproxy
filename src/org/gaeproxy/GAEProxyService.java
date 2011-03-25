@@ -393,7 +393,7 @@ public class GAEProxyService extends Service {
 					appMask);
 
 			runRootCommand(iptables_rules);
-			runRootCommand(cmd.toString());
+//			runRootCommand(cmd.toString());
 
 		} catch (Exception e) {
 			Log.e(TAG, "Error setting up port forward during connect", e);

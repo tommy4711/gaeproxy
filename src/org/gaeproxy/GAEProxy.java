@@ -416,7 +416,7 @@ public class GAEProxy extends PreferenceActivity implements
 		layout.addView(adView);
 		// Initiate a generic request to load it with an ad
 		AdRequest aq = new AdRequest();
-		aq.setTesting(true);
+//		aq.setTesting(true);
 		adView.loadAd(aq);
 
 		proxyText = (EditTextPreference) findPreference("proxy");

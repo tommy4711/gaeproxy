@@ -24,7 +24,7 @@ server['log_file'] = None
 
 gaeproxy = [{
     'url': '$2',
-    'key': '$3',
+    'key': '$4',
     'crypto':'XOR--0'
 }]
 plugins['plugins.gaeproxy'] = 'gaeproxy'

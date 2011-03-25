@@ -101,7 +101,7 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "";
+	private String appHost = "203.208.37.104";
 	private int port;
 	private String sitekey;
 	private String proxyType = "GAppProxy";
@@ -388,10 +388,11 @@ public class GAEProxyService extends Service {
 				}
 			}
 
-			String iptables_rules = cmd.toString().replace("203.208.0.0",
-					appHost);
+//			String iptables_rules = cmd.toString().replace("203.208.0.0",
+//					appHost);
 
-			runRootCommand(iptables_rules);
+//			runRootCommand(iptables_rules);
+			runRootCommand(cmd.toString());
 
 		} catch (Exception e) {
 			Log.e(TAG, "Error setting up port forward during connect", e);
@@ -402,20 +403,20 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleCommand() {
 
-		try {
-			InetAddress addr = InetAddress.getByName("www.google.co.jp");
-			appHost = addr.getHostAddress();
-			
-			if (appHost.length() > 8) {
-				String[] ips = appHost.split("\\.");
-				if (ips.length == 4)
-					appHost = ips[0] + "." + ips[1] + ".0.0";
-				Log.d(TAG, appHost);
-			}
-			
-		} catch (Exception ignore) {
-			return false;
-		}
+//		try {
+//			InetAddress addr = InetAddress.getByName("www.google.co.jp");
+//			appHost = addr.getHostAddress();
+//			
+//			if (appHost.length() > 8) {
+//				String[] ips = appHost.split("\\.");
+//				if (ips.length == 4)
+//					appHost = ips[0] + "." + ips[1] + ".0.0";
+//				Log.d(TAG, appHost);
+//			}
+//			
+//		} catch (Exception ignore) {
+//			return false;
+//		}
 
 		/*
 		 * try { URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");

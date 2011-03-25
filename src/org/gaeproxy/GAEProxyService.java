@@ -102,6 +102,7 @@ public class GAEProxyService extends Service {
 
 	private String proxy;
 	private String appHost = "203.208.37.104";
+	private String appMask = "203.208.0.0";
 	private int port;
 	private String sitekey;
 	private String proxyType = "GAppProxy";
@@ -388,10 +389,10 @@ public class GAEProxyService extends Service {
 				}
 			}
 
-//			String iptables_rules = cmd.toString().replace("203.208.0.0",
-//					appHost);
+			String iptables_rules = cmd.toString().replace("203.208.0.0",
+					appMask);
 
-//			runRootCommand(iptables_rules);
+			runRootCommand(iptables_rules);
 			runRootCommand(cmd.toString());
 
 		} catch (Exception e) {
@@ -403,34 +404,71 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleCommand() {
 
-//		try {
-//			InetAddress addr = InetAddress.getByName("www.google.co.jp");
-//			appHost = addr.getHostAddress();
-//			
-//			if (appHost.length() > 8) {
-//				String[] ips = appHost.split("\\.");
-//				if (ips.length == 4)
-//					appHost = ips[0] + "." + ips[1] + ".0.0";
-//				Log.d(TAG, appHost);
-//			}
-//			
-//		} catch (Exception ignore) {
-//			return false;
-//		}
+		// try {
+		// InetAddress addr = InetAddress.getByName("www.google.co.jp");
+		// appHost = addr.getHostAddress();
+		//
+		// if (appHost.length() > 8) {
+		// String[] ips = appHost.split("\\.");
+		// if (ips.length == 4)
+		// appHost = ips[0] + "." + ips[1] + ".0.0";
+		// Log.d(TAG, appHost);
+		// }
+		//
+		// } catch (Exception ignore) {
+		// return false;
+		// }
 
-		/*
-		 * try { URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
-		 * HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-		 * conn.setReadTimeout(10 * 1000); conn.connect(); InputStream is =
-		 * conn.getInputStream(); BufferedReader reader = new BufferedReader(
-		 * new InputStreamReader(is)); String line = reader.readLine(); if (line
-		 * == null) return false; if (!line.startsWith("#GAEPROXY")) return
-		 * false; while (true) { line = reader.readLine(); if (line == null)
-		 * break; if (line.startsWith("#")) continue; line =
-		 * line.trim().toLowerCase(); if (line.equals("")) continue; appHost =
-		 * line; } } catch (Exception e) { Log.e(TAG,
-		 * "cannot get remote host files", e); return false; }
-		 */
+		appHost = settings.getString("appHost", "203.208.37.104");
+
+		try {
+			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
+			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setReadTimeout(10 * 1000);
+			conn.connect();
+			InputStream is = conn.getInputStream();
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(is));
+			String line = reader.readLine();
+			if (line == null)
+				return false;
+			if (!line.startsWith("#GAEPROXY"))
+				return false;
+			while (true) {
+				line = reader.readLine();
+				if (line == null)
+					break;
+				if (line.startsWith("#"))
+					continue;
+				line = line.trim().toLowerCase();
+				if (line.equals(""))
+					continue;
+				if (!line.equals(appHost)) {
+					File cache = new File(GAEProxyService.BASE
+							+ "cache/dnscache");
+					if (cache.exists())
+						cache.delete();
+				}
+				appHost = line;
+				break;
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "cannot get remote host files", e);
+			return false;
+		}
+
+		try {
+
+			if (appHost.length() > 8) {
+				String[] ips = appHost.split("\\.");
+				if (ips.length == 4)
+					appMask = ips[0] + "." + ips[1] + ".0.0";
+				Log.d(TAG, appMask);
+			}
+
+		} catch (Exception ignore) {
+			return false;
+		}
 
 		// String host = proxy.trim().toLowerCase().split("/")[2];
 		// if (host == null || host.equals(""))

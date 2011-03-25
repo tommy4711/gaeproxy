@@ -30,7 +30,7 @@ gaeproxy = [{
 plugins['plugins.gaeproxy'] = 'gaeproxy'
 
 hosts = '''
-203.208.37.104  .appspot.com
+apphost  .appspot.com
 '''
 plugins['plugins.hosts'] = 'hosts'
 

@@ -46,7 +46,7 @@ dir = module_path()
 VERSION = "2.0.0"
 
 LOAD_BALANCE = 'http://gappproxy-center.appspot.com/available_fetchserver.py'
-GOOGLE_PROXY = 'www.google.cn:80'
+GOOGLE_PROXY = 'www.google.co.jp:80'
 
 DEF_LISTEN_PORT = 8000
 DEF_LOCAL_PROXY = ''

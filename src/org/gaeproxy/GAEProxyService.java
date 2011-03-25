@@ -403,7 +403,7 @@ public class GAEProxyService extends Service {
 	public boolean handleCommand() {
 
 		try {
-			InetAddress addr = InetAddress.getByName("www.google.cn");
+			InetAddress addr = InetAddress.getByName("www.google.co.jp");
 			appHost = addr.getHostAddress();
 			
 			if (appHost.length() > 8) {

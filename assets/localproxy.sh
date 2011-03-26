@@ -26,12 +26,10 @@ gaeproxy = [{
     'url': '$2',
     'key': '$4',
     'crypto':'XOR--0'
+	'proxy':'http://www.google.cn:80'
 }]
 plugins['plugins.gaeproxy'] = 'gaeproxy'
 
-hosts = '''
-www.google.cn  .appspot.com
-'''
 plugins['plugins.hosts'] = 'hosts'
 
 def find_http_handler(method, url, headers):

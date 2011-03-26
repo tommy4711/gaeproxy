@@ -67,7 +67,8 @@
 		<item>WallProxy</item>
 	</array>
 
-	<string name="connecting">Connecting</string>
+	<string name="connecting">Connecting...</string>
+	<string name="https_alert">Please modify your proxy host to start with "https://"</string>
 
 	<!-- settings notification category -->
 	<string name="notif_cat">Notification settings</string>

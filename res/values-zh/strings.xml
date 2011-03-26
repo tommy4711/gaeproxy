@@ -59,7 +59,9 @@
 		<item>WallProxy</item>
 	</array>
 
-	<string name="connecting">正在连接</string>
+	<string name="connecting">正在连接...</string>
+	<string name="https_alert">请修改你的代理地址，以 "https://" 开头</string>
+	
 
 	<!-- settings notification category -->
 	<string name="notif_cat">通知设置</string>

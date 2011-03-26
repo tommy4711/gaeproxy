@@ -416,7 +416,7 @@ public class GAEProxy extends PreferenceActivity implements
 		layout.addView(adView);
 		// Initiate a generic request to load it with an ad
 		AdRequest aq = new AdRequest();
-//		aq.setTesting(true);
+		// aq.setTesting(true);
 		adView.loadAd(aq);
 
 		proxyText = (EditTextPreference) findPreference("proxy");
@@ -564,12 +564,12 @@ public class GAEProxy extends PreferenceActivity implements
 			proxyedApps.setEnabled(false);
 		else
 			proxyedApps.setEnabled(true);
-		
+
 		if (proxyTypeList.getValue().equals("WallProxy"))
 			sitekeyText.setEnabled(true);
-		else 
+		else
 			sitekeyText.setEnabled(false);
-		
+
 		Editor edit = settings.edit();
 
 		if (this.isWorked(SERVICE_NAME)) {
@@ -593,7 +593,7 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 
 		// Setup the initial values
-		
+
 		if (!settings.getString("sitekey", "").equals(""))
 			sitekeyText.setSummary(settings.getString("sitekey", ""));
 
@@ -657,8 +657,7 @@ public class GAEProxy extends PreferenceActivity implements
 				sitekeyText.setEnabled(true);
 			else
 				sitekeyText.setEnabled(false);
-		}
-		else if (key.equals("port"))
+		} else if (key.equals("port"))
 			if (settings.getString("port", "").equals(""))
 				portText.setSummary(getString(R.string.port_summary));
 			else
@@ -672,13 +671,14 @@ public class GAEProxy extends PreferenceActivity implements
 			if (settings.getString("proxy", "").equals("")) {
 				proxyText.setSummary(getString(R.string.proxy_summary));
 			} else {
-				if (!settings.getString("proxy", "").startsWith(
-								"https://")) {
-					String host = settings.getString("proxy", "");
-					Editor ed = settings.edit();
+				String host = settings.getString("proxy", "");
+				Editor ed = settings.edit();
+				if (host.startsWith("http://")) {
+					ed.putString("proxy", host.replace("http://", "https://"));
+				} else if (!host.startsWith("https://")) {
 					ed.putString("proxy", "https://" + host);
-					ed.commit();
 				}
+				ed.commit();
 				proxyText.setSummary(settings.getString("proxy", ""));
 			}
 	}
@@ -709,6 +709,11 @@ public class GAEProxy extends PreferenceActivity implements
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
+		
+		if (!proxy.startsWith("https://")) {
+			showAToast(getString(R.string.https_alert));
+			return false;
+		}
 
 		String portText = settings.getString("port", "");
 		if (isTextEmpty(portText, getString(R.string.port_empty)))
@@ -723,7 +728,7 @@ public class GAEProxy extends PreferenceActivity implements
 			this.showAToast(getString(R.string.port_alert));
 			return false;
 		}
-		
+
 		sitekey = settings.getString("sitekey", "");
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);

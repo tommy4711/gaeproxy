@@ -25,8 +25,8 @@ server['log_file'] = None
 gaeproxy = [{
     'url': '$2',
     'key': '$4',
-    'crypto':'XOR--0'
-    'proxy':'http://www.google.cn:80'
+    'crypto':'XOR--0',
+    'proxy':'http://www.google.cn:80',
     'max_threads':5
 }]
 plugins['plugins.gaeproxy'] = 'gaeproxy'

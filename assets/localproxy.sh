@@ -29,9 +29,8 @@ gaeproxy = [{
     'proxy':'http://www.google.cn:80',
     'max_threads':5
 }]
-plugins['plugins.gaeproxy'] = 'gaeproxy'
 
-plugins['plugins.hosts'] = 'hosts'
+plugins['plugins.gaeproxy'] = 'gaeproxy'
 
 def find_http_handler(method, url, headers):
     if method not in ('GET', 'HEAD', 'PUT', 'POST', 'DELETE'):

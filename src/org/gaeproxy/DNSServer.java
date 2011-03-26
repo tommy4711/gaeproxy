@@ -173,7 +173,6 @@ public class DNSServer implements WrapServer {
 			srvSocket = new DatagramSocket(srvPort,
 					InetAddress.getByName("127.0.0.1"));
 			Log.e(TAG, this.name + "启动于端口： " + port);
-			inService = true;
 		} catch (SocketException e) {
 			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
 		} catch (UnknownHostException e) {
@@ -491,6 +490,8 @@ public class DNSServer implements WrapServer {
 		byte[] qbuffer = new byte[576];
 		long starTime = System.currentTimeMillis();
 
+		inService = true;
+		
 		while (true) {
 			try {
 				DatagramPacket dnsq = new DatagramPacket(qbuffer,

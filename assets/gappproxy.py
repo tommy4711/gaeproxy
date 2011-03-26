@@ -413,7 +413,7 @@ def shallWeNeedGoogleProxy():
     #        resp = urllib2.urlopen(request)
     #    resp.read()
     #except:
-    google_proxy = {"http": common.GOOGLE_PROXY}
+    #google_proxy = {"http": common.GOOGLE_PROXY}
 
 def getAvailableFetchServer():
     request = urllib2.Request(common.LOAD_BALANCE)

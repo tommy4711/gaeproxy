@@ -43,7 +43,8 @@
 	<string name="download">Downloading, Patient Please...</string>
 	<string name="isInstalled_summary">Install / Uninstall extra packages (need SD CARD)
 	</string>
-	<string name="install_alert">Please install dependent module first!</string>
+	<string name="install_alert">Please install dependent module first! (Scroll to
+		the bottom, and select to install)</string>
 	<string name="sdcard_alert">Please make sure you have a SD CARD!</string>
 	<string name="recovery">Recover the status</string>
 	<string name="unzip">Unzipping...</string>
@@ -68,7 +69,8 @@
 	</array>
 
 	<string name="connecting">Connecting...</string>
-	<string name="https_alert">Please modify your proxy host to start with "https://"</string>
+	<string name="https_alert">Please modify your proxy host to start with
+		"https://"</string>
 
 	<!-- settings notification category -->
 	<string name="notif_cat">Notification settings</string>

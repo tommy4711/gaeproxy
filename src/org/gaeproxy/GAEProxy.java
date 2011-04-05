@@ -8,6 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -64,10 +66,14 @@ public class GAEProxy extends PreferenceActivity implements
 
 			mWakeLock.acquire();
 
+			Proxy proxy = new Proxy(Proxy.Type.HTTP,
+					new InetSocketAddress("www.google.com.hk" , 80));
+			
 			try {
+				
 				File zip = new File(path[1]);
 				URL url = new URL(path[0]);
-				URLConnection conexion = url.openConnection();
+				URLConnection conexion = url.openConnection(proxy);
 				conexion.connect();
 				int lenghtOfFile = conexion.getContentLength();
 
@@ -104,7 +110,7 @@ public class GAEProxy extends PreferenceActivity implements
 				zip = new File(path[4]);
 
 				url = new URL(path[3]);
-				conexion = url.openConnection();
+				conexion = url.openConnection(proxy);
 				conexion.connect();
 
 				lenghtOfFile = conexion.getContentLength();

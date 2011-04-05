@@ -27,6 +27,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	private int port;
 	private String sitekey;
 	private boolean isGlobalProxy;
+	private boolean isHTTPSProxy;
 
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
 			int[] appWidgetIds) {
@@ -126,6 +127,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					}
 					sitekey = settings.getString("sitekey", "");
 					isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
+					isHTTPSProxy = settings.getBoolean("isHTTPSProxy", isHTTPSProxy);
 
 					Intent it = new Intent(context, GAEProxyService.class);
 					Bundle bundle = new Bundle();
@@ -134,6 +136,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					bundle.putString("proxyType", proxyType);
 					bundle.putString("sitekey", sitekey);
 					bundle.putBoolean("isGlobalProxy", isGlobalProxy);
+					bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
 
 					it.putExtras(bundle);
 					context.startService(it);

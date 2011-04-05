@@ -222,6 +222,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxyType = "GAppProxy";
 	public static boolean isAutoStart = false;
 	public static boolean isGlobalProxy = false;
+	public static boolean isHTTPSProxy = false;
 
 	private ProgressDialog pd = null;
 
@@ -279,6 +280,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private EditTextPreference portText;
 	private EditTextPreference sitekeyText;
 	private ListPreference proxyTypeList;
+	private CheckBoxPreference isHTTPSProxyCheck;
 
 	private CheckBoxPreference isRunningCheck;
 
@@ -331,6 +333,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		isAutoConnectCheck.setEnabled(false);
 		isGlobalProxyCheck.setEnabled(false);
+		isHTTPSProxyCheck.setEnabled(false);
 		isInstalledCheck.setEnabled(false);
 		proxyTypeList.setEnabled(false);
 	}
@@ -345,6 +348,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		isAutoConnectCheck.setEnabled(true);
 		isGlobalProxyCheck.setEnabled(true);
+		isHTTPSProxyCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 		proxyTypeList.setEnabled(true);
 	}
@@ -432,6 +436,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
+		isHTTPSProxyCheck = (CheckBoxPreference) findPreference("isHTTPSProxy");
 		isGlobalProxyCheck = (CheckBoxPreference) findPreference("isGlobalProxy");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 		proxyTypeList = (ListPreference) findPreference("proxyType");
@@ -739,6 +744,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		isAutoStart = settings.getBoolean("isAutoStart", false);
 		isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
+		isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
 
 		try {
 
@@ -748,6 +754,7 @@ public class GAEProxy extends PreferenceActivity implements
 			bundle.putInt("port", port);
 			bundle.putString("sitekey", sitekey);
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
+			bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
 			bundle.putString("proxyType", proxyType);
 
 			it.putExtras(bundle);

@@ -48,51 +48,59 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_FAIL = 3;
 	private static final int MSG_HOST_CHANGE = 4;
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_G1 = BASE
+	final static String CMD_IPTABLES_REDIRECT_DEL_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+	final static String CMD_IPTABLES_REDIRECT_DEL_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_G1 = BASE
+	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_DEL_N1 = BASE
+	final static String CMD_IPTABLES_REDIRECT_DEL_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+	final static String CMD_IPTABLES_REDIRECT_DEL_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_N1 = BASE
+	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n" + BASE
+			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_G1 = BASE
+	final static String CMD_IPTABLES_DNAT_DEL_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
+	final static String CMD_IPTABLES_DNAT_DEL_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_G1 = BASE
+	final static String CMD_IPTABLES_DNAT_ADD_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
+	final static String CMD_IPTABLES_DNAT_ADD_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_DEL_N1 = BASE
+	final static String CMD_IPTABLES_DNAT_DEL_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
+	final static String CMD_IPTABLES_DNAT_DEL_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_N1 = BASE
+	final static String CMD_IPTABLES_DNAT_ADD_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n" + BASE
+			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
+	final static String CMD_IPTABLES_DNAT_ADD_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
@@ -115,6 +123,7 @@ public class GAEProxyService extends Service {
 	private static int isARMv6 = -1;
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
+	private boolean isHTTPSProxy = false;
 
 	private ProxyedApp apps[];
 
@@ -362,11 +371,20 @@ public class GAEProxyService extends Service {
 
 			if (isGlobalProxy) {
 				if (isARMv6()) {
-					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1
-							: CMD_IPTABLES_DNAT_ADD_G1);
+					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTP
+							: CMD_IPTABLES_DNAT_ADD_G1_HTTP);
 				} else {
-					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1
-							: CMD_IPTABLES_DNAT_ADD_N1);
+					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTP
+							: CMD_IPTABLES_DNAT_ADD_N1_HTTP);
+				}
+				if (isHTTPSProxy) {
+					if (isARMv6()) {
+						cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS
+								: CMD_IPTABLES_DNAT_ADD_G1_HTTPS);
+					} else {
+						cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS
+								: CMD_IPTABLES_DNAT_ADD_N1_HTTPS);
+					}
 				}
 			} else {
 				// for proxy specified apps
@@ -376,15 +394,30 @@ public class GAEProxyService extends Service {
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {
 						if (isARMv6()) {
-							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1
-									: CMD_IPTABLES_DNAT_DEL_G1).replace(
+							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTP
+									: CMD_IPTABLES_DNAT_DEL_G1_HTTP).replace(
 									"-t nat", "-t nat -m owner --uid-owner "
 											+ apps[i].getUid()));
 						} else {
-							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1
-									: CMD_IPTABLES_DNAT_DEL_N1).replace(
+							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTP
+									: CMD_IPTABLES_DNAT_DEL_N1_HTTP).replace(
 									"-t nat", "-t nat -m owner --uid-owner "
 											+ apps[i].getUid()));
+						}
+						if (isHTTPSProxy) {
+							if (isARMv6()) {
+								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS
+										: CMD_IPTABLES_DNAT_DEL_G1_HTTPS)
+										.replace("-t nat",
+												"-t nat -m owner --uid-owner "
+														+ apps[i].getUid()));
+							} else {
+								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS
+										: CMD_IPTABLES_DNAT_DEL_N1_HTTPS)
+										.replace("-t nat",
+												"-t nat -m owner --uid-owner "
+														+ apps[i].getUid()));
+							}
 						}
 					}
 				}
@@ -453,7 +486,7 @@ public class GAEProxyService extends Service {
 				appHost = line;
 				break;
 			}
-			
+
 			handler.sendEmptyMessage(MSG_HOST_CHANGE);
 
 		} catch (Exception e) {
@@ -696,6 +729,7 @@ public class GAEProxyService extends Service {
 		port = bundle.getInt("port");
 		sitekey = bundle.getString("sitekey");
 		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
+		isHTTPSProxy = bundle.getBoolean("isHTTPSProxy");
 
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);

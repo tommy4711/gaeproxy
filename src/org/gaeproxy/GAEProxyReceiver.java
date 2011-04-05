@@ -16,6 +16,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 	private boolean isInstalled = false;
 	private String sitekey;
 	private boolean isGlobalProxy;
+	private boolean isHTTPSProxy;
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -39,6 +40,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			}
 			sitekey = settings.getString("sitekey", "");
 			isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
+			isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
 			
 			Intent it = new Intent(context, GAEProxyService.class);
 			Bundle bundle = new Bundle();
@@ -47,6 +49,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			bundle.putInt("port", port);
 			bundle.putString("sitekey", sitekey);
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
+			bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
 
 			it.putExtras(bundle);
 			context.startService(it);

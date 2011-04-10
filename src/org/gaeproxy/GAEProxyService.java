@@ -50,31 +50,31 @@ public class GAEProxyService extends Service {
 
 	final static String CMD_IPTABLES_REDIRECT_DEL_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_DEL_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
+			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS = BASE
 			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
+			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_REDIRECT_DEL_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_DEL_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
+			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTP = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to-ports 8123\n";
+			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS = BASE
 			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to-ports 8124\n";
+			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_DNAT_DEL_G1_HTTP = BASE
 			+ "iptables_g1 -t nat -D OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
@@ -158,9 +158,9 @@ public class GAEProxyService extends Service {
 		String line = null;
 
 		if (isARMv6()) {
-			command = "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153";
+			command = "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
 		} else
-			command = "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153";
+			command = "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
 
 		try {
 			process = Runtime.getRuntime().exec("su");
@@ -354,10 +354,10 @@ public class GAEProxyService extends Service {
 			if (hasRedirectSupport) {
 				if (isARMv6()) {
 					cmd.append(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 				} else {
 					cmd.append(BASE
-							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 8153\n");
+							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 				}
 			} else {
 				if (isARMv6()) {

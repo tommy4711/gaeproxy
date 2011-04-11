@@ -455,6 +455,13 @@ public class GAEProxyService extends Service {
 
 		appHost = settings.getString("appHost", "203.208.39.104");
 
+		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
+			int n = (int) (Math.random() * 10);
+			if (n > 0)
+				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
+			Log.d(TAG, "Balance Proxy: " + proxy);
+		}
+
 		try {
 			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();

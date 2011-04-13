@@ -220,7 +220,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private int port;
 	private String sitekey = "";
 	private String proxyType = "GAppProxy";
-	public static boolean isAutoStart = false;
+	public static boolean isAutoConnect = false;
 	public static boolean isGlobalProxy = false;
 	public static boolean isHTTPSProxy = false;
 
@@ -742,7 +742,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		sitekey = settings.getString("sitekey", "");
 
-		isAutoStart = settings.getBoolean("isAutoStart", false);
+		isAutoConnect = settings.getBoolean("isAutoConnect", false);
 		isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
 		isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
 

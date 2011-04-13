@@ -12,7 +12,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 	private String proxy;
 	private String proxyType;
 	private int port;
-	private boolean isAutoStart = false;
+	private boolean isAutoConnect = false;
 	private boolean isInstalled = false;
 	private String sitekey;
 	private boolean isGlobalProxy;
@@ -24,10 +24,10 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(context);
 
-		isAutoStart = settings.getBoolean("isAutoStart", false);
+		isAutoConnect = settings.getBoolean("isAutoConnect", false);
 		isInstalled = settings.getBoolean("isInstalled", false);
 
-		if (isAutoStart && isInstalled) {
+		if (isAutoConnect && isInstalled) {
 			proxy = settings.getString("proxy", "");
 			proxyType = settings.getString("proxyType", "GAppProxy");
 			String portText = settings.getString("port", "");

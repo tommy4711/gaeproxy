@@ -454,7 +454,7 @@ public class GAEProxy extends PreferenceActivity implements
 			isRunningCheck.setChecked(false);
 		}
 
-		if (!runRootCommand("ls")) {
+		if (!runRootCommand("")) {
 			isRoot = false;
 		} else {
 			isRoot = true;

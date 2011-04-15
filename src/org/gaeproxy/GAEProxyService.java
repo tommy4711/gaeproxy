@@ -453,7 +453,7 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		appHost = settings.getString("appHost", "203.208.39.104");
+		appHost = settings.getString("appHost", "74.125.71.18");
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			int n = (int) (Math.random() * 10);
@@ -498,7 +498,6 @@ public class GAEProxyService extends Service {
 
 		} catch (Exception e) {
 			Log.e(TAG, "cannot get remote host files", e);
-			return false;
 		}
 
 		try {

@@ -165,6 +165,8 @@ public class DNSServer implements WrapServer {
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.appHost = appHost;
+		
+		initOrgCache();
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -172,7 +174,11 @@ public class DNSServer implements WrapServer {
 		try {
 			srvSocket = new DatagramSocket(srvPort,
 					InetAddress.getByName("127.0.0.1"));
-			Log.e(TAG, this.name + "启动于端口： " + port);
+			
+			Log.d(TAG, this.name + "启动于端口： " + port);
+
+			inService = true;
+			
 		} catch (SocketException e) {
 			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
 		} catch (UnknownHostException e) {
@@ -385,7 +391,7 @@ public class DNSServer implements WrapServer {
 					.clone();
 			for (DnsResponse resp : dnsCache.values()) {
 				// 检查缓存时效(十天)
-				if ((System.currentTimeMillis() - resp.getTimestamp()) > 86400000L) {
+				if ((System.currentTimeMillis() - resp.getTimestamp()) > 864000000L) {
 					Log.d(TAG, "删除" + resp.getRequest() + "记录");
 					tmpCache.remove(resp.getRequest());
 				}
@@ -483,14 +489,11 @@ public class DNSServer implements WrapServer {
 
 	@Override
 	public void run() {
-
-		initOrgCache();
+		
 		loadCache();
 
 		byte[] qbuffer = new byte[576];
 		long starTime = System.currentTimeMillis();
-
-		inService = true;
 		
 		while (true) {
 			try {

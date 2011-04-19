@@ -522,23 +522,11 @@ public class GAEProxyService extends Service {
 
 		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
 		dnsServer.setBasePath(BASE);
-		new Thread(dnsServer).start();
-
-		int i = 0;
-		while (!dnsServer.isInService() && i < 3) {
-			try {
-				Thread.sleep(3 * 1000);
-			} catch (InterruptedException e) {
-				// Nothing
-			}
-			i++;
-		}
-
-		if (i >= 3)
-			return false;
 
 		preConnection();
 
+		new Thread(dnsServer).start();
+		
 		try {
 			Thread.sleep(1 * 1000);
 		} catch (InterruptedException e) {

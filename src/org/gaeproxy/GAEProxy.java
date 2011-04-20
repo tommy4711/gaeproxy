@@ -39,6 +39,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -64,6 +65,7 @@ public class GAEProxy extends PreferenceActivity implements
 		protected String doInBackground(String... path) {
 			int count;
 
+			handler.sendEmptyMessage(MSG_INSTALL_START);
 			PowerManager.WakeLock mWakeLock;
 			PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 			mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
@@ -148,9 +150,10 @@ public class GAEProxy extends PreferenceActivity implements
 
 				// Unzip File
 				unzip(path[4], path[5]);
+				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 
 			} catch (Exception e) {
-
+				handler.sendEmptyMessage(MSG_INSTALL_FAIL);
 				Log.e("error", e.getMessage().toString());
 				System.out.println(e.getMessage().toString());
 			}
@@ -161,16 +164,25 @@ public class GAEProxy extends PreferenceActivity implements
 
 		}
 
-		private String progress_count = "";
+		private int progress_count = 0;
+		
+        @Override
+        protected void onPreExecute() {
+                super.onPreExecute();
+				notification.contentView.setProgressBar(R.id.pb, 100,
+						0, false);
+				nm.notify(notification_id, notification);
+        }
 
 		@Override
 		protected void onProgressUpdate(String... progress) {
 			Log.d("ANDRO_ASYNC", progress[0]);
-			if (!progress_count.equals(progress[0])) {
+			int now = Integer.parseInt(progress[0]);
+			if (now - progress_count > 5) {
 				notification.contentView.setProgressBar(R.id.pb, 100,
 						Integer.parseInt(progress[0]), false);
 				nm.notify(notification_id, notification);
-				progress_count = progress[0];
+				progress_count = now;
 			}
 		}
 
@@ -228,8 +240,35 @@ public class GAEProxy extends PreferenceActivity implements
 	// Notification Progress Bar
 	int notification_id = 19172439;
 	NotificationManager nm;
-	Handler handler = new Handler();
 	Notification notification;
+
+	private static final int MSG_INSTALL_START = 0;
+	private static final int MSG_INSTALL_SUCCESS = 1;
+	private static final int MSG_INSTALL_FAIL = 2;
+
+	final Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			SharedPreferences settings = PreferenceManager
+					.getDefaultSharedPreferences(GAEProxy.this);
+			Editor ed = settings.edit();
+			switch (msg.what) {
+			case MSG_INSTALL_START:
+				ed.putBoolean("isInstalled", false);
+				break;
+			case MSG_INSTALL_SUCCESS:
+				ed.putBoolean("isInstalling", false);
+				ed.putBoolean("isInstalled", true);
+				break;
+			case MSG_INSTALL_FAIL:
+				ed.putBoolean("isInstalling", false);
+				ed.putBoolean("isInstalled", false);
+				break;
+			}
+			ed.commit();
+			super.handleMessage(msg);
+		}
+	};
 
 	private ProgressDialog pd = null;
 
@@ -385,12 +424,22 @@ public class GAEProxy extends PreferenceActivity implements
 				.getExternalStorageState()))
 			return false;
 
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(this);
+		if (settings.getBoolean("isInstalling", false))
+			return false;
+
+		Editor ed = settings.edit();
+		ed.putBoolean("isInstalling", true);
+		ed.commit();
+
 		DownloadFileAsync progress = new DownloadFileAsync();
 		progress.execute("http://gaeproxy.googlecode.com/files/python_r2.zip",
 				"/sdcard/python.zip", "/data/data/org.gaeproxy/",
 				"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",
 				"/sdcard/python-extras.zip", "/sdcard/");
 
+		showAToast(getString(R.string.downloading));
 		return true;
 	}
 
@@ -539,29 +588,17 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isRunning")) {
-			if (!isInstalledCheck.isChecked()) {
+			if (!settings.getBoolean("isInstalled", false)) {
 				showAToast(getString(R.string.install_alert));
-
 				Editor edit = settings.edit();
-
 				edit.putBoolean("isRunning", false);
-
 				edit.commit();
-
-				isRunningCheck.setChecked(false);
-				enableAll();
 				return false;
 			}
 			if (!serviceStart()) {
-
 				Editor edit = settings.edit();
-
 				edit.putBoolean("isRunning", false);
-
 				edit.commit();
-
-				isRunningCheck.setChecked(false);
-				enableAll();
 			}
 		}
 		return super.onPreferenceTreeClick(preferenceScreen, preference);
@@ -601,8 +638,14 @@ public class GAEProxy extends PreferenceActivity implements
 			isRunningCheck.setChecked(true);
 			disableAll();
 		} else {
+			if (settings.getBoolean("isInstalling", false)) {
+				disableAll();
+				isInstalledCheck.setChecked(false);
+			} else {
+				enableAll();
+				isInstalledCheck.setChecked(true);
+			}
 			isRunningCheck.setChecked(false);
-			enableAll();
 		}
 
 		// Setup the initial values
@@ -659,8 +702,24 @@ public class GAEProxy extends PreferenceActivity implements
 				disableAll();
 				isRunningCheck.setChecked(true);
 			} else {
-				enableAll();
+				if (settings.getBoolean("isInstalling", false)) {
+					disableAll();
+					isInstalledCheck.setChecked(false);
+				} else {
+					enableAll();
+					isInstalledCheck.setChecked(true);
+				}
 				isRunningCheck.setChecked(false);
+			}
+		}
+
+		if (key.equals("isInstalling")) {
+			if (settings.getBoolean("isInstalling", false)) {
+				disableAll();
+				isInstalledCheck.setChecked(false);
+			} else {
+				enableAll();
+				isInstalledCheck.setChecked(true);
 			}
 		}
 
@@ -845,6 +904,14 @@ public class GAEProxy extends PreferenceActivity implements
 		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
 			cache.delete();
+
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(this);
+
+		Editor ed = settings.edit();
+		ed.putBoolean("isInstalling", false);
+		ed.putBoolean("isRunning", false);
+		ed.commit();
 	}
 
 }

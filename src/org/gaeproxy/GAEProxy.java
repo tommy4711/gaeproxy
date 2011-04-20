@@ -24,6 +24,9 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -35,6 +38,7 @@ import android.content.res.AssetManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.PowerManager;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
@@ -49,6 +53,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
+import android.widget.RemoteViews;
 
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -66,11 +71,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 			mWakeLock.acquire();
 
-			Proxy proxy = new Proxy(Proxy.Type.HTTP,
-					new InetSocketAddress("www.google.com.hk" , 80));
-			
+			Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
+					"www.google.com.hk", 80));
+
 			try {
-				
+
 				File zip = new File(path[1]);
 				URL url = new URL(path[0]);
 				URLConnection conexion = url.openConnection(proxy);
@@ -156,25 +161,22 @@ public class GAEProxy extends PreferenceActivity implements
 
 		}
 
-		@Override
-		protected void onPostExecute(String unused) {
-			try {
-				dismissDialog(DIALOG_DOWNLOAD_PROGRESS);
-			} catch (Exception ignore) {
-				// Nothing
-			}
-		}
-
-		@Override
-		protected void onPreExecute() {
-			super.onPreExecute();
-			showDialog(DIALOG_DOWNLOAD_PROGRESS);
-		}
+		private String progress_count = "";
 
 		@Override
 		protected void onProgressUpdate(String... progress) {
 			Log.d("ANDRO_ASYNC", progress[0]);
-			mProgressDialog.setProgress(Integer.parseInt(progress[0]));
+			if (!progress_count.equals(progress[0])) {
+				notification.contentView.setProgressBar(R.id.pb, 100,
+						Integer.parseInt(progress[0]), false);
+				nm.notify(notification_id, notification);
+				progress_count = progress[0];
+			}
+		}
+
+		@Override
+		protected void onPostExecute(String unused) {
+			nm.cancel(notification_id);
 		}
 
 		public void unzip(String file, String path) {
@@ -215,7 +217,6 @@ public class GAEProxy extends PreferenceActivity implements
 	public static final String PREFS_NAME = "GAEProxy";
 	private static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
 
-	public static final int DIALOG_DOWNLOAD_PROGRESS = 0;
 	private String proxy;
 	private int port;
 	private String sitekey = "";
@@ -223,6 +224,12 @@ public class GAEProxy extends PreferenceActivity implements
 	public static boolean isAutoConnect = false;
 	public static boolean isGlobalProxy = false;
 	public static boolean isHTTPSProxy = false;
+
+	// Notification Progress Bar
+	int notification_id = 19172439;
+	NotificationManager nm;
+	Handler handler = new Handler();
+	Notification notification;
 
 	private ProgressDialog pd = null;
 
@@ -283,8 +290,6 @@ public class GAEProxy extends PreferenceActivity implements
 	private CheckBoxPreference isHTTPSProxyCheck;
 
 	private CheckBoxPreference isRunningCheck;
-
-	private ProgressDialog mProgressDialog;
 
 	private void CopyAssets(String path) {
 
@@ -429,6 +434,20 @@ public class GAEProxy extends PreferenceActivity implements
 		// aq.setTesting(true);
 		adView.loadAd(aq);
 
+		nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+		notification = new Notification(R.drawable.icon,
+				getString(R.string.download), System.currentTimeMillis());
+		notification.contentView = new RemoteViews(getPackageName(),
+				R.layout.layout_progress_bar);
+		// 使用notification.xml文件作VIEW
+		notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
+		// 设置进度条，最大值 为100,当前值为0，最后一个参数为true时显示条纹
+		// （就是在Android Market下载软件，点击下载但还没获取到目标大小时的状态）
+		Intent notificationIntent = new Intent(this, GAEProxy.class);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				notificationIntent, 0);
+		notification.contentIntent = contentIntent;
+
 		proxyText = (EditTextPreference) findPreference("proxy");
 		portText = (EditTextPreference) findPreference("port");
 		sitekeyText = (EditTextPreference) findPreference("sitekey");
@@ -468,23 +487,6 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-		}
-	}
-
-	@Override
-	protected Dialog onCreateDialog(int id) {
-		switch (id) {
-		case DIALOG_DOWNLOAD_PROGRESS:
-			mProgressDialog = new ProgressDialog(this);
-			mProgressDialog.setMessage(getString(R.string.download));
-			mProgressDialog.setProgressStyle
-
-			(ProgressDialog.STYLE_HORIZONTAL);
-			mProgressDialog.setCancelable(false);
-			mProgressDialog.show();
-			return mProgressDialog;
-		default:
-			return null;
 		}
 	}
 
@@ -720,7 +722,7 @@ public class GAEProxy extends PreferenceActivity implements
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
-		
+
 		if (!proxy.startsWith("https://")) {
 			showAToast(getString(R.string.https_alert));
 			return false;

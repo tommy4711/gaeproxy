@@ -574,17 +574,14 @@ public class GAEProxy extends PreferenceActivity implements
 				&& preference.getKey().equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
 				if (install()) {
-					isInstalledCheck.setChecked(true);
 				} else {
 					showAToast(getString(R.string.sdcard_alert));
 					Editor ed = settings.edit();
 					ed.putBoolean("isInstalled", false);
 					ed.commit();
-					isInstalledCheck.setChecked(false);
 				}
 			} else {
 				uninstall();
-				isInstalledCheck.setChecked(false);
 			}
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isRunning")) {
@@ -640,10 +637,8 @@ public class GAEProxy extends PreferenceActivity implements
 		} else {
 			if (settings.getBoolean("isInstalling", false)) {
 				disableAll();
-				isInstalledCheck.setChecked(false);
 			} else {
 				enableAll();
-				isInstalledCheck.setChecked(true);
 			}
 			isRunningCheck.setChecked(false);
 		}
@@ -689,6 +684,13 @@ public class GAEProxy extends PreferenceActivity implements
 				}
 			}
 		}
+		
+		if (key.equals("isInstalled")) {
+			if (settings.getBoolean("isInstalled", false))
+				isInstalledCheck.setChecked(true);
+			else
+				isInstalledCheck.setChecked(false);
+		}
 
 		if (key.equals("isGlobalProxy")) {
 			if (settings.getBoolean("isGlobalProxy", false))
@@ -704,10 +706,8 @@ public class GAEProxy extends PreferenceActivity implements
 			} else {
 				if (settings.getBoolean("isInstalling", false)) {
 					disableAll();
-					isInstalledCheck.setChecked(false);
 				} else {
 					enableAll();
-					isInstalledCheck.setChecked(true);
 				}
 				isRunningCheck.setChecked(false);
 			}
@@ -716,10 +716,8 @@ public class GAEProxy extends PreferenceActivity implements
 		if (key.equals("isInstalling")) {
 			if (settings.getBoolean("isInstalling", false)) {
 				disableAll();
-				isInstalledCheck.setChecked(false);
 			} else {
 				enableAll();
-				isInstalledCheck.setChecked(true);
 			}
 		}
 

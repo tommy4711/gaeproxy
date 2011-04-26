@@ -112,8 +112,8 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "203.208.39.104";
-	private String appMask = "203.208.0.0";
+	private String appHost = "72.14.203.50";
+	private String appMask = "72.14.0.0";
 	private int port;
 	private String sitekey;
 	private String proxyType = "GAppProxy";
@@ -455,7 +455,7 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		appHost = settings.getString("appHost", "74.125.71.18");
+		appHost = settings.getString("appHost", "72.14.203.50");
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			int n = (int) (Math.random() * 10);

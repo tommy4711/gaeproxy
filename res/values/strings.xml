@@ -83,5 +83,6 @@
 	<string name="notif_vibrate_title">Vibrate</string>
 	<string name="notif_vibrate_summary">Also vibrate when connection status changes
 	</string>
-
+	
+	<string name="loading">Loading app list...</string>
 </resources>

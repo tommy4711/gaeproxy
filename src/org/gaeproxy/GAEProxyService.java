@@ -30,6 +30,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -40,6 +41,7 @@ public class GAEProxyService extends Service {
 	private NotificationManager notificationManager;
 	private Intent intent;
 	private PendingIntent pendIntent;
+	private PowerManager.WakeLock mWakeLock;
 
 	public static final String BASE = "/data/data/org.gaeproxy/";
 	private static final int MSG_CONNECT_START = 0;
@@ -686,9 +688,20 @@ public class GAEProxyService extends Service {
 			switch (msg.what) {
 			case MSG_CONNECT_START:
 				ed.putBoolean("isConnecting", true);
+				
+				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
+						| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
+
+				mWakeLock.acquire();
+				
 				break;
 			case MSG_CONNECT_FINISH:
 				ed.putBoolean("isConnecting", false);
+				
+				if (mWakeLock != null && mWakeLock.isHeld())
+					mWakeLock.release();
+				
 				break;
 			case MSG_CONNECT_SUCCESS:
 				ed.putBoolean("isRunning", true);

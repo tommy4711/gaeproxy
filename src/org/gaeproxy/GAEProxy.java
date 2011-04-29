@@ -205,7 +205,6 @@ public class GAEProxy extends PreferenceActivity implements
 			} catch (Exception e) {
 				handler.sendEmptyMessage(MSG_INSTALL_FAIL);
 				Log.e("error", e.getMessage().toString());
-				System.out.println(e.getMessage().toString());
 			}
 
 			if (mWakeLock.isHeld())

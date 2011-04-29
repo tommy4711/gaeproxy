@@ -23,7 +23,6 @@ import com.google.ads.AdView;
 import android.app.ActivityManager;
 import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -35,7 +34,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.AssetManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -48,7 +46,6 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
-import android.provider.Contacts.Settings;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -59,10 +56,63 @@ import android.widget.RemoteViews;
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
 
-	class DownloadFileAsync extends AsyncTask<String, String, String> {
+	class DownloadFileRunnable implements Runnable {
+
+		private String[] path;
+
+		public DownloadFileRunnable(String... path) {
+			this.path = path;
+			notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
+			nm.notify(notification_id, notification);
+		}
+
+		private int progress_count = 0;
+
+		protected void publishProgress(String progress) {
+			Log.d("ANDRO_ASYNC", progress);
+			int now = Integer.parseInt(progress);
+			if (now - progress_count > 5) {
+				notification.contentView.setProgressBar(R.id.pb, 100,
+						Integer.parseInt(progress), false);
+				nm.notify(notification_id, notification);
+				progress_count = now;
+			}
+		}
+
+		public void unzip(String file, String path) {
+			dirChecker(path);
+			try {
+				FileInputStream fin = new FileInputStream(file);
+				ZipInputStream zin = new ZipInputStream(fin);
+				ZipEntry ze = null;
+				while ((ze = zin.getNextEntry()) != null) {
+					if (ze.getName().contains("__MACOSX"))
+						continue;
+					Log.v("Decompress", "Unzipping " + ze.getName());
+					if (ze.isDirectory()) {
+						dirChecker(path + ze.getName());
+					} else {
+						FileOutputStream fout = new FileOutputStream(path
+								+ ze.getName());
+						byte data[] = new byte[2048];
+						int count;
+						while ((count = zin.read(data)) != -1) {
+							fout.write(data, 0, count);
+						}
+						zin.closeEntry();
+						fout.close();
+					}
+
+				}
+				zin.close();
+			} catch (Exception e) {
+				Log.e("Decompress", "unzip", e);
+			}
+
+		}
 
 		@Override
-		protected String doInBackground(String... path) {
+		public void run() {
 			int count;
 
 			handler.sendEmptyMessage(MSG_INSTALL_START);
@@ -160,67 +210,8 @@ public class GAEProxy extends PreferenceActivity implements
 
 			if (mWakeLock.isHeld())
 				mWakeLock.release();
-			return null;
 
-		}
-
-		private int progress_count = 0;
-		
-        @Override
-        protected void onPreExecute() {
-                super.onPreExecute();
-				notification.contentView.setProgressBar(R.id.pb, 100,
-						0, false);
-				nm.notify(notification_id, notification);
-        }
-
-		@Override
-		protected void onProgressUpdate(String... progress) {
-			Log.d("ANDRO_ASYNC", progress[0]);
-			int now = Integer.parseInt(progress[0]);
-			if (now - progress_count > 5) {
-				notification.contentView.setProgressBar(R.id.pb, 100,
-						Integer.parseInt(progress[0]), false);
-				nm.notify(notification_id, notification);
-				progress_count = now;
-			}
-		}
-
-		@Override
-		protected void onPostExecute(String unused) {
 			nm.cancel(notification_id);
-		}
-
-		public void unzip(String file, String path) {
-			dirChecker(path);
-			try {
-				FileInputStream fin = new FileInputStream(file);
-				ZipInputStream zin = new ZipInputStream(fin);
-				ZipEntry ze = null;
-				while ((ze = zin.getNextEntry()) != null) {
-					if (ze.getName().contains("__MACOSX"))
-						continue;
-					Log.v("Decompress", "Unzipping " + ze.getName());
-					if (ze.isDirectory()) {
-						dirChecker(path + ze.getName());
-					} else {
-						FileOutputStream fout = new FileOutputStream(path
-								+ ze.getName());
-						byte data[] = new byte[2048];
-						int count;
-						while ((count = zin.read(data)) != -1) {
-							fout.write(data, 0, count);
-						}
-						zin.closeEntry();
-						fout.close();
-					}
-
-				}
-				zin.close();
-			} catch (Exception e) {
-				Log.e("Decompress", "unzip", e);
-			}
-
 		}
 
 	}
@@ -433,12 +424,12 @@ public class GAEProxy extends PreferenceActivity implements
 		ed.putBoolean("isInstalling", true);
 		ed.commit();
 
-		DownloadFileAsync progress = new DownloadFileAsync();
-		progress.execute("http://gaeproxy.googlecode.com/files/python_r2.zip",
+		DownloadFileRunnable progress = new DownloadFileRunnable(
+				"http://gaeproxy.googlecode.com/files/python_r2.zip",
 				"/sdcard/python.zip", "/data/data/org.gaeproxy/",
 				"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",
 				"/sdcard/python-extras.zip", "/sdcard/");
-
+		new Thread(progress).start();
 		showAToast(getString(R.string.downloading));
 		return true;
 	}
@@ -684,7 +675,7 @@ public class GAEProxy extends PreferenceActivity implements
 				}
 			}
 		}
-		
+
 		if (key.equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false))
 				isInstalledCheck.setChecked(true);

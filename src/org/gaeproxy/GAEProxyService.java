@@ -527,7 +527,9 @@ public class GAEProxyService extends Service {
 		
 		preConnection();
 
-		new Thread(dnsServer).start();
+		Thread dnsThread = new Thread(dnsServer);
+		dnsThread.setDaemon(true);
+		dnsThread.start();
 		
 		try {
 			Thread.sleep(1 * 1000);

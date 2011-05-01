@@ -329,10 +329,10 @@ public class GAEProxyService extends Service {
 			}
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec("su");
-			httpOS = new DataOutputStream(httpProcess.getOutputStream());
-			httpOS.writeBytes(cmd + "\n");
-			httpOS.flush();
+			httpProcess = Runtime.getRuntime().exec(cmd);
+//			httpOS = new DataOutputStream(httpProcess.getOutputStream());
+//			httpOS.writeBytes(cmd + "\n");
+//			httpOS.flush();
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
@@ -522,10 +522,10 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
+		preConnection();
+		
 		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
 		dnsServer.setBasePath(BASE);
-
-		preConnection();
 
 		new Thread(dnsServer).start();
 		
@@ -665,7 +665,9 @@ public class GAEProxyService extends Service {
 		} catch (Exception ignore) {
 			// Nothing
 		}
-
+		
+//		APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
+		
 		super.onDestroy();
 	}
 
@@ -738,6 +740,8 @@ public class GAEProxyService extends Service {
 
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
+		
+//		APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
 
 		new Thread(new Runnable() {
 			public void run() {

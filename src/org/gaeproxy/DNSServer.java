@@ -166,7 +166,7 @@ public class DNSServer implements WrapServer {
 		this.dnsPort = dnsPort;
 		this.appHost = appHost;
 
-//		initOrgCache();
+		initOrgCache();
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;

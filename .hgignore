@@ -1,0 +1,7 @@
+
+syntax: regexp
+.git bin
+syntax: regexp
+.git
+syntax: regexp
+bin

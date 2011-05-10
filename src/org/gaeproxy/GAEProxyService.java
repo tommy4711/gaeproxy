@@ -397,25 +397,25 @@ public class GAEProxyService extends Service {
 					if (apps[i].isProxyed()) {
 						if (isARMv6()) {
 							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTP
-									: CMD_IPTABLES_DNAT_DEL_G1_HTTP).replace(
+									: CMD_IPTABLES_DNAT_ADD_G1_HTTP).replace(
 									"-t nat", "-t nat -m owner --uid-owner "
 											+ apps[i].getUid()));
 						} else {
 							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTP
-									: CMD_IPTABLES_DNAT_DEL_N1_HTTP).replace(
+									: CMD_IPTABLES_DNAT_ADD_N1_HTTP).replace(
 									"-t nat", "-t nat -m owner --uid-owner "
 											+ apps[i].getUid()));
 						}
 						if (isHTTPSProxy) {
 							if (isARMv6()) {
 								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS
-										: CMD_IPTABLES_DNAT_DEL_G1_HTTPS)
+										: CMD_IPTABLES_DNAT_ADD_G1_HTTPS)
 										.replace("-t nat",
 												"-t nat -m owner --uid-owner "
 														+ apps[i].getUid()));
 							} else {
 								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS
-										: CMD_IPTABLES_DNAT_DEL_N1_HTTPS)
+										: CMD_IPTABLES_DNAT_ADD_N1_HTTPS)
 										.replace("-t nat",
 												"-t nat -m owner --uid-owner "
 														+ apps[i].getUid()));

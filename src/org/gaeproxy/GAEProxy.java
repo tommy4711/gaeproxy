@@ -559,8 +559,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (!isWorked(SERVICE_NAME)) {
 			CopyAssets("");
 
-			runCommand("chmod 777 /data/data/org.gaeproxy/iptables_g1");
-			runCommand("chmod 777 /data/data/org.gaeproxy/iptables_n1");
+			runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
@@ -917,13 +916,8 @@ public class GAEProxy extends PreferenceActivity implements
 			// Nothing
 		}
 
-		if (GAEProxyService.isARMv6()) {
 			runRootCommand(GAEProxyService.BASE
-					+ "iptables_g1 -t nat -F OUTPUT");
-		} else {
-			runRootCommand(GAEProxyService.BASE
-					+ "iptables_n1 -t nat -F OUTPUT");
-		}
+					+ "iptables -t nat -F OUTPUT");
 
 		runRootCommand(GAEProxyService.BASE + "proxy.sh stop");
 

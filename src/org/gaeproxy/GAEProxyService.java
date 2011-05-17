@@ -88,34 +88,18 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_FAIL = 3;
 	private static final int MSG_HOST_CHANGE = 4;
 
-
-	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTP = BASE
-			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = BASE
+			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to 8123\n";
-	final static String CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS = BASE
-			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = BASE
+			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to 8124\n";
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTP = BASE
-			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to 8123\n";
-	final static String CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS = BASE
-			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to 8124\n";
-
-
-	final static String CMD_IPTABLES_DNAT_ADD_G1_HTTP = BASE
-			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_HTTP = BASE
+			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
-	final static String CMD_IPTABLES_DNAT_ADD_G1_HTTPS = BASE
-			+ "iptables_g1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
-
-	final static String CMD_IPTABLES_DNAT_ADD_N1_HTTP = BASE
-			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
-			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
-	final static String CMD_IPTABLES_DNAT_ADD_N1_HTTPS = BASE
-			+ "iptables_n1 -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = BASE
+			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
@@ -171,10 +155,7 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		if (isARMv6()) {
-			command = "/data/data/org.gaeproxy/iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
-		} else
-			command = "/data/data/org.gaeproxy/iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
+		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
 
 		try {
 			process = Runtime.getRuntime().exec("su");
@@ -255,42 +236,6 @@ public class GAEProxyService extends Service {
 		setForeground(false);
 	}
 
-	/**
-	 * Check if this is an ARMv6 device
-	 * 
-	 * @return true if this is ARMv6
-	 */
-	public static boolean isARMv6() {
-		if (isARMv6 == -1) {
-			BufferedReader r = null;
-			try {
-				isARMv6 = 0;
-				r = new BufferedReader(new FileReader("/proc/cpuinfo"));
-				for (String line = r.readLine(); line != null; line = r
-						.readLine()) {
-					if (line.startsWith("Processor") && line.contains("ARMv6")) {
-						isARMv6 = 1;
-						break;
-					} else if (line.startsWith("CPU architecture")
-							&& (line.contains("6TE") || line.contains("5TE"))) {
-						isARMv6 = 1;
-						break;
-					}
-				}
-			} catch (Exception ex) {
-			} finally {
-				if (r != null)
-					try {
-						r.close();
-					} catch (Exception ex) {
-						// Nothing
-					}
-			}
-		}
-		Log.d(TAG, "isARMv6: " + isARMv6);
-		return (isARMv6 == 1);
-	}
-
 	public static boolean runRootCommand(String command) {
 		Process process = null;
 		DataOutputStream os = null;
@@ -342,9 +287,9 @@ public class GAEProxyService extends Service {
 			Log.e(TAG, cmd);
 
 			httpProcess = Runtime.getRuntime().exec(cmd);
-//			httpOS = new DataOutputStream(httpProcess.getOutputStream());
-//			httpOS.writeBytes(cmd + "\n");
-//			httpOS.flush();
+			// httpOS = new DataOutputStream(httpProcess.getOutputStream());
+			// httpOS.writeBytes(cmd + "\n");
+			// httpOS.flush();
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
@@ -366,39 +311,19 @@ public class GAEProxyService extends Service {
 			StringBuffer cmd = new StringBuffer();
 
 			if (hasRedirectSupport) {
-				if (isARMv6()) {
-					cmd.append(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-				} else {
-					cmd.append(BASE
-							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-				}
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 			} else {
-				if (isARMv6()) {
-					cmd.append(BASE
-							+ "iptables_g1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-				} else {
-					cmd.append(BASE
-							+ "iptables_n1 -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-				}
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 			}
 
 			if (isGlobalProxy) {
-				if (isARMv6()) {
-					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTP
-							: CMD_IPTABLES_DNAT_ADD_G1_HTTP);
-				} else {
-					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTP
-							: CMD_IPTABLES_DNAT_ADD_N1_HTTP);
-				}
+				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+						: CMD_IPTABLES_DNAT_ADD_HTTP);
 				if (isHTTPSProxy) {
-					if (isARMv6()) {
-						cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS
-								: CMD_IPTABLES_DNAT_ADD_G1_HTTPS);
-					} else {
-						cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS
-								: CMD_IPTABLES_DNAT_ADD_N1_HTTPS);
-					}
+					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+							: CMD_IPTABLES_DNAT_ADD_HTTPS);
 				}
 			} else {
 				// for proxy specified apps
@@ -407,31 +332,16 @@ public class GAEProxyService extends Service {
 
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {
-						if (isARMv6()) {
-							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTP
-									: CMD_IPTABLES_DNAT_ADD_G1_HTTP).replace(
-									"-t nat", "-t nat -m owner --uid-owner "
-											+ apps[i].getUid()));
-						} else {
-							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTP
-									: CMD_IPTABLES_DNAT_ADD_N1_HTTP).replace(
-									"-t nat", "-t nat -m owner --uid-owner "
-											+ apps[i].getUid()));
-						}
+						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+								: CMD_IPTABLES_DNAT_ADD_HTTP).replace(
+								"-t nat",
+								"-t nat -m owner --uid-owner "
+										+ apps[i].getUid()));
 						if (isHTTPSProxy) {
-							if (isARMv6()) {
-								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_G1_HTTPS
-										: CMD_IPTABLES_DNAT_ADD_G1_HTTPS)
-										.replace("-t nat",
-												"-t nat -m owner --uid-owner "
-														+ apps[i].getUid()));
-							} else {
-								cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_N1_HTTPS
-										: CMD_IPTABLES_DNAT_ADD_N1_HTTPS)
-										.replace("-t nat",
-												"-t nat -m owner --uid-owner "
-														+ apps[i].getUid()));
-							}
+							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+									: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
+									"-t nat", "-t nat -m owner --uid-owner "
+											+ apps[i].getUid()));
 						}
 					}
 				}
@@ -533,16 +443,16 @@ public class GAEProxyService extends Service {
 
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
-		
+
 		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
 		dnsServer.setBasePath(BASE);
-		
+
 		preConnection();
 
 		Thread dnsThread = new Thread(dnsServer);
 		dnsThread.setDaemon(true);
 		dnsThread.start();
-		
+
 		try {
 			Thread.sleep(1 * 1000);
 		} catch (InterruptedException e) {
@@ -679,19 +589,15 @@ public class GAEProxyService extends Service {
 		} catch (Exception ignore) {
 			// Nothing
 		}
-		
-//		APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
-		
+
+		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
+
 		super.onDestroy();
 	}
 
 	private void onDisconnect() {
 
-		if (isARMv6()) {
-			runRootCommand(BASE + "iptables_g1 -t nat -F OUTPUT");
-		} else {
-			runRootCommand(BASE + "iptables_n1 -t nat -F OUTPUT");
-		}
+		runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
 		runRootCommand(BASE + "proxy.sh stop");
 
@@ -704,20 +610,20 @@ public class GAEProxyService extends Service {
 			switch (msg.what) {
 			case MSG_CONNECT_START:
 				ed.putBoolean("isConnecting", true);
-				
+
 				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
 						| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
 
 				mWakeLock.acquire();
-				
+
 				break;
 			case MSG_CONNECT_FINISH:
 				ed.putBoolean("isConnecting", false);
-				
+
 				if (mWakeLock != null && mWakeLock.isHeld())
 					mWakeLock.release();
-				
+
 				break;
 			case MSG_CONNECT_SUCCESS:
 				ed.putBoolean("isRunning", true);
@@ -754,14 +660,14 @@ public class GAEProxyService extends Service {
 
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);
-		
-//		APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
+
+		// APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
 
 		new Thread(new Runnable() {
 			public void run() {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
-				
+
 				// Test for Redirect Support
 				initHasRedirectSupported();
 

@@ -377,7 +377,7 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		appHost = settings.getString("appHost", "72.14.203.50");
+		appHost = settings.getString("appHost", "203.208.46.178");
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			int n = (int) (Math.random() * 10);
@@ -387,7 +387,7 @@ public class GAEProxyService extends Service {
 		}
 
 		try {
-			URL aURL = new URL("http://myhosts.sinaapp.com/apphosts");
+			URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
 			conn.setReadTimeout(10 * 1000);
 			conn.connect();

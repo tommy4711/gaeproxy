@@ -744,10 +744,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 		if (key.equals("proxyType")) {
 			proxyTypeList.setSummary(settings.getString("proxyType", ""));
-			if (settings.getString("proxyType", "").equals("WallProxy"))
-				sitekeyText.setEnabled(true);
-			else
-				sitekeyText.setEnabled(false);
 		} else if (key.equals("port"))
 			if (settings.getString("port", "").equals(""))
 				portText.setSummary(getString(R.string.port_summary));

@@ -13,7 +13,8 @@ case $1 in
  goagent)
  
  echo "
- [listen]
+
+[listen]
 ip = 127.0.0.1
 port = $3
 visible = 1
@@ -33,7 +34,7 @@ https = $5
  " > /data/data/org.gaeproxy/proxy.ini
  
  
-/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/gappproxy.py
+/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/goagent.py
 
 ;;
 
@@ -69,6 +70,7 @@ def find_sock_handler(reqtype, ip, port, cmd):
 def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf
+ 
  /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/wallproxy.py
  
  ;;

@@ -1,4 +1,4 @@
-/* gaeproxy - GAppProxy / WallProxy client App for Android
+/* gaeproxy - GoAgent / WallProxy client App for Android
  * Copyright (C) 2011 <max.c.lv@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -108,17 +108,16 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "72.14.203.50";
+	private String appHost = "72.14.203.51";
 	private String appMask = "72.14.0.0";
 	private int port;
 	private String sitekey;
-	private String proxyType = "GAppProxy";
+	private String proxyType = "GoAgent";
 	private DNSServer dnsServer = null;
 
 	private SharedPreferences settings = null;
 
 	// Flag indicating if this is an ARMv6 device (-1: unknown, 0: no, 1: yes)
-	private static int isARMv6 = -1;
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
@@ -278,11 +277,13 @@ public class GAEProxyService extends Service {
 			is.close();
 
 			String cmd = BASE;
-			if (proxyType.equals("GAppProxy")) {
-				cmd += "localproxy.sh gappproxy";
+			if (proxyType.equals("GoAgent")) {
+				cmd += "localproxy.sh goagent "
+						+ proxy.replace("https://", "").replace("http://", "")
+						+ " " + port + " \"" + sitekey + "\" " + appHost;
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += "localproxy.sh wallproxy " + proxy + " " + port + " "
-						+ sitekey;
+				cmd += "localproxy.sh wallproxy " + proxy + " " + port + " \""
+						+ sitekey + "\"";
 			}
 			Log.e(TAG, cmd);
 

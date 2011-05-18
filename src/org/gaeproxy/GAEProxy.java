@@ -1,4 +1,4 @@
-/* gaeproxy - GAppProxy / WallProxy client App for Android
+/* gaeproxy - GoAgent / WallProxy client App for Android
  * Copyright (C) 2011 <max.c.lv@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -260,7 +260,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	private String sitekey = "";
-	private String proxyType = "GAppProxy";
+	private String proxyType = "GoAgent";
 	public static boolean isAutoConnect = false;
 	public static boolean isGlobalProxy = false;
 	public static boolean isHTTPSProxy = false;
@@ -413,8 +413,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private void enableAll() {
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
-		if (proxyTypeList.getValue().equals("WallProxy"))
-			sitekeyText.setEnabled(true);
+		sitekeyText.setEnabled(true);
 		if (!isGlobalProxyCheck.isChecked())
 			proxyedApps.setEnabled(true);
 
@@ -639,11 +638,6 @@ public class GAEProxy extends PreferenceActivity implements
 		else
 			proxyedApps.setEnabled(true);
 
-		if (proxyTypeList.getValue().equals("WallProxy"))
-			sitekeyText.setEnabled(true);
-		else
-			sitekeyText.setEnabled(false);
-
 		Editor edit = settings.edit();
 
 		if (this.isWorked(SERVICE_NAME)) {
@@ -799,7 +793,7 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		proxyType = settings.getString("proxyType", "GAppProxy");
+		proxyType = settings.getString("proxyType", "GoAgent");
 
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
@@ -914,8 +908,7 @@ public class GAEProxy extends PreferenceActivity implements
 			// Nothing
 		}
 
-			runRootCommand(GAEProxyService.BASE
-					+ "iptables -t nat -F OUTPUT");
+		runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
 
 		runRootCommand(GAEProxyService.BASE + "proxy.sh stop");
 

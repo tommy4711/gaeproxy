@@ -65,7 +65,7 @@
 
 	<string name="proxy_type">Choose your proxy type</string>
 	<array name="proxy_type_entry">
-		<item>GAppProxy</item>
+		<item>GoAgent</item>
 		<item>WallProxy</item>
 	</array>
 

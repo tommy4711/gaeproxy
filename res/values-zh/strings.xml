@@ -56,7 +56,7 @@
 
 	<string name="proxy_type">代理类型选择</string>
 	<array name="proxy_type_entry">
-		<item>GAppProxy</item>
+		<item>GoAgent</item>
 		<item>WallProxy</item>
 	</array>
 

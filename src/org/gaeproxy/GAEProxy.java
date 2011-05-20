@@ -46,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -565,6 +566,32 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		}
+
+		new Thread() {
+			public void run() {
+				try {
+					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+					InputStream input = new BufferedInputStream(
+							aURL.openStream());
+					OutputStream output = new FileOutputStream(
+							"/data/data/org.gaeproxy/hosts");
+
+					byte data[] = new byte[1024];
+
+					int count = 0;
+
+					while ((count = input.read(data)) != -1) {
+						output.write(data, 0, count);
+					}
+
+					output.flush();
+					output.close();
+					input.close();
+				} catch (Exception e) {
+					// Nothing
+				}
+			}
+		}.start();
 	}
 
 	/** Called when the activity is closed. */

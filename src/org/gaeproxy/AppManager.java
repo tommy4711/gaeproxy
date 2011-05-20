@@ -264,6 +264,8 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 			apps[appIdx] = new ProxyedApp();
 
 			apps[appIdx].setUid(aInfo.uid);
+			
+			apps[appIdx].setUsername(pMgr.getNameForUid(apps[appIdx].getUid()));
 
 			// check if this application is allowed
 			if (Arrays.binarySearch(tordApps, apps[appIdx].getUsername()) >= 0) {

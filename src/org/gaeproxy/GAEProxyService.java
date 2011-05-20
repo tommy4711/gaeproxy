@@ -332,7 +332,7 @@ public class GAEProxyService extends Service {
 			} else {
 				// for proxy specified apps
 				if (apps == null || apps.length <= 0)
-					apps = AppManager.getApps(this);
+					apps = AppManager.getProxyedApps(this);
 
 				for (int i = 0; i < apps.length; i++) {
 					if (apps[i].isProxyed()) {

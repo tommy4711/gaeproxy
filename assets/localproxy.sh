@@ -10,6 +10,34 @@ chmod 777 /data/data/org.gaeproxy/python.pid
 
 case $1 in
 
+ goagent)
+ 
+ echo "
+
+[listen]
+ip = 127.0.0.1
+port = $3
+visible = 1
+
+[hosts]
+# NOTE: Only effect on https
+
+[gae]
+host = $2
+password = $4
+path = /fetch.py
+prefer = https
+verify = 1
+http = $5
+https = $5
+
+ " > /data/data/org.gaeproxy/proxy.ini
+ 
+ 
+/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/goagent.py
+
+;;
+
  gappproxy)
  
 /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/gappproxy.py

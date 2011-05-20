@@ -67,6 +67,7 @@
 	<array name="proxy_type_entry">
 		<item>GAppProxy</item>
 		<item>WallProxy</item>
+		<item>GoAgent</item>
 	</array>
 
 	<string name="connecting">Connecting...</string>

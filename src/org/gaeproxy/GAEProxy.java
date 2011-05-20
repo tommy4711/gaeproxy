@@ -413,7 +413,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private void enableAll() {
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
-		if (proxyTypeList.getValue().equals("WallProxy"))
+		if (proxyTypeList.getValue().equals("WallProxy")
+				|| proxyTypeList.getValue().equals("GoAgent"))
 			sitekeyText.setEnabled(true);
 		if (!isGlobalProxyCheck.isChecked())
 			proxyedApps.setEnabled(true);
@@ -639,7 +640,8 @@ public class GAEProxy extends PreferenceActivity implements
 		else
 			proxyedApps.setEnabled(true);
 
-		if (proxyTypeList.getValue().equals("WallProxy"))
+		if (proxyTypeList.getValue().equals("WallProxy")
+				|| proxyTypeList.getValue().equals("GoAgent"))
 			sitekeyText.setEnabled(true);
 		else
 			sitekeyText.setEnabled(false);
@@ -750,7 +752,8 @@ public class GAEProxy extends PreferenceActivity implements
 
 		if (key.equals("proxyType")) {
 			proxyTypeList.setSummary(settings.getString("proxyType", ""));
-			if (settings.getString("proxyType", "").equals("WallProxy"))
+			if (settings.getString("proxyType", "").equals("WallProxy")
+					|| settings.getString("proxyType", "").equals("GoAgent"))
 				sitekeyText.setEnabled(true);
 			else
 				sitekeyText.setEnabled(false);
@@ -916,8 +919,7 @@ public class GAEProxy extends PreferenceActivity implements
 			// Nothing
 		}
 
-			runRootCommand(GAEProxyService.BASE
-					+ "iptables -t nat -F OUTPUT");
+		runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
 
 		runRootCommand(GAEProxyService.BASE + "proxy.sh stop");
 

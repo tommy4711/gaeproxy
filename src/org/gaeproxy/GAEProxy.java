@@ -1,4 +1,4 @@
-/* gaeproxy - GoAgent / WallProxy client App for Android
+/* gaeproxy - GAppProxy / WallProxy client App for Android
  * Copyright (C) 2011 <max.c.lv@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -46,6 +46,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
@@ -260,7 +261,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	private String sitekey = "";
-	private String proxyType = "GoAgent";
+	private String proxyType = "GAppProxy";
 	public static boolean isAutoConnect = false;
 	public static boolean isGlobalProxy = false;
 	public static boolean isHTTPSProxy = false;
@@ -413,7 +414,9 @@ public class GAEProxy extends PreferenceActivity implements
 	private void enableAll() {
 		proxyText.setEnabled(true);
 		portText.setEnabled(true);
-		sitekeyText.setEnabled(true);
+		if (proxyTypeList.getValue().equals("WallProxy")
+				|| proxyTypeList.getValue().equals("GoAgent"))
+			sitekeyText.setEnabled(true);
 		if (!isGlobalProxyCheck.isChecked())
 			proxyedApps.setEnabled(true);
 
@@ -563,6 +566,32 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		}
+
+		new Thread() {
+			public void run() {
+				try {
+					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+					InputStream input = new BufferedInputStream(
+							aURL.openStream());
+					OutputStream output = new FileOutputStream(
+							"/data/data/org.gaeproxy/hosts");
+
+					byte data[] = new byte[1024];
+
+					int count = 0;
+
+					while ((count = input.read(data)) != -1) {
+						output.write(data, 0, count);
+					}
+
+					output.flush();
+					output.close();
+					input.close();
+				} catch (Exception e) {
+					// Nothing
+				}
+			}
+		}.start();
 	}
 
 	/** Called when the activity is closed. */
@@ -637,6 +666,12 @@ public class GAEProxy extends PreferenceActivity implements
 			proxyedApps.setEnabled(false);
 		else
 			proxyedApps.setEnabled(true);
+
+		if (proxyTypeList.getValue().equals("WallProxy")
+				|| proxyTypeList.getValue().equals("GoAgent"))
+			sitekeyText.setEnabled(true);
+		else
+			sitekeyText.setEnabled(false);
 
 		Editor edit = settings.edit();
 
@@ -744,7 +779,8 @@ public class GAEProxy extends PreferenceActivity implements
 
 		if (key.equals("proxyType")) {
 			proxyTypeList.setSummary(settings.getString("proxyType", ""));
-			if (settings.getString("proxyType", "").equals("WallProxy"))
+			if (settings.getString("proxyType", "").equals("WallProxy")
+					|| settings.getString("proxyType", "").equals("GoAgent"))
 				sitekeyText.setEnabled(true);
 			else
 				sitekeyText.setEnabled(false);
@@ -793,7 +829,7 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		proxyType = settings.getString("proxyType", "GoAgent");
+		proxyType = settings.getString("proxyType", "GAppProxy");
 
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))

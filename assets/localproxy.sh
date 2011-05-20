@@ -13,7 +13,8 @@ case $1 in
  goagent)
  
  echo "
- [listen]
+
+[listen]
 ip = 127.0.0.1
 port = $3
 visible = 1
@@ -23,15 +24,21 @@ visible = 1
 
 [gae]
 host = $2
-password = $4
+password = $5
 path = /fetch.py
 prefer = https
 verify = 1
-http = $5
-https = $5
+http = $4
+https = $4
 
  " > /data/data/org.gaeproxy/proxy.ini
  
+ 
+/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/goagent.py
+
+;;
+
+ gappproxy)
  
 /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/gappproxy.py
 

@@ -58,6 +58,7 @@
 	<array name="proxy_type_entry">
 		<item>GoAgent</item>
 		<item>WallProxy</item>
+		<item>GoAgent</item>
 	</array>
 
 	<string name="connecting">正在连接...</string>

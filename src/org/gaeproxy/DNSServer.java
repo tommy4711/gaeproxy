@@ -275,15 +275,16 @@ public class DNSServer implements WrapServer {
 		try {
 			if (innerSocket != null && innerSocket.isConnected()) {
 				// 构造TCP DNS包
-				int dnsqLength = quest.length;
-				byte[] tcpdnsq = new byte[dnsqLength + 2];
-				System.arraycopy(int2byte(dnsqLength), 0, tcpdnsq, 1, 1);
-				System.arraycopy(quest, 0, tcpdnsq, 2, dnsqLength);
+//				int dnsqLength = quest.length;
+//				byte[] tcpdnsq = new byte[dnsqLength + 2];
+//				System.arraycopy(int2byte(dnsqLength), 0, tcpdnsq, 1, 1);
+//				System.arraycopy(quest, 0, tcpdnsq, 2, dnsqLength);
 
 				// 转发DNS
 				in = new DataInputStream(innerSocket.getInputStream());
 				out = new DataOutputStream(innerSocket.getOutputStream());
-				out.write(tcpdnsq);
+//				out.write(tcpdnsq);
+				out.write(quest);
 				out.flush();
 
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -292,11 +293,13 @@ public class DNSServer implements WrapServer {
 				while ((b = in.read()) != -1) {
 					bout.write(b);
 				}
-				byte[] tcpdnsr = bout.toByteArray();
-				if (tcpdnsr != null && tcpdnsr.length > 2) {
-					result = new byte[tcpdnsr.length - 2];
-					System.arraycopy(tcpdnsr, 2, result, 0, tcpdnsr.length - 2);
-				}
+				
+				result = bout.toByteArray();
+//				byte[] tcpdnsr = bout.toByteArray();
+//				if (tcpdnsr != null && tcpdnsr.length > 2) {
+//					result = new byte[tcpdnsr.length - 2];
+//					System.arraycopy(tcpdnsr, 2, result, 0, tcpdnsr.length - 2);
+//				}
 				innerSocket.close();
 			}
 		} catch (IOException e) {
@@ -330,34 +333,45 @@ public class DNSServer implements WrapServer {
 		return this.srvPort;
 	}
 
-	private void initOrgCache() {
-		try {
-			URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
-			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-			conn.connect();
-			InputStream is = conn.getInputStream();
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(is));
-			String line = reader.readLine();
+	private void loadOrgCache(InputStream is) throws IOException {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		String line = reader.readLine();
+		if (line == null)
+			return;
+		if (!line.startsWith("#SSHTunnel"))
+			return;
+		while (true) {
+			line = reader.readLine();
 			if (line == null)
-				return;
-			if (!line.startsWith("#SSHTunnel"))
-				return;
-			while (true) {
-				line = reader.readLine();
-				if (line == null)
-					break;
-				if (line.startsWith("#"))
-					continue;
-				line = line.trim().toLowerCase();
-				if (line.equals(""))
-					continue;
-				String[] hosts = line.split(" ");
-				if (hosts.length == 2) {
-					orgCache.put(hosts[1], hosts[0]);
-					Log.d(TAG, hosts[0] + " " + hosts[1]);
-				}
+				break;
+			if (line.startsWith("#"))
+				continue;
+			line = line.trim().toLowerCase();
+			if (line.equals(""))
+				continue;
+			String[] hosts = line.split(" ");
+			if (hosts.length == 2) {
+				orgCache.put(hosts[1], hosts[0]);
+				Log.d(TAG, hosts[0] + " " + hosts[1]);
 			}
+		}
+	}
+
+	private void initOrgCache() {
+		InputStream is = null;
+		try {
+			File f = new File("/data/data/org.gaeproxy/hosts");
+			if (!f.exists()) {
+				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+				HttpURLConnection conn = (HttpURLConnection) aURL
+						.openConnection();
+				conn.connect();
+				is = conn.getInputStream();
+			} else {
+				is = new FileInputStream(f);
+			}
+			loadOrgCache(is);
+			is.close();
 		} catch (Exception e) {
 			Log.e(TAG, "cannot get remote host files", e);
 		}

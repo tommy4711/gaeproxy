@@ -560,16 +560,24 @@ public class DNSServer implements WrapServer {
 					Log.d(TAG, "自定义解析" + orgCache);
 				} else {
 					starTime = System.currentTimeMillis();
-					byte[] answer = fetchAnswer(udpreq);
-					if (answer != null && answer.length != 0) {
-						addToCache(questDomain, answer);
-						sendDns(answer, dnsq, srvSocket);
-						Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
-								+ (System.currentTimeMillis() - starTime)
-								/ 1000 + "s");
-					} else {
-						Log.e(TAG, "返回DNS包长为0");
-					}
+					byte[] ips = parseIPString(InetAddress.getByName(questDomain).getHostAddress());
+					byte[] answer = createDNSResponse(udpreq, ips);
+					addToCache(questDomain, answer);
+					sendDns(answer, dnsq, srvSocket);
+					Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
+							+ (System.currentTimeMillis() - starTime)
+							/ 1000 + "s");
+					
+//					byte[] answer = fetchAnswer(udpreq);
+//					if (answer != null && answer.length != 0) {
+//						addToCache(questDomain, answer);
+//						sendDns(answer, dnsq, srvSocket);
+//						Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
+//								+ (System.currentTimeMillis() - starTime)
+//								/ 1000 + "s");
+//					} else {
+//						Log.e(TAG, "返回DNS包长为0");
+//					}
 
 				}
 

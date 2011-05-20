@@ -800,8 +800,8 @@ public class GAEProxy extends PreferenceActivity implements
 			} else {
 				String host = settings.getString("proxy", "");
 				Editor ed = settings.edit();
-				if (!host.startsWith("http://")) {
-					ed.putString("proxy", "http://" + host);
+				if (!host.startsWith("https://")) {
+					ed.putString("proxy", "https://" + host);
 				}
 				ed.commit();
 				proxyText.setSummary(settings.getString("proxy", ""));
@@ -835,7 +835,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
 
-		if (!proxy.startsWith("http://")) {
+		if (!proxy.startsWith("https://")) {
 			showAToast(getString(R.string.https_alert));
 			return false;
 		}

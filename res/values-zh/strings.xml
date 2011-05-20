@@ -62,7 +62,7 @@
 	</array>
 
 	<string name="connecting">正在连接...</string>
-	<string name="https_alert">请修改你的代理地址，以 "http://" 开头</string>
+	<string name="https_alert">请修改你的代理地址，以 "https://" 开头</string>
 
 	<string name="https_proxy">启用HTTPS代理</string>
 	<string name="https_proxy_summary">重定向HTTPS流量，与大部分应用不兼容</string>

@@ -275,16 +275,15 @@ public class DNSServer implements WrapServer {
 		try {
 			if (innerSocket != null && innerSocket.isConnected()) {
 				// 构造TCP DNS包
-//				int dnsqLength = quest.length;
-//				byte[] tcpdnsq = new byte[dnsqLength + 2];
-//				System.arraycopy(int2byte(dnsqLength), 0, tcpdnsq, 1, 1);
-//				System.arraycopy(quest, 0, tcpdnsq, 2, dnsqLength);
+				int dnsqLength = quest.length;
+				byte[] tcpdnsq = new byte[dnsqLength + 2];
+				System.arraycopy(int2byte(dnsqLength), 0, tcpdnsq, 1, 1);
+				System.arraycopy(quest, 0, tcpdnsq, 2, dnsqLength);
 
 				// 转发DNS
 				in = new DataInputStream(innerSocket.getInputStream());
 				out = new DataOutputStream(innerSocket.getOutputStream());
-//				out.write(tcpdnsq);
-				out.write(quest);
+				out.write(tcpdnsq);
 				out.flush();
 
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -560,24 +559,17 @@ public class DNSServer implements WrapServer {
 					Log.d(TAG, "自定义解析" + orgCache);
 				} else {
 					starTime = System.currentTimeMillis();
-					byte[] ips = parseIPString(InetAddress.getByName(questDomain).getHostAddress());
-					byte[] answer = createDNSResponse(udpreq, ips);
-					addToCache(questDomain, answer);
-					sendDns(answer, dnsq, srvSocket);
-					Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
-							+ (System.currentTimeMillis() - starTime)
-							/ 1000 + "s");
 					
-//					byte[] answer = fetchAnswer(udpreq);
-//					if (answer != null && answer.length != 0) {
-//						addToCache(questDomain, answer);
-//						sendDns(answer, dnsq, srvSocket);
-//						Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
-//								+ (System.currentTimeMillis() - starTime)
-//								/ 1000 + "s");
-//					} else {
-//						Log.e(TAG, "返回DNS包长为0");
-//					}
+					byte[] answer = fetchAnswer(udpreq);
+					if (answer != null && answer.length != 0) {
+						addToCache(questDomain, answer);
+						sendDns(answer, dnsq, srvSocket);
+						Log.d(TAG, "正确返回DNS解析，长度：" + answer.length + "  耗时："
+								+ (System.currentTimeMillis() - starTime)
+								/ 1000 + "s");
+					} else {
+						Log.e(TAG, "返回DNS包长为0");
+					}
 
 				}
 

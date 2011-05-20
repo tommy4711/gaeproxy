@@ -294,12 +294,11 @@ public class DNSServer implements WrapServer {
 					bout.write(b);
 				}
 				
-				result = bout.toByteArray();
-//				byte[] tcpdnsr = bout.toByteArray();
-//				if (tcpdnsr != null && tcpdnsr.length > 2) {
-//					result = new byte[tcpdnsr.length - 2];
-//					System.arraycopy(tcpdnsr, 2, result, 0, tcpdnsr.length - 2);
-//				}
+				byte[] tcpdnsr = bout.toByteArray();
+				if (tcpdnsr != null && tcpdnsr.length > 2) {
+					result = new byte[tcpdnsr.length - 2];
+					System.arraycopy(tcpdnsr, 2, result, 0, tcpdnsr.length - 2);
+				}
 				innerSocket.close();
 			}
 		} catch (IOException e) {

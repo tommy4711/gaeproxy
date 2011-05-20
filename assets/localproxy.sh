@@ -24,12 +24,12 @@ visible = 1
 
 [gae]
 host = $2
-password = $4
+password = $5
 path = /fetch.py
 prefer = https
 verify = 1
-http = $5
-https = $5
+http = $4
+https = $4
 
  " > /data/data/org.gaeproxy/proxy.ini
  

@@ -284,9 +284,11 @@ public class GAEProxyService extends Service {
 				cmd += "localproxy.sh wallproxy " + proxy + " " + port + " "
 						+ sitekey;
 			} else if (proxyType.equals("GoAgent")) {
-				cmd += "localproxy.sh goagent "
-						+ proxy.replace("https://", "").replace("http://", "")
-						+ " " + port + " " + appHost + " " + sitekey;
+				String[] proxyString = proxy.split("\\/");
+				if (proxyString.length < 3)
+					return false;
+				cmd += "localproxy.sh goagent " + proxyString[2] + " " + port
+						+ " " + appHost + " " + sitekey;
 			}
 			Log.e(TAG, cmd);
 

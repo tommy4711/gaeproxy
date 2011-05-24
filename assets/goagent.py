@@ -42,7 +42,7 @@ def random_shuffle(seq):
 
 class Common(object):
     '''global config module, based on GappProxy 2.0.0'''
-    FILENAME = sys.argv[1] if len(sys.argv) == 2 and os.path.isfile(os.sys.argv[1]) else os.path.splitext(__file__)[0] + '.ini'
+    FILENAME = '/data/data/org.gaeproxy/proxy.ini'
     ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
 
     def __init__(self):

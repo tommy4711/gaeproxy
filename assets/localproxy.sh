@@ -12,12 +12,13 @@ case $1 in
 
  goagent)
  
- echo "
+ echo " 
 
 [listen]
 ip = 127.0.0.1
 port = $3
 visible = 1
+debug = INFO	
 
 [hosts]
 # NOTE: Only effect on https
@@ -27,11 +28,14 @@ host = $2
 password = $5
 path = /fetch.py
 prefer = https
-verify = 1
+http_timeout = 3
+http_step = 1
+https_timeout = 3
+https_step = 8
 http = $4
 https = $4
 
- " > /data/data/org.gaeproxy/proxy.ini
+"> /data/data/org.gaeproxy/proxy.ini
  
  
 /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/goagent.py

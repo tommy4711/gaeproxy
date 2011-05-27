@@ -315,9 +315,9 @@ public class GAEProxyService extends Service {
 		try {
 			InputStream is = null;
 			String socksIp = "173.192.90.214";
-			String socksPort = "";
+			String socksPort = "16976";
 			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+				URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
 				HttpURLConnection conn = (HttpURLConnection) aURL
 						.openConnection();
 				conn.connect();
@@ -325,27 +325,20 @@ public class GAEProxyService extends Service {
 
 				BufferedReader reader = new BufferedReader(
 						new InputStreamReader(is));
+				
 				String line = reader.readLine();
-				if (line == null)
-					return;
+				if (!line.startsWith("#ip"))
+					throw new Exception("Format error");
+				line = reader.readLine();
+				socksIp = line.trim().toLowerCase();
+				
+				line = reader.readLine();
 				if (!line.startsWith("#port"))
-					return;
-				while (true) {
-					line = reader.readLine();
-					if (line == null)
-						break;
-					if (line.startsWith("#"))
-						continue;
-					line = line.trim().toLowerCase();
-					if (line.equals(""))
-						continue;
-					socksPort = line;
-				}
-
-				socksIp = InetAddress.getByName("freesocksproxy.org")
-						.getHostAddress();
+					throw new Exception("Format error");
+				line = reader.readLine();
+				socksPort = line.trim().toLowerCase();
 			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote host files", e);
+				Log.e(TAG, "cannot get remote port info", e);
 			}
 
 			Log.e(TAG, "Forward Successful");

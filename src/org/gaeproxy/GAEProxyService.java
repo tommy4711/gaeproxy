@@ -42,8 +42,10 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -285,10 +287,10 @@ public class GAEProxyService extends Service {
 						+ sitekey;
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
-				if (proxyString.length < 3)
+				if (proxyString.length < 4)
 					return false;
 				cmd += "localproxy.sh goagent " + proxyString[2] + " " + port
-						+ " " + appHost + " " + sitekey;
+						+ " " + appHost + " " + proxyString[3] + " " + sitekey;
 			}
 			Log.e(TAG, cmd);
 
@@ -311,8 +313,44 @@ public class GAEProxyService extends Service {
 	private void preConnection() {
 
 		try {
+			InputStream is = null;
+			String socksIp = "173.192.90.214";
+			String socksPort = "";
+			try {
+				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+				HttpURLConnection conn = (HttpURLConnection) aURL
+						.openConnection();
+				conn.connect();
+				is = conn.getInputStream();
+
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(is));
+				String line = reader.readLine();
+				if (line == null)
+					return;
+				if (!line.startsWith("#port"))
+					return;
+				while (true) {
+					line = reader.readLine();
+					if (line == null)
+						break;
+					if (line.startsWith("#"))
+						continue;
+					line = line.trim().toLowerCase();
+					if (line.equals(""))
+						continue;
+					socksPort = line;
+				}
+
+				socksIp = InetAddress.getByName("freesocksproxy.org")
+						.getHostAddress();
+			} catch (Exception e) {
+				Log.e(TAG, "cannot get remote host files", e);
+			}
+
 			Log.e(TAG, "Forward Successful");
-			runRootCommand(BASE + "proxy.sh start " + port);
+			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
+					+ " " + socksPort);
 
 			StringBuffer cmd = new StringBuffer();
 

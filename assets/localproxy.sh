@@ -25,8 +25,8 @@ debug = INFO
 
 [gae]
 host = $2
-password = $5
-path = /fetch.py
+password = $6
+path = /$5
 prefer = http
 http_timeout = 3
 http_step = 1

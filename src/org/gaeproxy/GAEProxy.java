@@ -374,6 +374,10 @@ public class GAEProxy extends PreferenceActivity implements
 			try {
 				// if (!(new File("/data/data/org.gaeproxy/" +
 				// files[i])).exists()) {
+				if (files[i].equals("hosts")
+						&& (new File("/data/data/org.gaeproxy/" + files[i]))
+								.exists())
+					continue;
 				in = assetManager.open(files[i]);
 				out = new FileOutputStream("/data/data/org.gaeproxy/"
 						+ files[i]);

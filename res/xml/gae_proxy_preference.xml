@@ -8,7 +8,7 @@
 
 		<ListPreference android:key="proxyType" android:title="@string/proxy_type"
 			android:entryValues="@array/proxy_type_entry" android:entries="@array/proxy_type_entry"
-			android:defaultValue="GAppProxy"></ListPreference>
+			android:defaultValue="GoAgent"></ListPreference>
 		<EditTextPreference android:title="@string/proxy"
 			android:summary="@string/proxy_summary" android:key="proxy"
 			android:defaultValue="https://proxyofmax.appspot.com/fetch.py"></EditTextPreference>

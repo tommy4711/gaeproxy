@@ -188,7 +188,7 @@ public class DNSServer implements WrapServer {
 		// test the upper dns server if reachable
 		try {
 			InetAddress addr = InetAddress.getByName(dnsHost);
-			if (addr.isReachable(2000))
+			if (addr.isReachable(1000))
 				httpMode = false;
 			else
 				httpMode = true;
@@ -608,7 +608,12 @@ public class DNSServer implements WrapServer {
 						public void run() {
 							long startTime = System.currentTimeMillis();
 							try {
-								byte[] answer = fetchAnswerHTTP(udpreq);
+								byte[] answer;
+								if (httpMode)
+									answer = fetchAnswerHTTP(udpreq);
+								else
+									answer = fetchAnswer(udpreq);
+								
 								if (answer != null && answer.length != 0) {
 									addToCache(questDomain, answer);
 									sendDns(answer, dnsq, srvSocket);
@@ -668,6 +673,7 @@ public class DNSServer implements WrapServer {
 	 * Example:
 	 * 
 	 * http://www.hosts.dotcloud.com/lookup.php?(domain name encoded)
+	 * http://gaednsproxy.appspot.com/?d=(domain name encoded)
 	 */
 	private String resolveDomainName(String domain) {
 		String ip = null;

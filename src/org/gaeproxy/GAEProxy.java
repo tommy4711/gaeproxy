@@ -1,4 +1,4 @@
-/* gaeproxy - GAppProxy / WallProxy client App for Android
+/* gaeproxy - GoAgent / WallProxy client App for Android
  * Copyright (C) 2011 <max.c.lv@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -261,7 +261,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private String proxy;
 	private int port;
 	private String sitekey = "";
-	private String proxyType = "GAppProxy";
+	private String proxyType = "GoAgent";
 	public static boolean isAutoConnect = false;
 	public static boolean isGlobalProxy = false;
 	public static boolean isHTTPSProxy = false;
@@ -833,7 +833,7 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		proxyType = settings.getString("proxyType", "GAppProxy");
+		proxyType = settings.getString("proxyType", "GoAgent");
 
 		proxy = settings.getString("proxy", "");
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))

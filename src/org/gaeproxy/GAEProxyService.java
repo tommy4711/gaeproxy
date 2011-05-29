@@ -114,7 +114,7 @@ public class GAEProxyService extends Service {
 	private String appMask = "72.14.0.0";
 	private int port;
 	private String sitekey;
-	private String proxyType = "GAppProxy";
+	private String proxyType = "GoAgent";
 	private DNSServer dnsServer = null;
 
 	private SharedPreferences settings = null;

@@ -151,6 +151,7 @@ public class DNSServer implements WrapServer {
 	final private int IP_SECTION_LEN = 4;
 
 	private boolean inService = false;
+	private boolean httpMode = false;
 
 	private Hashtable<String, DnsResponse> dnsCache = new Hashtable<String, DnsResponse>();
 
@@ -177,11 +178,26 @@ public class DNSServer implements WrapServer {
 
 		initOrgCache();
 
+		// test the upper dns server if reachable
 		try {
-			InetAddress addr = InetAddress.getByName("www.hosts.dotcloud.com");
-			dnsRelay = addr.getHostAddress();
-		} catch (Exception ignore) {
-			dnsRelay = "174.129.17.131";
+			InetAddress addr = InetAddress.getByName(dnsHost);
+			if (addr.isReachable(2000))
+				httpMode = false;
+			else
+				httpMode = true;
+		} catch (Exception e) {
+			httpMode = true;
+		}
+
+		// upper dns server not reachable, so use http mode
+		if (httpMode) {
+			try {
+				InetAddress addr = InetAddress
+						.getByName("www.hosts.dotcloud.com");
+				dnsRelay = addr.getHostAddress();
+			} catch (Exception ignore) {
+				dnsRelay = "174.129.17.131";
+			}
 		}
 
 		if (dnsHost != null && !dnsHost.equals(""))

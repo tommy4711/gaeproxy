@@ -23,6 +23,7 @@ import java.net.SocketException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownHostException;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import org.apache.http.HttpEntity;
@@ -138,6 +139,10 @@ public class DNSServer implements WrapServer {
 
 	private DatagramSocket srvSocket;
 
+	private volatile int threadNum = 0;
+	private final static int MAX_THREAD_NUM = 5;
+	public HashSet<String> domains;
+
 	private int srvPort = 8153;
 	private String name;
 	protected String dnsHost;
@@ -175,6 +180,8 @@ public class DNSServer implements WrapServer {
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.appHost = appHost;
+
+		domains = new HashSet<String>();
 
 		initOrgCache();
 
@@ -226,7 +233,7 @@ public class DNSServer implements WrapServer {
 	 * @param answer
 	 *            解析结果
 	 */
-	private void addToCache(String questDomainName, byte[] answer) {
+	private synchronized void addToCache(String questDomainName, byte[] answer) {
 		DnsResponse response = new DnsResponse(questDomainName);
 		response.setDnsResponse(answer);
 		dnsCache.put(questDomainName, response);
@@ -541,7 +548,7 @@ public class DNSServer implements WrapServer {
 
 		while (true) {
 			try {
-				DatagramPacket dnsq = new DatagramPacket(qbuffer,
+				final DatagramPacket dnsq = new DatagramPacket(qbuffer,
 						qbuffer.length);
 
 				srvSocket.receive(dnsq);
@@ -550,10 +557,10 @@ public class DNSServer implements WrapServer {
 
 				byte[] data = dnsq.getData();
 				int dnsqLength = dnsq.getLength();
-				byte[] udpreq = new byte[dnsqLength];
+				final byte[] udpreq = new byte[dnsqLength];
 				System.arraycopy(data, 0, udpreq, 0, dnsqLength);
 				// 尝试从缓存读取域名解析
-				String questDomain = getRequestDomain(udpreq);
+				final String questDomain = getRequestDomain(udpreq);
 
 				Log.d(TAG, "Resolving: " + questDomain);
 
@@ -583,21 +590,48 @@ public class DNSServer implements WrapServer {
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "Custom DNS resolver" + orgCache);
 				} else {
-					starTime = System.currentTimeMillis();
 
-					byte[] answer = fetchAnswerHTTP(udpreq);
-					if (answer != null && answer.length != 0) {
-						addToCache(questDomain, answer);
-						sendDns(answer, dnsq, srvSocket);
-						Log.d(TAG,
-								"Success to get DNS response，length:"
-										+ answer.length
-										+ "  cost："
-										+ (System.currentTimeMillis() - starTime)
-										/ 1000 + "s");
-					} else {
-						Log.e(TAG, "The size of DNS packet returned is 0");
+					synchronized (this) {
+						if (domains.contains(questDomain))
+							continue;
+						else
+							domains.add(questDomain);
 					}
+
+					while (threadNum >= MAX_THREAD_NUM) {
+						Thread.sleep(2000);
+					}
+
+					threadNum++;
+
+					new Thread() {
+						public void run() {
+							long startTime = System.currentTimeMillis();
+							try {
+								byte[] answer = fetchAnswerHTTP(udpreq);
+								if (answer != null && answer.length != 0) {
+									addToCache(questDomain, answer);
+									sendDns(answer, dnsq, srvSocket);
+									Log.d(TAG,
+											"Success to get DNS response，length:"
+													+ answer.length
+													+ "  cost："
+													+ (System
+															.currentTimeMillis() - startTime)
+													/ 1000 + "s");
+								} else {
+									Log.e(TAG,
+											"The size of DNS packet returned is 0");
+								}
+							} catch (Exception e) {
+								// Nothing
+							}
+							synchronized (DNSServer.this) {
+								domains.remove(questDomain);
+							}
+							threadNum--;
+						}
+					}.start();
 
 				}
 
@@ -620,6 +654,9 @@ public class DNSServer implements WrapServer {
 				break;
 			} catch (IOException e) {
 				Log.e(TAG, e.getLocalizedMessage());
+			} catch (InterruptedException e) {
+				Log.e(TAG, "Interrupted", e);
+				break;
 			}
 		}
 

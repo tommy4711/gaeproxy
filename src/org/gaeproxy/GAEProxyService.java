@@ -91,17 +91,17 @@ public class GAEProxyService extends Service {
 	private static final int MSG_HOST_CHANGE = 4;
 
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_DNAT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
 	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "-d ! 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";

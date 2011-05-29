@@ -955,6 +955,13 @@ public class GAEProxy extends PreferenceActivity implements
 		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
 			cache.delete();
+		
+		CopyAssets("");
+		
+		runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
+		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
+		runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);

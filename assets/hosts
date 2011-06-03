@@ -1,0 +1,112 @@
+#flickr
+69.147.90.215 farm3.static.flickr.com
+67.195.19.74 farm5.static.flickr.com
+#facebook
+69.63.189.16 facebook.com
+66.220.147.21 m.facebook.com
+66.220.158.19 0.facebook.com
+66.220.147.43 zero.facebook.com
+69.63.181.65 touch.facebook.com
+
+66.220.146.56 ssl.facebook.com
+69.192.194.110 s-static.ak.facebook.com
+69.63.181.26 login.facebook.com
+69.63.179.70 secure.facebook.com
+66.220.145.59 secure-profile.facebook.com
+69.63.189.63 apps.facebook.com
+96.17.15.107 b.static.ak.facebook.com
+69.63.176.59 secure-media-sf2p.facebook.com
+69.171.224.14 zh-CN.facebook.com
+96.17.69.34 profile.ak.facebook.com
+69.63.181.12 fbcdn.net
+96.17.15.112 external.ak.fbcdn.net
+96.17.69.50 vthumb.ak.fbcdn.net
+96.17.15.107 static.ak.fbcdn.net
+96.17.15.107 b.static.ak.fbcdn.net
+96.17.15.106 creative.ak.fbcdn.net
+96.17.69.35 profile.ak.fbcdn.net
+66.220.145.61 s-hprofile-sf2p.fbcdn.net
+96.17.15.74 photos-a.ak.fbcdn.net
+96.17.15.75 photos-b.ak.fbcdn.net
+96.17.15.59 photos-c.ak.fbcdn.net
+96.17.15.51 photos-d.ak.fbcdn.net
+96.17.15.24 photos-e.ak.fbcdn.net
+96.17.15.90 photos-f.ak.fbcdn.net
+96.17.15.59 photos-g.ak.fbcdn.net
+96.17.15.41 photos-h.ak.fbcdn.net
+#Twitter
+199.59.149.230 twitter.com
+199.59.148.82 www.twitter.com
+199.59.149.200 api.twitter.com
+199.59.148.201 search.twitter.com
+199.59.149.231 assets0.twitter.com
+199.59.148.21 assets1.twitter.com
+199.59.148.33 assets2.twitter.com
+199.59.148.92 assets3.twitter.com
+199.59.148.21 static.twitter.com
+199.59.148.206 help.twitter.com
+#Google
+74.125.53.132 webcache.googleusercontent.com
+74.125.224.161 encrypted.google.com
+74.125.224.172 docs.google.com
+74.125.224.169 docs0.google.com
+74.125.224.163 docs1.google.com
+74.125.224.175 docs2.google.com
+74.125.224.163 docs3.google.com
+74.125.224.162 docs4.google.com
+74.125.224.163 docs5.google.com
+74.125.224.167 spreadsheets.google.com
+74.125.224.167 spreadsheets1.google.com
+74.125.224.174 spreadsheets2.google.com
+74.125.224.175 spreadsheets0.google.com
+74.125.224.165 spreadsheets3.google.com
+74.125.224.168 spreadsheets4.google.com
+74.125.224.177 reader.google.com
+74.125.224.164 chrome.google.com
+74.125.224.166 clients2.google.com
+74.125.224.165 clients4.google.com
+74.125.224.175 calendar.google.com
+74.125.224.162 tools.google.com
+74.125.224.166 android.clients.google.com
+74.125.53.190 dl-ssl.google.com
+74.125.53.101 groups.google.com
+74.125.224.162 sites.google.com
+74.125.224.177 reader.google.com
+#bit.ly
+168.143.172.53 bit.ly
+168.143.172.53 j.mp
+#dropbox
+174.36.30.71 api.dropbox.com
+208.43.202.53 www.dropbox.com
+174.36.30.74 linux.dropbox.com
+50.17.233.29 api-content.dropbox.com
+#imageshack
+208.94.0.21 imageshack.us
+208.94.0.21 crackle.imageshack.us
+208.94.0.61 a.yfrog.com
+208.94.0.38 yfrog.com
+208.94.0.21 www.yfrog.com
+#megaupload
+174.140.154.15 www.megaupload.com
+#wikipedia
+208.80.152.3 upload.wikimedia.org
+208.80.152.2 commons.wikimedia.org
+#twitpic
+74.86.224.44 twitpic.com
+174.36.45.48 www.twitpic.com
+174.36.46.32 web7.twitpic.com
+174.36.58.204 web1.twitpic.com
+174.36.58.224 web2.twitpic.com
+174.36.58.200 web3.twitpic.com
+174.37.33.184 web4.twitpic.com
+174.37.75.16 web5.twitpic.com
+174.36.35.60 web6.twitpic.com
+66.228.120.92 web8.twitpic.com
+74.86.100.160 web9.twitpic.com
+74.86.87.236 web10.twitpic.com
+#Tumblr
+174.121.194.34 www.tumblr.com
+72.21.91.19 assets.tumblr.com
+174.121.98.168 safe.tumblr.com
+174.121.98.168 safariextensions.tumblr.com
+174.121.194.34 tumblr.com

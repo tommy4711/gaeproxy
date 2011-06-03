@@ -439,7 +439,7 @@ public class GAEProxyService extends Service {
 				if (!addr.getCountryCode().equals("CN"))
 					enableDNSProxy = false;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			enableDNSProxy = true;
 			// Nothing
 		}

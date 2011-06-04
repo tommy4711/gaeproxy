@@ -351,14 +351,12 @@ public class GAEProxyService extends Service {
 
 			StringBuffer cmd = new StringBuffer();
 
-			if (enableDNSProxy) {
-				if (hasRedirectSupport) {
-					cmd.append(BASE
-							+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-				} else {
-					cmd.append(BASE
-							+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-				}
+			if (hasRedirectSupport) {
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+			} else {
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 			}
 
 			if (isGlobalProxy) {
@@ -486,32 +484,36 @@ public class GAEProxyService extends Service {
 			} catch (Exception e) {
 				Log.e(TAG, "cannot get remote host files", e);
 			}
-
+		} else {
 			try {
-
-				if (appHost.length() > 8) {
-					String[] ips = appHost.split("\\.");
-					if (ips.length == 4)
-						appMask = ips[0] + "." + ips[1] + ".0.0";
-					Log.d(TAG, appMask);
-				}
-
+				InetAddress addr = InetAddress.getByName("www.google.com");
+				appHost = addr.getHostAddress();
 			} catch (Exception ignore) {
 				return false;
 			}
-
-			// String host = proxy.trim().toLowerCase().split("/")[2];
-			// if (host == null || host.equals(""))
-			// return false;
-
-			// Add hosts here
-			// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
-
-			dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53,
-					appHost);
-			dnsServer.setBasePath(BASE);
-
 		}
+
+		try {
+			if (appHost.length() > 8) {
+				String[] ips = appHost.split("\\.");
+				if (ips.length == 4)
+					appMask = ips[0] + "." + ips[1] + ".0.0";
+				Log.d(TAG, appMask);
+			}
+
+		} catch (Exception ignore) {
+			return false;
+		}
+
+		// String host = proxy.trim().toLowerCase().split("/")[2];
+		// if (host == null || host.equals(""))
+		// return false;
+
+		// Add hosts here
+		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
+
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
+		dnsServer.setBasePath(BASE);
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
@@ -523,13 +525,9 @@ public class GAEProxyService extends Service {
 
 		preConnection();
 
-		if (enableDNSProxy) {
-
-			Thread dnsThread = new Thread(dnsServer);
-			dnsThread.setDaemon(true);
-			dnsThread.start();
-
-		}
+		Thread dnsThread = new Thread(dnsServer);
+		dnsThread.setDaemon(true);
+		dnsThread.start();
 
 		connect();
 

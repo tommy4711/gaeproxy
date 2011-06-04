@@ -127,7 +127,6 @@ public class GAEProxyService extends Service {
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
-	private boolean enableDNSProxy = true;
 
 	private ProxyedApp apps[];
 
@@ -418,79 +417,44 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		// Acquire a reference to the system Location Manager
-		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		appHost = settings.getString("appHost", "203.208.46.178");
 
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		// Or use LocationManager.GPS_PROVIDER
-
-		Location lastKnownLocation = locationManager
-				.getLastKnownLocation(locationProvider);
-		Geocoder geoCoder = new Geocoder(GAEProxyService.this);
 		try {
-			List<Address> addrs = geoCoder.getFromLocation(
-					lastKnownLocation.getLatitude(),
-					lastKnownLocation.getLongitude(), 1);
-			if (addrs != null && addrs.size() > 0) {
-				Address addr = addrs.get(0);
-				Log.d(TAG, "Location: " + addr.getCountryName());
-				if (!addr.getCountryCode().equals("CN"))
-					enableDNSProxy = false;
-			}
-		} catch (Exception e) {
-			enableDNSProxy = true;
-			// Nothing
-		}
-
-		if (enableDNSProxy) {
-
-			appHost = settings.getString("appHost", "203.208.46.178");
-
-			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
-				conn.setReadTimeout(10 * 1000);
-				conn.connect();
-				InputStream is = conn.getInputStream();
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(is));
-				String line = reader.readLine();
-				if (line == null)
-					return false;
-				if (!line.startsWith("#GAEPROXY"))
-					return false;
-				while (true) {
-					line = reader.readLine();
-					if (line == null)
-						break;
-					if (line.startsWith("#"))
-						continue;
-					line = line.trim().toLowerCase();
-					if (line.equals(""))
-						continue;
-					if (!line.equals(appHost)) {
-						File cache = new File(GAEProxyService.BASE
-								+ "cache/dnscache");
-						if (cache.exists())
-							cache.delete();
-					}
-					appHost = line;
-					break;
-				}
-
-				handler.sendEmptyMessage(MSG_HOST_CHANGE);
-
-			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote host files", e);
-			}
-		} else {
-			try {
-				InetAddress addr = InetAddress.getByName("www.google.com");
-				appHost = addr.getHostAddress();
-			} catch (Exception ignore) {
+			URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
+			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setReadTimeout(10 * 1000);
+			conn.connect();
+			InputStream is = conn.getInputStream();
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(is));
+			String line = reader.readLine();
+			if (line == null)
 				return false;
+			if (!line.startsWith("#GAEPROXY"))
+				return false;
+			while (true) {
+				line = reader.readLine();
+				if (line == null)
+					break;
+				if (line.startsWith("#"))
+					continue;
+				line = line.trim().toLowerCase();
+				if (line.equals(""))
+					continue;
+				if (!line.equals(appHost)) {
+					File cache = new File(GAEProxyService.BASE
+							+ "cache/dnscache");
+					if (cache.exists())
+						cache.delete();
+				}
+				appHost = line;
+				break;
 			}
+
+			handler.sendEmptyMessage(MSG_HOST_CHANGE);
+
+		} catch (Exception e) {
+			Log.e(TAG, "cannot get remote host files", e);
 		}
 
 		try {

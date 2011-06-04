@@ -64,7 +64,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 	private String sitekey;
 	private boolean isGlobalProxy;
 	private boolean isHTTPSProxy;
-	
+
 	private static final String TAG = "GAEProxy";
 
 	@Override
@@ -75,43 +75,25 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 
 		isAutoConnect = settings.getBoolean("isAutoConnect", false);
 		isInstalled = settings.getBoolean("isInstalled", false);
-		
-		// Acquire a reference to the system Location Manager
-		LocationManager locationManager = (LocationManager) context
-				.getSystemService(Context.LOCATION_SERVICE);
-
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		// Or use LocationManager.GPS_PROVIDER
-
-		Location lastKnownLocation = locationManager
-				.getLastKnownLocation(locationProvider);
-		Geocoder geoCoder = new Geocoder(context);
 
 		TelephonyManager tm = (TelephonyManager) context
 				.getSystemService(Context.TELEPHONY_SERVICE);
 		String countryCode = tm.getSimCountryIso();
 
 		try {
-			List<Address> addrs = geoCoder.getFromLocation(
-					lastKnownLocation.getLatitude(),
-					lastKnownLocation.getLongitude(), 1);
-			if (addrs != null && addrs.size() > 0) {
-				Address addr = addrs.get(0);
-				Log.d(TAG, "Location: " + addr.getCountryName());
-				if (addr.getCountryCode().toLowerCase().equals("cn")
-						&& countryCode.toLowerCase().equals("cn")) {
-					String command = "setprop gsm.sim.operator.numeric 31026\n"
-							+ "setprop gsm.operator.numeric 31026\n"
-							+ "setprop gsm.sim.operator.iso-country us\n"
-							+ "setprop gsm.operator.iso-country us\n"
-							+ "setprop gsm.operator.alpha T-Mobile\n"
-							+ "setprop gsm.sim.operator.alpha T-Mobile\n"
-							+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
-							+ "rm -rf /data/data/com.android.vending/cache/*\n";
-					GAEProxy.runRootCommand(command);
-				}
+			Log.d(TAG, "Location: " + countryCode);
+			if (countryCode.toLowerCase().equals("cn")) {
+				String command = "setprop gsm.sim.operator.numeric 31026\n"
+						+ "setprop gsm.operator.numeric 31026\n"
+						+ "setprop gsm.sim.operator.iso-country us\n"
+						+ "setprop gsm.operator.iso-country us\n"
+						+ "setprop gsm.operator.alpha T-Mobile\n"
+						+ "setprop gsm.sim.operator.alpha T-Mobile\n"
+						+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
+						+ "rm -rf /data/data/com.android.vending/cache/*\n";
+				GAEProxy.runRootCommand(command);
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// Nothing
 		}
 
@@ -129,7 +111,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			sitekey = settings.getString("sitekey", "");
 			isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
 			isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
-			
+
 			Intent it = new Intent(context, GAEProxyService.class);
 			Bundle bundle = new Bundle();
 			bundle.putString("proxy", proxy);

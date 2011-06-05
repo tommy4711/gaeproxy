@@ -75,6 +75,6 @@
 	
 	<string name="loading">正在加载应用列表...</string>
 	<string name="enable_market">启用电子市场</string>
-	<string name="enable_market_summary">帮助大陆用户从电子市场中获得程序更新</string>
+	<string name="enable_market_summary">帮助大陆用户从电子市场中获得程序更新（需要重启）</string>
 
 </resources>

@@ -680,7 +680,7 @@ public class DNSServer implements WrapServer {
 
 		InputStream is;
 
-		String url = "http://www.hosts.dotcloud.com/lookup.php?host="
+		String url = "http://gaednsproxy.appspot.com/?d="
 				+ URLEncoder.encode(android.util.Base64.encodeToString(
 						android.util.Base64.encode(domain.getBytes(),
 								android.util.Base64.DEFAULT),

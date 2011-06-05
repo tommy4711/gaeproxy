@@ -85,6 +85,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -348,7 +349,6 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	private CheckBoxPreference isAutoConnectCheck;
-	private CheckBoxPreference isMarketEnableCheck;
 	private CheckBoxPreference isGlobalProxyCheck;
 	private Preference proxyedApps;
 	private CheckBoxPreference isInstalledCheck;
@@ -746,6 +746,30 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		}
 
+		if (key.equals("isMarketEnable")) {
+			if (settings.getBoolean("isMarketEnable", false)) {
+				TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+				String countryCode = tm.getSimCountryIso();
+
+				try {
+					Log.d(TAG, "Location: " + countryCode);
+					if (countryCode.toLowerCase().equals("cn")) {
+						String command = "setprop gsm.sim.operator.numeric 31026\n"
+								+ "setprop gsm.operator.numeric 31026\n"
+								+ "setprop gsm.sim.operator.iso-country us\n"
+								+ "setprop gsm.operator.iso-country us\n"
+								+ "setprop gsm.operator.alpha T-Mobile\n"
+								+ "setprop gsm.sim.operator.alpha T-Mobile\n"
+								+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
+								+ "rm -rf /data/data/com.android.vending/cache/*\n";
+						runRootCommand(command);
+					}
+				} catch (Exception e) {
+					// Nothing
+				}
+			}
+		}
+
 		if (key.equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false))
 				isInstalledCheck.setChecked(true);
@@ -956,9 +980,9 @@ public class GAEProxy extends PreferenceActivity implements
 		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
 			cache.delete();
-		
+
 		CopyAssets("");
-		
+
 		runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
 		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 		runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");

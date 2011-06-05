@@ -76,25 +76,29 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 		isAutoConnect = settings.getBoolean("isAutoConnect", false);
 		isInstalled = settings.getBoolean("isInstalled", false);
 
-		TelephonyManager tm = (TelephonyManager) context
-				.getSystemService(Context.TELEPHONY_SERVICE);
-		String countryCode = tm.getSimCountryIso();
+		boolean isMarketEnable = settings.getBoolean("isMarketEnable", false);
 
-		try {
-			Log.d(TAG, "Location: " + countryCode);
-			if (countryCode.toLowerCase().equals("cn")) {
-				String command = "setprop gsm.sim.operator.numeric 31026\n"
-						+ "setprop gsm.operator.numeric 31026\n"
-						+ "setprop gsm.sim.operator.iso-country us\n"
-						+ "setprop gsm.operator.iso-country us\n"
-						+ "setprop gsm.operator.alpha T-Mobile\n"
-						+ "setprop gsm.sim.operator.alpha T-Mobile\n"
-						+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
-						+ "rm -rf /data/data/com.android.vending/cache/*\n";
-				GAEProxy.runRootCommand(command);
+		if (isMarketEnable) {
+			TelephonyManager tm = (TelephonyManager) context
+					.getSystemService(Context.TELEPHONY_SERVICE);
+			String countryCode = tm.getSimCountryIso();
+
+			try {
+				Log.d(TAG, "Location: " + countryCode);
+				if (countryCode.toLowerCase().equals("cn")) {
+					String command = "setprop gsm.sim.operator.numeric 31026\n"
+							+ "setprop gsm.operator.numeric 31026\n"
+							+ "setprop gsm.sim.operator.iso-country us\n"
+							+ "setprop gsm.operator.iso-country us\n"
+							+ "setprop gsm.operator.alpha T-Mobile\n"
+							+ "setprop gsm.sim.operator.alpha T-Mobile\n"
+							+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
+							+ "rm -rf /data/data/com.android.vending/cache/*\n";
+					GAEProxy.runRootCommand(command);
+				}
+			} catch (Exception e) {
+				// Nothing
 			}
-		} catch (Exception e) {
-			// Nothing
 		}
 
 		if (isAutoConnect && isInstalled) {

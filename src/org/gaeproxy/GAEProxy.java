@@ -348,6 +348,7 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	private CheckBoxPreference isAutoConnectCheck;
+	private CheckBoxPreference isMarketEnableCheck;
 	private CheckBoxPreference isGlobalProxyCheck;
 	private Preference proxyedApps;
 	private CheckBoxPreference isInstalledCheck;

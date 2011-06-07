@@ -42,18 +42,14 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
 import java.net.URL;
-import java.util.List;
+import java.util.Random;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -65,10 +61,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.location.Address;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationManager;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -127,7 +119,6 @@ public class GAEProxyService extends Service {
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
-	private boolean enableDNSProxy = true;
 
 	private ProxyedApp apps[];
 
@@ -351,14 +342,12 @@ public class GAEProxyService extends Service {
 
 			StringBuffer cmd = new StringBuffer();
 
-			if (enableDNSProxy) {
-				if (hasRedirectSupport) {
-					cmd.append(BASE
-							+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-				} else {
-					cmd.append(BASE
-							+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-				}
+			if (hasRedirectSupport) {
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+			} else {
+				cmd.append(BASE
+						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 			}
 
 			if (isGlobalProxy) {
@@ -420,104 +409,72 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		// Acquire a reference to the system Location Manager
-		LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+		appHost = settings.getString("appHost", "203.208.46.178");
 
-		String locationProvider = LocationManager.NETWORK_PROVIDER;
-		// Or use LocationManager.GPS_PROVIDER
-
-		Location lastKnownLocation = locationManager
-				.getLastKnownLocation(locationProvider);
-		Geocoder geoCoder = new Geocoder(GAEProxyService.this);
 		try {
-			if (lastKnownLocation != null) {
-				List<Address> addrs = geoCoder.getFromLocation(
-						lastKnownLocation.getLatitude(),
-						lastKnownLocation.getLongitude(), 1);
-				if (addrs != null && addrs.size() > 0) {
-					Address addr = addrs.get(0);
-					Log.d(TAG, "Location: " + addr.getCountryName());
-					if (!addr.getCountryCode().equals("CN"))
-						enableDNSProxy = false;
-				}
-			}
-		} catch (IOException e) {
-			enableDNSProxy = true;
-			// Nothing
-		}
-
-		if (enableDNSProxy) {
-
-			appHost = settings.getString("appHost", "203.208.46.178");
-
-			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
-				conn.setReadTimeout(10 * 1000);
-				conn.connect();
-				InputStream is = conn.getInputStream();
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(is));
-				String line = reader.readLine();
-				if (line == null)
-					return false;
-				if (!line.startsWith("#GAEPROXY"))
-					return false;
-				while (true) {
-					line = reader.readLine();
-					if (line == null)
-						break;
-					if (line.startsWith("#"))
-						continue;
-					line = line.trim().toLowerCase();
-					if (line.equals(""))
-						continue;
-					if (!line.equals(appHost)) {
-						File cache = new File(GAEProxyService.BASE
-								+ "cache/dnscache");
-						if (cache.exists())
-							cache.delete();
-					}
-					appHost = line;
-					break;
-				}
-
-				handler.sendEmptyMessage(MSG_HOST_CHANGE);
-
-			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote host files", e);
-			}
-
-			try {
-
-				if (appHost.length() > 8) {
-					String[] ips = appHost.split("\\.");
-					if (ips.length == 4)
-						appMask = ips[0] + "." + ips[1] + ".0.0";
-					Log.d(TAG, appMask);
-				}
-
-			} catch (Exception ignore) {
+			URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
+			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setReadTimeout(10 * 1000);
+			conn.connect();
+			InputStream is = conn.getInputStream();
+			BufferedReader reader = new BufferedReader(
+					new InputStreamReader(is));
+			String line = reader.readLine();
+			if (line == null)
 				return false;
+			if (!line.startsWith("#GAEPROXY"))
+				return false;
+			while (true) {
+				line = reader.readLine();
+				if (line == null)
+					break;
+				if (line.startsWith("#"))
+					continue;
+				line = line.trim().toLowerCase();
+				if (line.equals(""))
+					continue;
+				if (!line.equals(appHost)) {
+					File cache = new File(GAEProxyService.BASE
+							+ "cache/dnscache");
+					if (cache.exists())
+						cache.delete();
+				}
+				appHost = line;
+				break;
 			}
 
-			// String host = proxy.trim().toLowerCase().split("/")[2];
-			// if (host == null || host.equals(""))
-			// return false;
+			handler.sendEmptyMessage(MSG_HOST_CHANGE);
 
-			// Add hosts here
-			// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
-
-			dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53,
-					appHost);
-			dnsServer.setBasePath(BASE);
-
+		} catch (Exception e) {
+			Log.e(TAG, "cannot get remote host files", e);
 		}
+
+		try {
+			if (appHost.length() > 8) {
+				String[] ips = appHost.split("\\.");
+				if (ips.length == 4)
+					appMask = ips[0] + "." + ips[1] + ".0.0";
+				Log.d(TAG, appMask);
+			}
+
+		} catch (Exception ignore) {
+			return false;
+		}
+
+		// String host = proxy.trim().toLowerCase().split("/")[2];
+		// if (host == null || host.equals(""))
+		// return false;
+
+		// Add hosts here
+		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
+
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
+		dnsServer.setBasePath(BASE);
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
-			int n = (int) (Math.random() * 10);
+			Random random = new Random(System.currentTimeMillis());
+			int n = random.nextInt(10);
 			if (n > 0)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
@@ -525,13 +482,9 @@ public class GAEProxyService extends Service {
 
 		preConnection();
 
-		if (enableDNSProxy) {
-
-			Thread dnsThread = new Thread(dnsServer);
-			dnsThread.setDaemon(true);
-			dnsThread.start();
-
-		}
+		Thread dnsThread = new Thread(dnsServer);
+		dnsThread.setDaemon(true);
+		dnsThread.start();
 
 		connect();
 

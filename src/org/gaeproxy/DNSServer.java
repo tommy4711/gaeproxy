@@ -197,15 +197,15 @@ public class DNSServer implements WrapServer {
 		}
 
 		// upper dns server not reachable, so use http mode
-		if (httpMode) {
-			try {
-				InetAddress addr = InetAddress
-						.getByName("www.hosts.dotcloud.com");
-				dnsRelay = addr.getHostAddress();
-			} catch (Exception ignore) {
-				dnsRelay = "174.129.17.131";
-			}
-		}
+//		if (httpMode) {
+//			try {
+//				InetAddress addr = InetAddress
+//						.getByName("www.hosts.dotcloud.com");
+//				dnsRelay = addr.getHostAddress();
+//			} catch (Exception ignore) {
+//				dnsRelay = "174.129.17.131";
+//			}
+//		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -583,12 +583,12 @@ public class DNSServer implements WrapServer {
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "Custom DNS resolver" + orgCache);
-				} else if (questDomain.toLowerCase().contains("dotcloud.com")) { // 如果为apphost域名解析
-					byte[] ips = parseIPString(dnsRelay);
-					byte[] answer = createDNSResponse(udpreq, ips);
-					addToCache(questDomain, answer);
-					sendDns(answer, dnsq, srvSocket);
-					Log.d(TAG, "Custom DNS resolver" + orgCache);
+//				} else if (questDomain.toLowerCase().contains("dotcloud.com")) { // 如果为apphost域名解析
+//					byte[] ips = parseIPString(dnsRelay);
+//					byte[] answer = createDNSResponse(udpreq, ips);
+//					addToCache(questDomain, answer);
+//					sendDns(answer, dnsq, srvSocket);
+//					Log.d(TAG, "Custom DNS resolver" + orgCache);
 				} else {
 
 					synchronized (this) {
@@ -680,7 +680,7 @@ public class DNSServer implements WrapServer {
 
 		InputStream is;
 
-		String url = "http://www.hosts.dotcloud.com/lookup.php?host="
+		String url = "http://gaednsproxy.appspot.com/?d="
 				+ URLEncoder.encode(android.util.Base64.encodeToString(
 						android.util.Base64.encode(domain.getBytes(),
 								android.util.Base64.DEFAULT),

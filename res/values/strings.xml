@@ -86,4 +86,6 @@
 	</string>
 	
 	<string name="loading">Loading app list...</string>
+	<string name="enable_market">Enable Market</string>
+	<string name="enable_market_summary">Only for users in China, help to update app from Android Market (need reboot)</string>
 </resources>

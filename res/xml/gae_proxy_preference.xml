@@ -29,6 +29,7 @@
 		<CheckBoxPreference android:summary="@string/auto_set_proxy_summary"
 			android:key="isGlobalProxy" android:title="@string/auto_set_proxy" android:defaultValue="true"></CheckBoxPreference>
 		<Preference android:key="proxyedApps" android:title="@string/proxyed_apps"></Preference>
+		<CheckBoxPreference android:key="isMarketEnable" android:title="@string/enable_market" android:summary="@string/enable_market_summary"></CheckBoxPreference>
 
 	</PreferenceCategory>
 

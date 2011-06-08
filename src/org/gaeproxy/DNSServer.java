@@ -26,6 +26,7 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -197,15 +198,15 @@ public class DNSServer implements WrapServer {
 		}
 
 		// upper dns server not reachable, so use http mode
-//		if (httpMode) {
-//			try {
-//				InetAddress addr = InetAddress
-//						.getByName("www.hosts.dotcloud.com");
-//				dnsRelay = addr.getHostAddress();
-//			} catch (Exception ignore) {
-//				dnsRelay = "174.129.17.131";
-//			}
-//		}
+		// if (httpMode) {
+		// try {
+		// InetAddress addr = InetAddress
+		// .getByName("www.hosts.dotcloud.com");
+		// dnsRelay = addr.getHostAddress();
+		// } catch (Exception ignore) {
+		// dnsRelay = "174.129.17.131";
+		// }
+		// }
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -583,12 +584,14 @@ public class DNSServer implements WrapServer {
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "Custom DNS resolver" + orgCache);
-//				} else if (questDomain.toLowerCase().contains("dotcloud.com")) { // 如果为apphost域名解析
-//					byte[] ips = parseIPString(dnsRelay);
-//					byte[] answer = createDNSResponse(udpreq, ips);
-//					addToCache(questDomain, answer);
-//					sendDns(answer, dnsq, srvSocket);
-//					Log.d(TAG, "Custom DNS resolver" + orgCache);
+					// } else if
+					// (questDomain.toLowerCase().contains("dotcloud.com")) { //
+					// 如果为apphost域名解析
+					// byte[] ips = parseIPString(dnsRelay);
+					// byte[] answer = createDNSResponse(udpreq, ips);
+					// addToCache(questDomain, answer);
+					// sendDns(answer, dnsq, srvSocket);
+					// Log.d(TAG, "Custom DNS resolver" + orgCache);
 				} else {
 
 					synchronized (this) {
@@ -613,7 +616,7 @@ public class DNSServer implements WrapServer {
 									answer = fetchAnswerHTTP(udpreq);
 								else
 									answer = fetchAnswer(udpreq);
-								
+
 								if (answer != null && answer.length != 0) {
 									addToCache(questDomain, answer);
 									sendDns(answer, dnsq, srvSocket);
@@ -681,10 +684,8 @@ public class DNSServer implements WrapServer {
 		InputStream is;
 
 		String url = "http://gaednsproxy.appspot.com/?d="
-				+ URLEncoder.encode(android.util.Base64.encodeToString(
-						android.util.Base64.encode(domain.getBytes(),
-								android.util.Base64.DEFAULT),
-						android.util.Base64.DEFAULT));
+				+ URLEncoder.encode(Base64.encodeBase64(
+						Base64.encodeBase64(domain.getBytes())).toString());
 
 		Log.d(TAG, "DNS Relay URL: " + url);
 

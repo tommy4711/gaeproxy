@@ -154,7 +154,7 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153";
+		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
 			process = Runtime.getRuntime().exec("su");

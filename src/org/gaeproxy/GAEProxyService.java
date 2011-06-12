@@ -713,13 +713,13 @@ public class GAEProxyService extends Service {
 				int tries = 0;
 				while (tries < 3) {
 					try {
-						URL url = new URL("http://myhosts.sinaapp.com/ip.php");
+						URL url = new URL("http://gae-ip-country.appspot.com/");
 						BufferedReader input = new BufferedReader(
 								new InputStreamReader(url.openStream()));
 						String code = input.readLine();
 						if (code != null && code.length() > 0) {
 							Log.d(TAG, "Location: " + code);
-							if (!code.contains("CN") && !code.contains("XX"))
+							if (!code.contains("CN") && !code.contains("ZZ"))
 								isDNSBlocked = false;
 						}
 						break;

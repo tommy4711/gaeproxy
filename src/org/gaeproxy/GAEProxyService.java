@@ -714,8 +714,13 @@ public class GAEProxyService extends Service {
 				while (tries < 3) {
 					try {
 						URL url = new URL("http://gae-ip-country.appspot.com/");
+						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+						conn.setConnectTimeout(1000);
+						conn.setReadTimeout(1000);
+						conn.connect();
+						InputStream is = conn.getInputStream();
 						BufferedReader input = new BufferedReader(
-								new InputStreamReader(url.openStream()));
+								new InputStreamReader(is));
 						String code = input.readLine();
 						if (code != null && code.length() > 0) {
 							Log.d(TAG, "Location: " + code);

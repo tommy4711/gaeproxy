@@ -281,18 +281,17 @@ public class GAEProxyService extends Service {
 				cmd = BASE + "localproxy.sh";
 			else
 				cmd = BASE + "localproxy_en.sh";
-			
+
 			if (proxyType.equals("GAppProxy")) {
 				cmd += " gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += " wallproxy " + proxy + " " + port + " "
-						+ sitekey;
+				cmd += " wallproxy " + proxy + " " + port + " " + sitekey;
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)
 					return false;
-				cmd += " goagent " + proxyString[2] + " " + port
-						+ " " + appHost + " " + proxyString[3] + " " + sitekey;
+				cmd += " goagent " + proxyString[2] + " " + port + " "
+						+ appHost + " " + proxyString[3] + " " + sitekey;
 			}
 			Log.e(TAG, cmd);
 
@@ -459,7 +458,8 @@ public class GAEProxyService extends Service {
 			}
 		} else {
 			try {
-				InetAddress addr = InetAddress.getByName("gaednsproxy.appspot.com");
+				InetAddress addr = InetAddress
+						.getByName("gaednsproxy.appspot.com");
 				appHost = addr.getHostAddress();
 			} catch (Exception ignore) {
 				return false;
@@ -485,7 +485,8 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost, isDNSBlocked);
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost,
+				isDNSBlocked);
 		dnsServer.setBasePath(BASE);
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
@@ -710,32 +711,31 @@ public class GAEProxyService extends Service {
 		new Thread(new Runnable() {
 			public void run() {
 
-				int tries = 0;
-				while (tries < 3) {
-					try {
-						URL url = new URL("http://gae-ip-country.appspot.com/");
-						HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-						conn.setConnectTimeout(1000);
-						conn.setReadTimeout(1000);
-						conn.connect();
-						InputStream is = conn.getInputStream();
-						BufferedReader input = new BufferedReader(
-								new InputStreamReader(is));
-						String code = input.readLine();
-						if (code != null && code.length() > 0) {
-							Log.d(TAG, "Location: " + code);
-							if (!code.contains("CN") && !code.contains("ZZ"))
-								isDNSBlocked = false;
-						}
-						break;
-					} catch (Exception e) {
-						isDNSBlocked = true;
-						// Nothing
-					}
-					tries++;
-				}
-
 				handler.sendEmptyMessage(MSG_CONNECT_START);
+
+				int tries = 0;
+				try {
+					URL url = new URL("http://gae-ip-country.appspot.com/");
+					HttpURLConnection conn = (HttpURLConnection) url
+							.openConnection();
+					conn.setConnectTimeout(1000);
+					conn.setReadTimeout(1000);
+					conn.connect();
+					InputStream is = conn.getInputStream();
+					BufferedReader input = new BufferedReader(
+							new InputStreamReader(is));
+					String code = input.readLine();
+					if (code != null && code.length() > 0) {
+						Log.d(TAG, "Location: " + code);
+						if (!code.contains("CN") && !code.contains("ZZ"))
+							isDNSBlocked = false;
+					}
+				} catch (Exception e) {
+					isDNSBlocked = true;
+					Log.d(TAG, "Cannot get country info");
+					// Nothing
+				}
+				tries++;
 
 				// Test for Redirect Support
 				initHasRedirectSupported();

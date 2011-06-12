@@ -485,7 +485,7 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost);
+		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost, isDNSBlocked);
 		dnsServer.setBasePath(BASE);
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {

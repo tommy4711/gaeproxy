@@ -174,27 +174,18 @@ public class DNSServer implements WrapServer {
 	private static final String CANT_RESOLVE = "Error";
 
 	public DNSServer(String name, int port, String dnsHost, int dnsPort,
-			String appHost) {
+			String appHost, boolean httpMode) {
 		this.name = name;
 		this.srvPort = port;
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.appHost = appHost;
+		this.httpMode = httpMode;
 
 		domains = new HashSet<String>();
 
 		initOrgCache();
 
-		// test the upper dns server if reachable
-		try {
-			InetAddress addr = InetAddress.getByName(dnsHost);
-			if (addr.isReachable(1000))
-				httpMode = false;
-			else
-				httpMode = true;
-		} catch (Exception e) {
-			httpMode = true;
-		}
 
 		// upper dns server not reachable, so use http mode
 		// if (httpMode) {

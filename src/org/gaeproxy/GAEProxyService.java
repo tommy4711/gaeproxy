@@ -718,7 +718,7 @@ public class GAEProxyService extends Service {
 					URL url = new URL("http://gae-ip-country.appspot.com/");
 					HttpURLConnection conn = (HttpURLConnection) url
 							.openConnection();
-					conn.setConnectTimeout(5000);
+					conn.setConnectTimeout(2000);
 					conn.setReadTimeout(5000);
 					conn.connect();
 					InputStream is = conn.getInputStream();
@@ -732,7 +732,7 @@ public class GAEProxyService extends Service {
 					}
 				} catch (Exception e) {
 					isDNSBlocked = true;
-					Log.d(TAG, "Cannot get country info");
+					Log.d(TAG, "Cannot get country info", e);
 					// Nothing
 				}
 				tries++;

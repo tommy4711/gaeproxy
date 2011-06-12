@@ -392,7 +392,7 @@ public class DNSServer implements WrapServer {
 			if (!f.exists()) {
 				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 				HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-				conn.setConnectTimeout(5000);
+				conn.setConnectTimeout(2000);
 				conn.setReadTimeout(5000);
 				conn.connect();
 				is = conn.getInputStream();

@@ -570,6 +570,7 @@ public class GAEProxy extends PreferenceActivity implements
 			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
+			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
 		}
 
 		new Thread() {
@@ -991,6 +992,7 @@ public class GAEProxy extends PreferenceActivity implements
 		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 		runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
+		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);

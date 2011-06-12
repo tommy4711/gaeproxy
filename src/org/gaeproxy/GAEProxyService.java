@@ -48,6 +48,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.util.Random;
 
@@ -119,6 +120,7 @@ public class GAEProxyService extends Service {
 	private boolean hasRedirectSupport = true;
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
+	private boolean isDNSBlocked = true;
 
 	private ProxyedApp apps[];
 
@@ -275,16 +277,21 @@ public class GAEProxyService extends Service {
 			is.close();
 
 			String cmd = BASE;
+			if (isDNSBlocked)
+				cmd = BASE + "localproxy.sh";
+			else
+				cmd = BASE + "localproxy_en.sh";
+			
 			if (proxyType.equals("GAppProxy")) {
-				cmd += "localproxy.sh gappproxy";
+				cmd += " gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += "localproxy.sh wallproxy " + proxy + " " + port + " "
+				cmd += " wallproxy " + proxy + " " + port + " "
 						+ sitekey;
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)
 					return false;
-				cmd += "localproxy.sh goagent " + proxyString[2] + " " + port
+				cmd += " goagent " + proxyString[2] + " " + port
 						+ " " + appHost + " " + proxyString[3] + " " + sitekey;
 			}
 			Log.e(TAG, cmd);
@@ -409,44 +416,54 @@ public class GAEProxyService extends Service {
 		// return false;
 		// }
 
-		appHost = settings.getString("appHost", "203.208.46.178");
+		if (isDNSBlocked) {
+			appHost = settings.getString("appHost", "203.208.46.178");
 
-		try {
-			URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
-			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-			conn.setReadTimeout(10 * 1000);
-			conn.connect();
-			InputStream is = conn.getInputStream();
-			BufferedReader reader = new BufferedReader(
-					new InputStreamReader(is));
-			String line = reader.readLine();
-			if (line == null)
-				return false;
-			if (!line.startsWith("#GAEPROXY"))
-				return false;
-			while (true) {
-				line = reader.readLine();
+			try {
+				URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
+				HttpURLConnection conn = (HttpURLConnection) aURL
+						.openConnection();
+				conn.setReadTimeout(10 * 1000);
+				conn.connect();
+				InputStream is = conn.getInputStream();
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(is));
+				String line = reader.readLine();
 				if (line == null)
+					return false;
+				if (!line.startsWith("#GAEPROXY"))
+					return false;
+				while (true) {
+					line = reader.readLine();
+					if (line == null)
+						break;
+					if (line.startsWith("#"))
+						continue;
+					line = line.trim().toLowerCase();
+					if (line.equals(""))
+						continue;
+					if (!line.equals(appHost)) {
+						File cache = new File(GAEProxyService.BASE
+								+ "cache/dnscache");
+						if (cache.exists())
+							cache.delete();
+					}
+					appHost = line;
 					break;
-				if (line.startsWith("#"))
-					continue;
-				line = line.trim().toLowerCase();
-				if (line.equals(""))
-					continue;
-				if (!line.equals(appHost)) {
-					File cache = new File(GAEProxyService.BASE
-							+ "cache/dnscache");
-					if (cache.exists())
-						cache.delete();
 				}
-				appHost = line;
-				break;
+
+				handler.sendEmptyMessage(MSG_HOST_CHANGE);
+
+			} catch (Exception e) {
+				Log.e(TAG, "cannot get remote host files", e);
 			}
-
-			handler.sendEmptyMessage(MSG_HOST_CHANGE);
-
-		} catch (Exception e) {
-			Log.e(TAG, "cannot get remote host files", e);
+		} else {
+			try {
+				InetAddress addr = InetAddress.getByName("gaednsproxy.appspot.com");
+				appHost = addr.getHostAddress();
+			} catch (Exception ignore) {
+				return false;
+			}
 		}
 
 		try {
@@ -692,6 +709,26 @@ public class GAEProxyService extends Service {
 
 		new Thread(new Runnable() {
 			public void run() {
+
+				int tries = 0;
+				while (tries < 3) {
+					try {
+						URL url = new URL("http://myhosts.sinaapp.com/ip.php");
+						BufferedReader input = new BufferedReader(
+								new InputStreamReader(url.openStream()));
+						String code = input.readLine();
+						if (code != null && code.length() > 0) {
+							Log.d(TAG, "Location: " + code);
+							if (!code.contains("CN") && !code.contains("XX"))
+								isDNSBlocked = false;
+						}
+						break;
+					} catch (Exception e) {
+						isDNSBlocked = true;
+						// Nothing
+					}
+					tries++;
+				}
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
 

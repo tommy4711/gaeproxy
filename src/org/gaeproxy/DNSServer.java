@@ -745,7 +745,7 @@ public class DNSServer implements WrapServer {
 
 		/* Not support reverse domain name query */
 		if (domain.endsWith("in-addr.arpa")) {
-			return null;
+			return createDNSResponse(quest, parseIPString("127.0.0.1"));
 		}
 
 		ip = resolveDomainName(domain);

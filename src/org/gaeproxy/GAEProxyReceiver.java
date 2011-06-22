@@ -110,7 +110,11 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			proxyType = settings.getString("proxyType", "GAppProxy");
 			String portText = settings.getString("port", "");
 			if (portText != null && portText.length() > 0) {
-				port = Integer.valueOf(portText);
+				try {
+					port = Integer.valueOf(portText);
+				} catch (NumberFormatException e) {
+					port = 1984;
+				}
 				if (port <= 1024)
 					port = 1984;
 			} else {

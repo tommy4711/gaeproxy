@@ -25,6 +25,7 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Random;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -185,7 +186,6 @@ public class DNSServer implements WrapServer {
 		domains = new HashSet<String>();
 
 		initOrgCache();
-
 
 		// upper dns server not reachable, so use http mode
 		// if (httpMode) {
@@ -391,7 +391,8 @@ public class DNSServer implements WrapServer {
 			File f = new File("/data/data/org.gaeproxy/hosts");
 			if (!f.exists()) {
 				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
-				HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+				HttpURLConnection conn = (HttpURLConnection) aURL
+						.openConnection();
 				conn.setConnectTimeout(2000);
 				conn.setReadTimeout(5000);
 				conn.connect();
@@ -674,9 +675,15 @@ public class DNSServer implements WrapServer {
 
 		InputStream is;
 
-		String url = "http://gaednsproxy.appspot.com/?d="
-				+ URLEncoder.encode(Base64.encodeBytes(Base64
-						.encodeBytesToBytes(domain.getBytes())));
+		String encode_host = URLEncoder.encode(Base64.encodeBytes(Base64
+				.encodeBytesToBytes(domain.getBytes())));
+
+		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
+
+		Random random = new Random(System.currentTimeMillis());
+		int n = random.nextInt(1);
+		if (n == 1)
+			url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
 
 		Log.d(TAG, "DNS Relay URL: " + url);
 

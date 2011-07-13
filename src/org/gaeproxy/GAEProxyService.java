@@ -121,6 +121,7 @@ public class GAEProxyService extends Service {
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
 	private boolean isDNSBlocked = true;
+	private boolean isGFWList = false;
 
 	private ProxyedApp apps[];
 
@@ -356,7 +357,24 @@ public class GAEProxyService extends Service {
 						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 			}
 
-			if (isGlobalProxy) {
+			if (isGFWList) {
+				String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+						: CMD_IPTABLES_DNAT_ADD_HTTP;
+				String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+						: CMD_IPTABLES_DNAT_ADD_HTTPS;
+
+				String[] gfw_list = getResources().getStringArray(
+						R.array.gfw_list);
+
+				for (String item : gfw_list) {
+					cmd.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
+							+ item));
+					if (isHTTPSProxy) {
+						cmd.append(cmd_https.replace("! -d 203.208.0.0/16",
+								"-d " + item));
+					}
+				}
+			} else if (isGlobalProxy) {
 				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 						: CMD_IPTABLES_DNAT_ADD_HTTP);
 				if (isHTTPSProxy) {
@@ -702,6 +720,7 @@ public class GAEProxyService extends Service {
 		sitekey = bundle.getString("sitekey");
 		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
 		isHTTPSProxy = bundle.getBoolean("isHTTPSProxy");
+		isGFWList = bundle.getBoolean("isGFWList");
 
 		Log.e(TAG, "GAE Proxy: " + proxy);
 		Log.e(TAG, "Local Port: " + port);

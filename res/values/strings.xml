@@ -19,7 +19,7 @@
 	<string name="sitekey">Site Key</string>
 	<string name="auto_connect">Connect at boot</string>
 	<string name="auto_reconnect">Auto reconnect</string>
-	<string name="auto_set_proxy">Global proxy</string>
+	<string name="auto_set_proxy">Global Proxy</string>
 	<string name="disconnect">Disconnect</string>
 	<string name="connect">Connect</string>
 	<string name="feedback">Feedback @ofmax</string>
@@ -30,7 +30,7 @@
 	<string name="service_summary">Enable / Disable Proxy</string>
 	<string name="proxy_summary">GAE Proxy URL</string>
 	<string name="port_summary">Listening port</string>
-	<string name="sitekey_summary">Site key for WallProxy (XOR--0 only)</string>
+	<string name="sitekey_summary">Site key for WallProxy / GoAgent</string>
 	<string name="port_alert">The port number should be greater than 1024
 	</string>
 	<string name="auto_connect_summary">Start GAE Proxy at the startup</string>
@@ -49,7 +49,10 @@
 	<string name="sdcard_alert">Please make sure you have a SD CARD!</string>
 	<string name="recovery">Recover the status</string>
 	<string name="unzip">Unzipping...</string>
-	<string name="proxyed_apps">Choose apps through proxy</string>
+	<string name="proxyed_apps">Individual Proxy</string>
+	<string name="proxyed_apps_summary">Set individual proxy for apps (needs ROOT
+		permission and
+		IPTABLES support)</string>
 	<string name="proxyed_help">Select apps to use with GAEProxy:</string>
 
 	<string name="crash_alert">You are recovering from a crash. \n\nplease report
@@ -70,6 +73,17 @@
 		<item>GoAgent</item>
 	</array>
 
+	<string-array name="gfw_list">
+		<item>173.0.0.0/8</item>
+		<item>209.0.0.0/8</item>
+		<item>72.0.0.0/8</item>
+		<item>74.0.0.0/8</item>
+		<item>69.0.0.0/8</item>
+		<item>199.0.0.0/8</item>
+		<item>168.0.0.0/8</item>
+		<item>67.0.0.0/8</item>
+	</string-array>
+
 	<string name="connecting">Connecting...</string>
 	<string name="https_alert">Please modify your proxy host to start with
 		"https://"</string>
@@ -84,8 +98,14 @@
 	<string name="notif_vibrate_title">Vibrate</string>
 	<string name="notif_vibrate_summary">Also vibrate when connection status changes
 	</string>
-	
+
 	<string name="loading">Loading app list...</string>
 	<string name="enable_market">Enable Market</string>
-	<string name="enable_market_summary">Only for users in China, help to update app from Android Market (need reboot)</string>
+	<string name="enable_market_summary">Only for users in China, help to update app from
+		Android Market (need reboot)</string>
+
+	<string name="auto_set_gfwlist">Enable GFW List</string>
+	<string name="auto_set_gfwlist_summary">Set proxy only for blocked sites (needs ROOT
+		permission and
+		IPTABLES support)</string>
 </resources>

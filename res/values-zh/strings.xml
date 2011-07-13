@@ -29,7 +29,7 @@
 	<string name="service_summary">开启 / 关闭后台服务</string>
 	<string name="proxy_summary">GAE代理服务地址</string>
 	<string name="port_summary">本地代理服务器监听端口，任意大于1024的数字</string>
-	<string name="sitekey_summary">WallProxy 加密密钥 (只支持 XOR--0 加密方式)</string>
+	<string name="sitekey_summary">WallProxy / GoAgent 加密密钥)</string>
 	<string name="port_alert">端口必需是大于1024的数字</string>
 	<string name="auto_connect_summary">启动时自动打开代理服务</string>
 	<string name="auto_set_proxy_summary">配置全局代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
@@ -44,7 +44,8 @@
 	<string name="sdcard_alert">请确认SD卡已插入</string>
 	<string name="recovery">清除连接状态</string>
 	<string name="unzip">解压缩中...</string>
-	<string name="proxyed_apps">为应用分别设置代理</string>
+	<string name="proxyed_apps">分应用代理</string>
+	<string name="proxyed_apps_summary">为应用单独设置代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
 	<string name="proxyed_help">选择使用GAE代理的应用:</string>
 
 	<string name="crash_alert">检测到本程序正在从一次崩溃中恢复。\n\n请将您的情况提交到项目网站，谢谢！
@@ -72,9 +73,12 @@
 	<string name="notif_ringtone_title">选择铃声</string>
 	<string name="notif_vibrate_title">震动</string>
 	<string name="notif_vibrate_summary">在连接状态改变时震动</string>
-	
+
 	<string name="loading">正在加载应用列表...</string>
 	<string name="enable_market">启用电子市场</string>
 	<string name="enable_market_summary">帮助大陆用户从电子市场中获得程序更新（需要重启）</string>
+
+	<string name="auto_set_gfwlist">启用GFW列表</string>
+	<string name="auto_set_gfwlist_summary">为部分被屏蔽网站设置代理（实验性）</string>
 
 </resources>

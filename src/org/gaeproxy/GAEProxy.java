@@ -263,9 +263,9 @@ public class GAEProxy extends PreferenceActivity implements
 	private int port;
 	private String sitekey = "";
 	private String proxyType = "GoAgent";
-	public static boolean isAutoConnect = false;
-	public static boolean isGlobalProxy = false;
-	public static boolean isHTTPSProxy = false;
+	private boolean isGlobalProxy = false;
+	private boolean isHTTPSProxy = false;
+	private boolean isGFWList = false;
 
 	// Notification Progress Bar
 	int notification_id = 19172439;
@@ -357,6 +357,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private EditTextPreference sitekeyText;
 	private ListPreference proxyTypeList;
 	private CheckBoxPreference isHTTPSProxyCheck;
+	private CheckBoxPreference isGFWListCheck;
 
 	private CheckBoxPreference isRunningCheck;
 
@@ -408,6 +409,7 @@ public class GAEProxy extends PreferenceActivity implements
 		portText.setEnabled(false);
 		sitekeyText.setEnabled(false);
 		proxyedApps.setEnabled(false);
+		isGFWListCheck.setEnabled(false);
 
 		isAutoConnectCheck.setEnabled(false);
 		isGlobalProxyCheck.setEnabled(false);
@@ -422,11 +424,14 @@ public class GAEProxy extends PreferenceActivity implements
 		if (proxyTypeList.getValue().equals("WallProxy")
 				|| proxyTypeList.getValue().equals("GoAgent"))
 			sitekeyText.setEnabled(true);
-		if (!isGlobalProxyCheck.isChecked())
-			proxyedApps.setEnabled(true);
+		if (!isGFWListCheck.isChecked()) {
+			isGlobalProxyCheck.setEnabled(true);
+			if (!isGlobalProxyCheck.isChecked())
+				proxyedApps.setEnabled(true);
+		}
 
 		isAutoConnectCheck.setEnabled(true);
-		isGlobalProxyCheck.setEnabled(true);
+		isGFWListCheck.setEnabled(true);
 		isHTTPSProxyCheck.setEnabled(true);
 		isInstalledCheck.setEnabled(true);
 		proxyTypeList.setEnabled(true);
@@ -543,6 +548,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isGlobalProxyCheck = (CheckBoxPreference) findPreference("isGlobalProxy");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 		proxyTypeList = (ListPreference) findPreference("proxyType");
+		isGFWListCheck = (CheckBoxPreference) findPreference ("isGFWList");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		if (this.isWorked(SERVICE_NAME)) {
@@ -668,10 +674,16 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		if (settings.getBoolean("isGlobalProxy", false))
+		if (settings.getBoolean("isGFWList", false)) {
+			isGlobalProxyCheck.setEnabled(false);
 			proxyedApps.setEnabled(false);
-		else
-			proxyedApps.setEnabled(true);
+		} else {
+			isGlobalProxyCheck.setEnabled(true);
+			if (settings.getBoolean("isGlobalProxy", false))
+				proxyedApps.setEnabled(false);
+			else
+				proxyedApps.setEnabled(true);
+		}
 
 		if (proxyTypeList.getValue().equals("WallProxy")
 				|| proxyTypeList.getValue().equals("GoAgent"))
@@ -756,17 +768,17 @@ public class GAEProxy extends PreferenceActivity implements
 					Log.d(TAG, "Location: " + countryCode);
 					if (countryCode.toLowerCase().equals("cn")) {
 						String command = "setprop gsm.sim.operator.numeric 31026\n"
-							+ "setprop gsm.operator.numeric 31026\n"
-							+ "setprop gsm.sim.operator.iso-country us\n"
-							+ "setprop gsm.operator.iso-country us\n"
-							+ "chmod 777 /data/data/com.android.vending/shared_prefs\n"
-							+ "chmod 666 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
-							+ "setpref com.android.vending vending_preferences boolean metadata_paid_apps_enabled true\n"
-							+ "chmod 660 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
-							+ "chmod 771 /data/data/com.android.vending/shared_prefs\n"
-							+ "setown com.android.vending /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
-							+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
-							+ "rm -rf /data/data/com.android.vending/cache/*\n";
+								+ "setprop gsm.operator.numeric 31026\n"
+								+ "setprop gsm.sim.operator.iso-country us\n"
+								+ "setprop gsm.operator.iso-country us\n"
+								+ "chmod 777 /data/data/com.android.vending/shared_prefs\n"
+								+ "chmod 666 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
+								+ "setpref com.android.vending vending_preferences boolean metadata_paid_apps_enabled true\n"
+								+ "chmod 660 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
+								+ "chmod 771 /data/data/com.android.vending/shared_prefs\n"
+								+ "setown com.android.vending /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
+								+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
+								+ "rm -rf /data/data/com.android.vending/cache/*\n";
 						runRootCommand(command);
 					}
 				} catch (Exception e) {
@@ -782,11 +794,27 @@ public class GAEProxy extends PreferenceActivity implements
 				isInstalledCheck.setChecked(false);
 		}
 
-		if (key.equals("isGlobalProxy")) {
-			if (settings.getBoolean("isGlobalProxy", false))
+		if (key.equals("isGFWList")) {
+			if (settings.getBoolean("isGFWList", false)) {
+				isGlobalProxyCheck.setEnabled(false);
 				proxyedApps.setEnabled(false);
-			else
-				proxyedApps.setEnabled(true);
+			}
+			else {
+				isGlobalProxyCheck.setEnabled(true);
+				if (settings.getBoolean("isGlobalProxy", false))
+					proxyedApps.setEnabled(false);
+				else
+					proxyedApps.setEnabled(true);
+			}
+		}
+
+		if (key.equals("isGlobalProxy")) {
+			if (!settings.getBoolean("isGFWList", false)) {
+				if (settings.getBoolean("isGlobalProxy", false))
+					proxyedApps.setEnabled(false);
+				else
+					proxyedApps.setEnabled(true);
+			}
 		}
 
 		if (key.equals("isRunning")) {
@@ -890,9 +918,9 @@ public class GAEProxy extends PreferenceActivity implements
 
 		sitekey = settings.getString("sitekey", "");
 
-		isAutoConnect = settings.getBoolean("isAutoConnect", false);
 		isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
 		isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
+		isGFWList = settings.getBoolean("isGFWList", false);
 
 		try {
 
@@ -904,6 +932,7 @@ public class GAEProxy extends PreferenceActivity implements
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
 			bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
 			bundle.putString("proxyType", proxyType);
+			bundle.putBoolean("isGFWList", isGFWList);
 
 			it.putExtras(bundle);
 			startService(it);

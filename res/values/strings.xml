@@ -78,11 +78,13 @@
 		<item>209.0.0.0/8</item>
 		<item>72.0.0.0/8</item>
 		<item>74.0.0.0/8</item>
+		<item>68.0.0.0/8</item>
 		<item>69.0.0.0/8</item>
 		<item>199.0.0.0/8</item>
 		<item>168.0.0.0/8</item>
 		<item>67.0.0.0/8</item>
 		<item>173.0.0.0/8</item>
+		<item>202.248.0.0/16</item>
 	</string-array>
 
 	<string name="connecting">Connecting...</string>

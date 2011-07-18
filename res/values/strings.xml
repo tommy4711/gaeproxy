@@ -25,7 +25,7 @@
 	<string name="feedback">Feedback @ofmax</string>
 	<string name="proxy_cat">GAE Proxy Settings</string>
 	<string name="fearute_cat">Feature Settings</string>
-	<string name="service_controller">Proxy Swtich</string>
+	<string name="service_controller">Proxy Switch</string>
 	<string name="function_cat">Service Controller</string>
 	<string name="service_summary">Enable / Disable Proxy</string>
 	<string name="proxy_summary">GAE Proxy URL</string>

@@ -133,7 +133,7 @@ public class Framework
 		try
 		{
 			stop();
-			Config config = Config.reloadConfig();
+			Config config = Config.getInstance();
 			esf = HttpProxyEventServiceFactory.Registry
 			        .getHttpProxyEventServiceFactory(config
 			                .getProxyEventServiceFactory());

@@ -111,4 +111,12 @@
 	<string name="auto_set_gfwlist_summary">Set proxy only for blocked sites (needs ROOT
 		permission and
 		IPTABLES support)</string>
+
+	<string name="PROXY_SERVICE_HOST">ProxyServiceHost</string>
+	<string name="PROXY_SERVICE_PORT">ProxyServicePort</string>
+	<string name="THREAD_POOL_SIZE">ThreadPoolSize</string>
+	<string name="GOOGLE_APPID_LIST">AppIDs</string>
+	<string name="GAE_CONNECTION_MODE">ConnectionMode</string>
+	<string name="XMPP_ACCOUNTS">XMPPAccounts</string>
+	<string name="LOCAL_PROXY">LocalProxy</string>
 </resources>

@@ -42,6 +42,13 @@ public final class R {
         public static final int overlay=0x7f030005;
     }
     public static final class string {
+        public static final int GAE_CONNECTION_MODE=0x7f050044;
+        public static final int GOOGLE_APPID_LIST=0x7f050043;
+        public static final int LOCAL_PROXY=0x7f050046;
+        public static final int PROXY_SERVICE_HOST=0x7f050040;
+        public static final int PROXY_SERVICE_PORT=0x7f050041;
+        public static final int THREAD_POOL_SIZE=0x7f050042;
+        public static final int XMPP_ACCOUNTS=0x7f050045;
         public static final int about=0x7f050031;
         public static final int already_running=0x7f050008;
         public static final int already_stopped=0x7f050007;

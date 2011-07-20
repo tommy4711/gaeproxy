@@ -19,8 +19,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import android.util.Log;
 
 import com.hyk.serializer.io.Type;
 
@@ -30,7 +29,7 @@ import com.hyk.serializer.io.Type;
  */
 public class ReflectionCache
 {
-	protected static Logger			logger					= LoggerFactory.getLogger(ReflectionCache.class);
+	private static final String TAG = "hyk-proxy";
 	private static Map<Class, List<Type>>	typeListCacheTable				= new ConcurrentHashMap<Class, List<Type>>();
 	private static Map<Class, Field[]>		fieldCacheTable					= new ConcurrentHashMap<Class, Field[]>();
 	private static Map<Class, Method[]>		methodCacheTable				= new ConcurrentHashMap<Class, Method[]>();
@@ -141,7 +140,7 @@ public class ReflectionCache
 			ArrayList<Field> fieldList = getAllDeaclaredFields(clazz);
 			if(null == fieldList)
 			{
-				logger.error("Failed to get fields for :" + clazz);
+				Log.e(TAG, "Failed to get fields for :" + clazz);
 			}
 			fs = new Field[fieldList.size()];
 			fieldList.toArray(fs);

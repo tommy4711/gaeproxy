@@ -7,8 +7,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
 
 import com.hyk.rpc.core.message.MessageFragment;
 import com.hyk.rpc.core.message.MessageID;
@@ -20,7 +21,7 @@ import com.hyk.rpc.core.transport.RpcChannel;
  */
 public abstract class AbstractDefaultRpcChannel extends RpcChannel {
 
-	protected  Logger			logger			= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 	
 	protected Map<MessageID, MessageFragment[]> fragmentTable = new ConcurrentHashMap<MessageID, MessageFragment[]>();
 	
@@ -65,9 +66,9 @@ public abstract class AbstractDefaultRpcChannel extends RpcChannel {
 		}
 		else
 		{
-			if(logger.isDebugEnabled())
+			if(Config.isDebug())
 			{
-				logger.debug("Discard duplicate message fragment!");
+				Log.d(TAG, "Discard duplicate message fragment!");
 			}
 		}
 		

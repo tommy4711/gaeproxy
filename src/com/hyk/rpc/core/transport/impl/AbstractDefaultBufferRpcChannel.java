@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
+
 import com.hyk.io.buffer.ChannelDataBuffer;
 import com.hyk.rpc.core.address.Address;
 import com.hyk.rpc.core.transport.RpcChannelData;
@@ -28,6 +32,7 @@ import com.hyk.serializer.impl.SerailizerStream;
 public abstract class AbstractDefaultBufferRpcChannel extends
 		AbstractDefaultRpcChannel
 {
+	private static final String TAG = "hyk-proxy";
 	protected static final int HEADER_LEN = 6;
 	protected static final short						START_TAG	= 0xCA;
 
@@ -70,9 +75,9 @@ public abstract class AbstractDefaultBufferRpcChannel extends
 			{
 				return null;
 			}
-			if(logger.isDebugEnabled())
+			if(Config.isDebug())
 			{
-				logger.debug("Try to construct buffer:" + buf.readableBytes() + ", at state:" + state);
+				Log.d(TAG, "Try to construct buffer:" + buf.readableBytes() + ", at state:" + state);
 			}
 			switch (state)
 			{
@@ -103,9 +108,9 @@ public abstract class AbstractDefaultBufferRpcChannel extends
 							throw new IOException("Unexpected message with header tag:" + tag);
 						}
 						contentLength = hb.getInt();
-						if(logger.isDebugEnabled())
+						if(Config.isDebug())
 						{
-							logger.debug("ContentLength is " + contentLength);
+							Log.d(TAG, "ContentLength is " + contentLength);
 						}
 						state = State.READ_CONTENT;
 					}

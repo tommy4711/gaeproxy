@@ -13,16 +13,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  * @author qiyingwang
  * 
  */
 public class GoogleAvailableService
 {
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 
 	private List<String> defaultHttpsServiceAddress = Arrays.asList(
 	        "www.google.com.hk", "mail.google.com", "code.google.com",

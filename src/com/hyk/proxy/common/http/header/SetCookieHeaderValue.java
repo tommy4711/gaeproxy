@@ -12,8 +12,7 @@ package com.hyk.proxy.common.http.header;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import android.util.Log;
 
 /**
  * Set-Cookie: <name>=<value>[; <name>=<value>]... [;
@@ -22,8 +21,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SetCookieHeaderValue implements HttpHeaderValue
 {
-	protected static Logger logger = LoggerFactory
-	        .getLogger(SetCookieHeaderValue.class);
+	private static final String TAG = "hyk-proxy";
 
 	private String value;
 
@@ -67,7 +65,7 @@ public class SetCookieHeaderValue implements HttpHeaderValue
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to parse SetCookie header:" + value, e);
+			Log.e(TAG, "Failed to parse SetCookie header:" + value, e);
 			return hvs;
 		}
 

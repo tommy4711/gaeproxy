@@ -20,8 +20,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
 
 import com.hyk.io.buffer.ChannelDataBuffer;
 import com.hyk.rpc.core.address.SimpleSockAddress;
@@ -36,7 +37,7 @@ import com.hyk.rpc.core.transport.impl.AbstractDefaultBufferRpcChannel;
  */
 public class TCPRpcChannel extends AbstractDefaultBufferRpcChannel
 {
-	protected Logger								logger			= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 	
 	private ByteBuffer								recvBuffer		= ByteBuffer.allocate(65536);
 	private ServerSocketChannel						channel;
@@ -103,17 +104,17 @@ public class TCPRpcChannel extends AbstractDefaultBufferRpcChannel
 									ServerSocketChannel ssc = (ServerSocketChannel)key.channel();
 									SocketChannel csc = ssc.accept();
 									InetSocketAddress target = (InetSocketAddress)csc.socket().getRemoteSocketAddress();
-									if(logger.isDebugEnabled())
+									if(Config.isDebug())
 									{
-										logger.debug("Accept a client from " + target);
+										Log.d(TAG, "Accept a client from " + target);
 									}
 									registerSocketChannel(csc);
 								}
 								else if(key.isReadable())
 								{
-									if(logger.isDebugEnabled())
+									if(Config.isDebug())
 									{
-										logger.debug("recv data... ");
+										Log.d(TAG, "recv data... ");
 									}
 									SocketChannel csc = (SocketChannel)key.channel();
 									//csc.configureBlocking(false);
@@ -130,9 +131,9 @@ public class TCPRpcChannel extends AbstractDefaultBufferRpcChannel
 								
 									recvBuffer.flip();
 									InetSocketAddress target = (InetSocketAddress)csc.socket().getRemoteSocketAddress();
-									if(logger.isDebugEnabled())
+									if(Config.isDebug())
 									{
-										logger.debug("recv data from " + target);
+										Log.d(TAG, "recv data from " + target);
 									}
 									ChannelDataBuffer data = ChannelDataBuffer.allocate(recvBuffer.limit());
 									data.writeBytes(recvBuffer);
@@ -194,9 +195,9 @@ public class TCPRpcChannel extends AbstractDefaultBufferRpcChannel
 	@Override
 	protected void sendRawData(RpcChannelData data) throws IOException
 	{
-		if(logger.isDebugEnabled())
+		if(Config.isDebug())
 		{
-			logger.debug("Send data to " + data.address.toPrintableString());
+			Log.d(TAG, "Send data to " + data.address.toPrintableString());
 		}
 		SimpleSockAddress address = (SimpleSockAddress)data.address;
 		SocketChannel csc = socketTable.get(address);
@@ -213,9 +214,9 @@ public class TCPRpcChannel extends AbstractDefaultBufferRpcChannel
 			if(csc.connect(target))
 			{
 				registerSocketChannel(csc);
-				if(logger.isDebugEnabled())
+				if(Config.isDebug())
 				{
-					logger.debug("Create socket to connect " + target + " " + csc.socket().getRemoteSocketAddress());
+					Log.d(TAG, "Create socket to connect " + target + " " + csc.socket().getRemoteSocketAddress());
 				}
 				
 				long len = csc.write(ChannelDataBuffer.asByteBuffer(data.content));

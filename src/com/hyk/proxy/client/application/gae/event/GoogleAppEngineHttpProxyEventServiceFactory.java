@@ -18,18 +18,18 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
-import org.hyk.proxy.android.config.Config;
-import org.hyk.proxy.android.config.Config.ConnectionMode;
-import org.hyk.proxy.android.config.Config.HykProxyServerAuth;
-import org.hyk.proxy.android.config.Config.XmppAccount;
 import org.hyk.proxy.framework.common.Misc;
+import org.hyk.proxy.framework.config.*;
+import org.hyk.proxy.framework.config.Config.ConnectionMode;
+import org.hyk.proxy.framework.config.Config.HykProxyServerAuth;
+import org.hyk.proxy.framework.config.Config.XmppAccount;
 import org.hyk.proxy.framework.event.HttpProxyEventService;
 import org.hyk.proxy.framework.event.HttpProxyEventServiceFactory;
 import org.hyk.proxy.framework.util.ListSelector;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.jivesoftware.smack.XMPPException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import android.util.Log;
 
 import com.hyk.proxy.client.util.ClientUtils;
 import com.hyk.proxy.common.Constants;
@@ -55,7 +55,7 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 		HttpProxyEventServiceFactory {
 	public static final String NAME = "GAE";
 
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 	private FetchServiceSelector selector;
 	// private SSLContext sslContext;
 	private ExecutorService workerExecutor;
@@ -129,8 +129,8 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 
 	protected List<FetchService> retriveFetchServices(final Config config)
 			throws IOException, RpcException, XMPPException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Start retrive remote fetch services.");
+		if (Config.isDebug()) {
+			Log.d(TAG, "Start retrive remote fetch services.");
 		}
 		List<HykProxyServerAuth> auths = config.getHykProxyServerAuths();
 		if (null == auths || auths.isEmpty()) {
@@ -177,7 +177,7 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 				}
 			}
 		} catch (Exception e) {
-			logger.error("Failed to execute retrieve fetch service task!", e);
+			Log.e(TAG, "Failed to execute retrieve fetch service task!", e);
 		}
 
 		return ret;
@@ -218,7 +218,7 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 			info.setPasswd(appid.passwd);
 			return remoteServiceManager.getFetchService(info);
 		} catch (Exception e) {
-			logger.error("Failed to init fetch service.", e);
+			Log.e(TAG, "Failed to init fetch service.", e);
 			return null;
 		}
 
@@ -243,9 +243,9 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 					String cause = String
 							.format("Client's version:%s may be not compatible with Server's version:%s .",
 									Version.value, serverVersion);
-					logger.warn(cause);
+					Log.w(TAG, cause);
 				} catch (Throwable e) {
-					logger.error("Failed to get version from server.", e);
+					Log.e(TAG, "Failed to get version from server.", e);
 				}
 			}
 		});

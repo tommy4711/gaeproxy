@@ -29,10 +29,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
-import org.hyk.proxy.android.config.Config;
-import org.hyk.proxy.android.config.Config.ConnectionMode;
-import org.hyk.proxy.android.config.Config.ProxyInfo;
-import org.hyk.proxy.android.config.Config.ProxyType;
+import org.hyk.proxy.framework.config.Config;
+import org.hyk.proxy.framework.config.Config.ConnectionMode;
+import org.hyk.proxy.framework.config.Config.ProxyInfo;
+import org.hyk.proxy.framework.config.Config.ProxyType;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -61,8 +61,8 @@ import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jivesoftware.smack.util.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import android.util.Log;
 
 import com.hyk.io.buffer.ChannelDataBuffer;
 import com.hyk.proxy.client.util.ClientUtils;
@@ -78,7 +78,7 @@ import com.hyk.rpc.core.transport.impl.AbstractDefaultRpcChannel;
  */
 public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 {
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 
 	private List<RpcChannelData> recvList = new LinkedList<RpcChannelData>();
 
@@ -205,9 +205,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 				{
 					channel = new HttpClientSocketChannel(remoteAddress);
 					channels[start_cur] = channel;
-					if(logger.isDebugEnabled())
+					if(Config.isDebug())
 					{
-						logger.debug("Create " + start_cur + " channel for pool!");
+						Log.d(TAG, "Create " + start_cur + " channel for pool!");
 					}
 					break;
 				}
@@ -228,9 +228,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 			}
 			else
 			{
-				if(logger.isDebugEnabled())
+				if(Config.isDebug())
 				{
-					logger.debug("Select " + start_cur + " channel in pool!");
+					Log.d(TAG, "Select " + start_cur + " channel in pool!");
 				}
 			}
 			return channel;
@@ -337,9 +337,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 		}
 		connectHost = GoogleAvailableService.getInstance().getMappingHost(
 		        connectHost);
-		//if (logger.isDebugEnabled())
+		//if (Config.isDebug())
 		{
-			logger.info("Connect remote proxy server " + connectHost + ":"
+			Log.i(TAG, "Connect remote proxy server " + connectHost + ":"
 			        + connectPort + " and sslProxyEnable:" + sslProxyEnable);
 		}
 		ChannelFuture future = channel.connect(
@@ -347,7 +347,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 		        .awaitUninterruptibly();
 		if (!future.isSuccess())
 		{
-			logger.error("Failed to connect proxy server.", future.getCause());
+			Log.e(TAG, "Failed to connect proxy server.", future.getCause());
 			return null;
 		}
 
@@ -384,14 +384,14 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 						}
 						else
 						{
-							logger.error("Failed to send CONNECT to local proxy. Recv response code:"
+							Log.e(TAG, "Failed to send CONNECT to local proxy. Recv response code:"
 							        + lc.responseCode);
 							return null;
 						}
 					}
 					else
 					{
-						logger.error("Timeout to send CONNECT to local proxy.");
+						Log.e(TAG, "Timeout to send CONNECT to local proxy.");
 						return null;
 					}
 				}
@@ -402,7 +402,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 			}
 			catch (Exception e)
 			{
-				logger.error("Error occured!", e);
+				Log.e(TAG, "Error occured!", e);
 			}
 			finally
 			{
@@ -423,18 +423,18 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 				hf.awaitUninterruptibly();
 				if (!hf.isSuccess())
 				{
-					logger.error("Handshake failed", hf.getCause());
+					Log.e(TAG, "Handshake failed", hf.getCause());
 					channel.close();
 					return null;
 				}
-				if (logger.isDebugEnabled())
+				if (Config.isDebug())
 				{
-					logger.debug("SSL handshake success!");
+					Log.d(TAG, "SSL handshake success!");
 				}
 			}
 			catch (Exception ex)
 			{
-				logger.error(null, ex);
+				Log.e(TAG, null, ex);
 				channel.close();
 				return null;
 			}
@@ -469,7 +469,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 				}
 				catch (InterruptedException e)
 				{
-					logger.error("", e);
+					Log.e(TAG, "", e);
 					return null;
 				}
 			}
@@ -486,9 +486,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 		{
 			remoteAddress.trnasform2Https();
 		}
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("send  data to:" + data.address.toPrintableString());
+			Log.d(TAG, "send  data to:" + data.address.toPrintableString());
 		}
 
 		HttpClientSocketChannel clientChannel = clientChannelSelector
@@ -500,7 +500,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 		}
 		else
 		{
-			logger.error("Failed to get http(s) channel for sending RPC data.");
+			Log.e(TAG, "Failed to get http(s) channel for sending RPC data.");
 			return ;
 		}
 		String url = data.address.toPrintableString();
@@ -555,9 +555,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 
 		ChannelFuture result = clientChannel.getSocketChannel().write(request)
 		        .awaitUninterruptibly();
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Send data to remote server " + remoteAddress);
+			Log.d(TAG, "Send data to remote server " + remoteAddress);
 		}
 		// try again
 		if (!result.isSuccess())
@@ -590,7 +590,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 
 			addressTable.remove(e.getChannel());
 			e.getChannel().close();
-			logger.error("exceptionCaught in HttpResponseHandler", e.getCause());
+			Log.e(TAG, "exceptionCaught in HttpResponseHandler", e.getCause());
 		}
 
 		@Override
@@ -599,9 +599,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 		{
 			addressTable.remove(e.getChannel());
 			waitingReplyChannelSet.remove(e.getChannel());
-			if (logger.isDebugEnabled())
+			if (Config.isDebug())
 			{
-				logger.debug("Connection closed.");
+				Log.d(TAG, "Connection closed.");
 			}
 		}
 
@@ -610,7 +610,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 			waitingReplyChannelSet.remove(channel);
 			if(null == content)
 			{
-				logger.error("NULL content for RPC");
+				Log.e(TAG, "NULL content for RPC");
 				return;
 			}
 			int secid = content.readInt();
@@ -620,7 +620,7 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 
 			if (null == reg)
 			{
-				logger.error("Can not decrypt data"
+				Log.e(TAG, "Can not decrypt data"
 				        + new String(content.toByteBuffer().array()));
 				return;
 			}
@@ -644,9 +644,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 			{
 				HttpResponse response = (HttpResponse) e.getMessage();
 				int bodyLen = (int) response.getContentLength();
-				if (logger.isDebugEnabled())
+				if (Config.isDebug())
 				{
-					logger.debug("Recv message:" + response + " with len:"
+					Log.d(TAG, "Recv message:" + response + " with len:"
 					        + bodyLen + " from "
 					        + addressTable.get(e.getChannel()));
 				}
@@ -690,9 +690,9 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel
 					}
 					else
 					{
-						if (logger.isDebugEnabled())
+						if (Config.isDebug())
 						{
-							logger.debug("Recv message with no body or error rsponse"
+							Log.d(TAG, "Recv message with no body or error rsponse"
 							        + response);
 						}
 					}

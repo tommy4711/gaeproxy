@@ -7,8 +7,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
 
 import com.hyk.rpc.core.constant.RpcConstants;
 import com.hyk.rpc.core.message.Message;
@@ -24,7 +25,7 @@ import com.hyk.timer.Timer;
  */
 public class SessionManager implements MessageListener
 {
-	protected Logger				logger				= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 
 	private Map<Long, Session>		clientSessionMap	= new ConcurrentHashMap<Long, Session>();
 	private Map<MessageID, Session>	serverSessionMap	= new ConcurrentHashMap<MessageID, Session>();
@@ -131,9 +132,9 @@ public class SessionManager implements MessageListener
 	@Override
 	public void onMessage(Message msg)
 	{
-		if(logger.isDebugEnabled())
+		if(Config.isDebug())
 		{
-			logger.debug("Handle message:" + msg.getType());
+			Log.d(TAG, "Handle message:" + msg.getType());
 		}
 		switch(msg.getType())
 		{
@@ -147,9 +148,9 @@ public class SessionManager implements MessageListener
 				else
 				{
 					session = getServerSession(msg.getId());
-					if(logger.isDebugEnabled())
+					if(Config.isDebug())
 					{
-						logger.debug("Duplicate request!");
+						Log.d(TAG, "Duplicate request!");
 					}
 				}
 				session.processRequest();
@@ -164,9 +165,9 @@ public class SessionManager implements MessageListener
 				}
 				else
 				{
-					if(logger.isDebugEnabled())
+					if(Config.isDebug())
 					{
-						logger.debug("Duplicate response!");
+						Log.d(TAG, "Duplicate response!");
 					}
 				}
 				break;

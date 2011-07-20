@@ -46,6 +46,10 @@ public class Config
 	{
 		this.ctx = ctx;
 	}
+	
+	public static boolean isDebug() {
+		return false;
+	}
 
 	public static void initSingletonInstance(Context ctx)
 	{

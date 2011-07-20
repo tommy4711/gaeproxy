@@ -20,7 +20,7 @@ import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.hyk.proxy.android.config.Config;
+import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.event.HttpProxyEvent;
 import org.hyk.proxy.framework.event.HttpProxyEventCallback;
 import org.hyk.proxy.framework.event.HttpProxyEventService;
@@ -39,8 +39,8 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jboss.netty.handler.ssl.SslHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import android.util.Log;
 
 import com.hyk.proxy.client.application.gae.event.GoogleAppEngineHttpProxyEventServiceFactory.FetchServiceSelector;
 import com.hyk.proxy.client.util.ClientUtils;
@@ -60,7 +60,7 @@ import com.hyk.rpc.core.RpcCallbackResult;
 class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
         RpcCallback<HttpResponseExchange>
 {
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 
 	private FetchServiceSelector selector;
 	private SSLContext sslContext;
@@ -203,9 +203,9 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 		        && Config.getInstance().isInjectRangeHeaderSitesMatchHost(
 		                recvReq.getHeader(HttpHeaders.Names.HOST)))
 		{
-			if (logger.isDebugEnabled())
+			if (Config.isDebug())
 			{
-				logger.debug("Inject a range header for host:"
+				Log.d(TAG, "Inject a range header for host:"
 				        + recvReq.getHeader(HttpHeaders.Names.HOST));
 			}
 			// logger.info("Inject a range header for host:" + host);
@@ -215,9 +215,9 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 		}
 		else
 		{
-			if (logger.isDebugEnabled())
+			if (Config.isDebug())
 			{
-				logger.debug("Not Inject a range header for host:"
+				Log.d(TAG, "Not Inject a range header for host:"
 				        + recvReq.getHeader(HttpHeaders.Names.HOST));
 			}
 		}
@@ -229,9 +229,9 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 	        HttpProxyEventCallback callback)
 	{
 		this.callback = callback;
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Handle event:" + event.getType() + " in handler:"
+			Log.d(TAG, "Handle event:" + event.getType() + " in handler:"
 			        + hashCode());
 		}
 		try
@@ -249,9 +249,9 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 					        HttpProxyEventType.RECV_HTTPS_REQUEST);
 					if (request.getMethod().equals(HttpMethod.CONNECT))
 					{
-						if (logger.isDebugEnabled())
+						if (Config.isDebug())
 						{
-							logger.debug("Recv https Connect request:"
+							Log.d(TAG, "Recv https Connect request:"
 							        + request);
 						}
 						httpspath = request.getHeader("Host");
@@ -356,7 +356,7 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 		}
 		catch (Exception e)
 		{
-			logger.error("Failed to handle this event.", e);
+			Log.e(TAG, "Failed to handle this event.", e);
 		}
 
 	}
@@ -365,10 +365,10 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 	{
 		AsyncFetchService fetchService = selector.selectAsync(req);
 		fetchService.fetch(req, GoogleAppEngineHttpProxyEventService.this);
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Send proxy request");
-			logger.debug(ClientUtils.httpMessage2String(req));
+			Log.d(TAG, "Send proxy request");
+			Log.d(TAG, ClientUtils.httpMessage2String(req));
 		}
 	}
 
@@ -388,7 +388,7 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 					}
 					catch (InterruptedException e)
 					{
-						logger.error("", e);
+						Log.e(TAG, "", e);
 					}
 				}
 			});
@@ -404,16 +404,16 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 	{
 		waitForwardBodyComplete();
 		FetchService fetchService = selector.select(req);
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Send proxy request");
-			logger.debug(ClientUtils.httpMessage2String(req));
+			Log.d(TAG, "Send proxy request");
+			Log.d(TAG, ClientUtils.httpMessage2String(req));
 		}
 		HttpResponseExchange res = fetchService.fetch(req);
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Recv proxy response");
-			logger.debug(ClientUtils.httpMessage2String(res));
+			Log.d(TAG, "Recv proxy response");
+			Log.d(TAG, ClientUtils.httpMessage2String(res));
 		}
 		return res;
 	}
@@ -424,18 +424,18 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 		try
 		{
 			HttpResponseExchange forwardResponse = result.get();
-			if (logger.isDebugEnabled())
+			if (Config.isDebug())
 			{
-				logger.debug("Recv proxy response");
-				logger.debug(ClientUtils.httpMessage2String(forwardResponse));
+				Log.d(TAG, "Recv proxy response");
+				Log.d(TAG, ClientUtils.httpMessage2String(forwardResponse));
 			}
 			int fetchSizeLimit = Config.getInstance().getFetchLimitSize();
 			if (forwardResponse.isResponseTooLarge()
 			        || forwardResponse.getResponseCode() == 400)
 			{
-				if (logger.isDebugEnabled())
+				if (Config.isDebug())
 				{
-					logger.debug("Try to start range fetch!");
+					Log.d(TAG, "Try to start range fetch!");
 				}
 				if (!forwardRequest.containsHeader(HttpHeaders.Names.RANGE))
 				{
@@ -518,9 +518,9 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 						                        - returnContentRange
 						                                .getFirstBytePos() + 1)
 						                        + "");
-						if (logger.isDebugEnabled())
+						if (Config.isDebug())
 						{
-							logger.debug("Range get response content-range header is "
+							Log.d(TAG, "Range get response content-range header is "
 							        + returnContentRange);
 						}
 					}
@@ -557,15 +557,15 @@ class GoogleAppEngineHttpProxyEventService implements HttpProxyEventService,
 			}
 			else
 			{
-				if (logger.isDebugEnabled())
+				if (Config.isDebug())
 				{
-					logger.debug("Warn:Browser connection is already closed by browser.");
+					Log.d(TAG, "Warn:Browser connection is already closed by browser.");
 				}
 			}
 		}
 		catch (Throwable e)
 		{
-			logger.error("Encounter error for request:" + forwardRequest.url, e);
+			Log.e(TAG, "Encounter error for request:" + forwardRequest.url, e);
 			if (channel.isConnected())
 			{
 				channel.write(

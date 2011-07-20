@@ -8,8 +8,9 @@ import java.io.NotSerializableException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
 
 import com.hyk.rpc.core.ResponseListener;
 import com.hyk.rpc.core.address.Address;
@@ -28,7 +29,7 @@ import com.hyk.util.thread.ThreadLocalUtil;
  */
 public class RemoteObjectProxy implements InvocationHandler, Externalizable {
 	
-	protected transient Logger			logger			= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 	protected long objID = -2;
 	protected Address hostAddress;
 	protected transient SessionManager sessionManager;
@@ -76,9 +77,9 @@ public class RemoteObjectProxy implements InvocationHandler, Externalizable {
 			return method.invoke(this, args);
 		}
 		//int methodID = RemoteUtil.getMethodID(method, proxy);
-		if(logger.isDebugEnabled())
+		if(Config.isDebug())
 		{
-			logger.debug("Invoke method:" + method.getName());
+			Log.d(TAG, "Invoke method:" + method.getName());
 		}
 		RemoteInvocationResultFuture future = new RemoteInvocationResultFuture();
 		invokeWithResponseListener(method, args, future);

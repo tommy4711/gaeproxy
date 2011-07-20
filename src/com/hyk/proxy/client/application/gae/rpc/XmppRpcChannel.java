@@ -14,7 +14,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.hyk.proxy.android.config.Config.XmppAccount;
+import org.hyk.proxy.framework.config.Config;
+import org.hyk.proxy.framework.config.Config.XmppAccount;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ConnectionConfiguration;
 import org.jivesoftware.smack.MessageListener;
@@ -23,8 +24,8 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.packet.Presence;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import android.util.Log;
 
 import com.hyk.codec.Base64;
 import com.hyk.io.buffer.ChannelDataBuffer;
@@ -40,7 +41,7 @@ import com.hyk.rpc.core.transport.impl.AbstractDefaultRpcChannel;
  */
 public class XmppRpcChannel extends AbstractDefaultRpcChannel implements MessageListener
 {
-	protected Logger				logger		= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 
 	private XMPPConnection					xmppConnection;
 	private Map<String, Chat>				chatTable	= new HashMap<String, Chat>();
@@ -125,9 +126,9 @@ public class XmppRpcChannel extends AbstractDefaultRpcChannel implements Message
 		}
 		try
 		{
-			if(logger.isDebugEnabled())
+			if(Config.isDebug())
 			{
-				logger.debug("Send message from " + this.address + " to " + xmppAddress.toPrintableString());
+				Log.d(TAG, "Send message from " + this.address + " to " + xmppAddress.toPrintableString());
 			}
 			semaphore.acquire();
 			//chat.sendMessage(Base64.byteArrayBufferToBase64(data.content));
@@ -136,12 +137,12 @@ public class XmppRpcChannel extends AbstractDefaultRpcChannel implements Message
 		}
 		catch(XMPPException e)
 		{
-			logger.error("Failed to send XMPP message", e);
+			Log.e(TAG, "Failed to send XMPP message", e);
 			throw new IOException("Failed to send XMPP message");
 		}
 		catch(Exception e)
 		{
-			logger.error("Failed to send XMPP message", e);
+			Log.e(TAG, "Failed to send XMPP message", e);
 		}
 		finally
 		{
@@ -151,9 +152,9 @@ public class XmppRpcChannel extends AbstractDefaultRpcChannel implements Message
 
 	public void processMessage(final Chat chat, final Message message)
 	{
-		if(logger.isDebugEnabled())
+		if(Config.isDebug())
 		{
-			logger.debug("Recv message from " + message.getFrom() + " to " + message.getTo());
+			Log.d(TAG, "Recv message from " + message.getFrom() + " to " + message.getTo());
 		}
 		
 		if(message.getType().equals(Type.chat))
@@ -172,7 +173,7 @@ public class XmppRpcChannel extends AbstractDefaultRpcChannel implements Message
 		}
 		else
 		{
-			logger.error("Receive message:" + message.getType() + ", error" + message.getError());
+			Log.e(TAG, "Receive message:" + message.getType() + ", error" + message.getError());
 			resendService.schedule(new Runnable()
 			{
 				@Override
@@ -184,7 +185,7 @@ public class XmppRpcChannel extends AbstractDefaultRpcChannel implements Message
 					}
 					catch(XMPPException e)
 					{
-						logger.error("Failed to send XMPP message", e);
+						Log.e(TAG, "Failed to send XMPP message", e);
 					}
 				}
 			}, 5000, TimeUnit.MICROSECONDS);

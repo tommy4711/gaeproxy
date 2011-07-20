@@ -10,8 +10,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
 
 import com.hyk.rpc.core.RequestListener;
 import com.hyk.rpc.core.ResponseListener;
@@ -31,7 +32,7 @@ import com.hyk.util.reflect.ClassUtil;
  */
 public class Session
 {
-	protected Logger			logger					= LoggerFactory.getLogger(getClass());
+	private static final String TAG = "hyk-proxy";
 	public static final int		CLIENT					= 0;
 	public static final int		SERVER					= 1;
 
@@ -93,9 +94,9 @@ public class Session
 
 	public void sendResponse(Message response) throws NotSerializableException, IOException
 	{
-		if(logger.isDebugEnabled())
+		if(Config.isDebug())
 		{
-			logger.debug("Send invocation result back!");
+			Log.d(TAG, "Send invocation result back!");
 		}
 		channel.sendMessage(response);
 	}
@@ -111,7 +112,7 @@ public class Session
 			}
 			catch(Exception e)
 			{
-				logger.error("Failed to process response", e);
+				Log.e(TAG, "Failed to process response", e);
 			}
 		}
 		close();
@@ -147,7 +148,7 @@ public class Session
 			}
 			catch(Exception e)
 			{
-				logger.error("Failed to resend response", e);
+				Log.e(TAG, "Failed to resend response", e);
 			}
 			return;
 		}
@@ -160,12 +161,12 @@ public class Session
 			Object target = remoteObjectFactory.getRawObject(objid);
 			if(null == target)
 			{
-				logger.error("Failed to get raw object with ID:" + objid + " messageID:" + request.getId());
+				Log.e(TAG, "Failed to get raw object with ID:" + objid + " messageID:" + request.getId());
 			}
 			Method method = ClassUtil.getMethod(target.getClass(), req.getOperation(), paras);
-			if(logger.isDebugEnabled())
+			if(Config.isDebug())
 			{
-				logger.debug("execute invocation:" + method.getName() + ", paras:" + Arrays.toString(paras));
+				Log.d(TAG, "execute invocation:" + method.getName() + ", paras:" + Arrays.toString(paras));
 			}
 			Object result = null;
 			try
@@ -183,9 +184,9 @@ public class Session
 				result = e;
 			}
 
-			if(logger.isDebugEnabled())
+			if(Config.isDebug())
 			{
-				logger.debug("Invoked finish with normal result.");
+				Log.d(TAG, "Invoked finish with normal result.");
 			}
 			response = MessageFactory.instance.createResponse(request, result);
 			sendResponse(response);
@@ -201,7 +202,7 @@ public class Session
 		}
 		catch(Exception e)
 		{
-			logger.error("Failed to execute invocation", e);
+			Log.e(TAG, "Failed to execute invocation", e);
 		}
 	}
 
@@ -225,7 +226,7 @@ public class Session
 			}
 			catch(Throwable e)
 			{
-				logger.error("Failed to retransmit request", e);
+				Log.e(TAG, "Failed to retransmit request", e);
 			}
 		}
 	}

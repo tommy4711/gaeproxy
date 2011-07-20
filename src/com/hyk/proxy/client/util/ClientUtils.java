@@ -41,10 +41,10 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509ExtendedKeyManager;
 import javax.net.ssl.X509KeyManager;
 
-import org.hyk.proxy.android.config.Config;
-import org.hyk.proxy.android.config.Config.ConnectionMode;
-import org.hyk.proxy.android.config.Config.HykProxyServerAuth;
-import org.hyk.proxy.android.config.Config.XmppAccount;
+import org.hyk.proxy.framework.config.Config;
+import org.hyk.proxy.framework.config.Config.ConnectionMode;
+import org.hyk.proxy.framework.config.Config.HykProxyServerAuth;
+import org.hyk.proxy.framework.config.Config.XmppAccount;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -54,11 +54,10 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 import org.jivesoftware.smack.XMPPException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import android.content.res.AssetManager;
 import android.text.GetChars;
+import android.util.Log;
 
 import com.hyk.compress.CompressorFactory;
 import com.hyk.compress.preference.DefaultCompressPreference;
@@ -84,7 +83,7 @@ import com.hyk.serializer.reflect.ReflectionCache;
  */
 public class ClientUtils
 {
-	protected static Logger logger = LoggerFactory.getLogger(ClientUtils.class);
+	private static final String TAG = "hyk-proxy";
 
 	private static byte[] STDIN_BUFFER = new byte[1024];
 	// private static Console console = System.console();
@@ -603,9 +602,9 @@ static KeyManager[] tempkms;
 		{
 			return;
 		}
-		if (logger.isDebugEnabled())
+		if (Config.isDebug())
 		{
-			logger.debug("Start check remote server reachable.");
+			Log.d(TAG, "Start check remote server reachable.");
 		}
 		List<HykProxyServerAuth> auths = Config.getInstance()
 		        .getHykProxyServerAuths();
@@ -630,7 +629,7 @@ static KeyManager[] tempkms;
 				{
 					Config.getInstance().setPrefernceValue(
 					        DEFAULT_GOOGLE_PROXY_TYPE, OVER_HTTPS + "");
-					logger.error("Can NOT reach remote appengine server:"
+					Log.e(TAG, "Can NOT reach remote appengine server:"
 					        + auth.appid);
 				}
 				return;

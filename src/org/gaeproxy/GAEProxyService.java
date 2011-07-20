@@ -58,6 +58,7 @@ import org.hyk.proxy.framework.Framework;
 import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.util.SimpleSocketAddress;
 
+import com.hyk.proxy.client.util.ClientUtils;
 import com.hyk.rpc.core.constant.RpcConstants;
 
 import android.app.Notification;
@@ -169,6 +170,8 @@ public class GAEProxyService extends Service {
 		System.setProperty(RpcConstants.SERIALIZE_REFLECTIOON_SORT_FIELD, "true");
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		System.setProperty("java.net.preferIPv6Addresses", "false");
+		
+		ClientUtils.assetManager = getAssets();
 		
 		frameworkExecutor.execute(new Runnable()
 		{

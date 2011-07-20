@@ -897,7 +897,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
 
-		if (!proxy.startsWith("https://")) {
+		if (proxy.startsWith("http://")) {
 			showAToast(getString(R.string.https_alert));
 			return false;
 		}

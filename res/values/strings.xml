@@ -14,7 +14,7 @@
 	</string>
 	<string name="reconnect_fail">Cannot reconnect</string>
 	<string name="ok_iknow">OK, I know</string>
-	<string name="proxy">Proxy</string>
+	<string name="proxy">Proxy URL / AppId</string>
 	<string name="port">Local Port</string>
 	<string name="sitekey">Site Key</string>
 	<string name="auto_connect">Connect at boot</string>
@@ -71,6 +71,7 @@
 		<item>GAppProxy</item>
 		<item>WallProxy</item>
 		<item>GoAgent</item>
+		<item>HYK-Proxy</item>
 	</array>
 
 	<string-array name="gfw_list">
@@ -112,11 +113,4 @@
 		permission and
 		IPTABLES support)</string>
 
-	<string name="PROXY_SERVICE_HOST">ProxyServiceHost</string>
-	<string name="PROXY_SERVICE_PORT">ProxyServicePort</string>
-	<string name="THREAD_POOL_SIZE">ThreadPoolSize</string>
-	<string name="GOOGLE_APPID_LIST">AppIDs</string>
-	<string name="GAE_CONNECTION_MODE">ConnectionMode</string>
-	<string name="XMPP_ACCOUNTS">XMPPAccounts</string>
-	<string name="LOCAL_PROXY">LocalProxy</string>
 </resources>

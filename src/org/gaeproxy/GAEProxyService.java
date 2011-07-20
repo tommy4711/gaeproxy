@@ -51,6 +51,14 @@ import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
+import org.hyk.proxy.framework.Framework;
+import org.hyk.proxy.framework.config.Config;
+import org.hyk.proxy.framework.util.SimpleSocketAddress;
+
+import com.hyk.rpc.core.constant.RpcConstants;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -69,6 +77,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -103,6 +112,9 @@ public class GAEProxyService extends Service {
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
+	
+	private Executor frameworkExecutor = Executors.newFixedThreadPool(1);
+	private Framework fr = null;
 
 	private Process httpProcess = null;
 	private DataOutputStream httpOS = null;
@@ -145,6 +157,39 @@ public class GAEProxyService extends Service {
 			// Should not happen.
 			Log.w("ApiDemos", "Unable to invoke method", e);
 		}
+	}
+	
+	public void startHyk() throws RemoteException
+	{
+		Config.initSingletonInstance(GAEProxyService.this);
+		SimpleSocketAddress local = new SimpleSocketAddress();
+		local.host = "127.0.0.1";
+		local.port = port;
+		Config.reloadConfig(local, proxy);
+		System.setProperty(RpcConstants.SERIALIZE_REFLECTIOON_SORT_FIELD, "true");
+		System.setProperty("java.net.preferIPv4Stack", "true");
+		System.setProperty("java.net.preferIPv6Addresses", "false");
+		
+		frameworkExecutor.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				fr.start();
+			}
+		});
+
+	}
+	
+	public void stopHyk() {
+		frameworkExecutor.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				fr.stop();
+			}
+		});
 	}
 
 	private void initHasRedirectSupported() {
@@ -293,6 +338,10 @@ public class GAEProxyService extends Service {
 					return false;
 				cmd += " goagent " + proxyString[2] + " " + port + " "
 						+ appHost + " " + proxyString[3] + " " + sitekey;
+			} else if (proxyType.equals("HYK-Proxy")) {
+				fr = Framework.getInstance();
+				startHyk();
+				
 			}
 			Log.e(TAG, cmd);
 
@@ -662,7 +711,11 @@ public class GAEProxyService extends Service {
 
 		runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		runRootCommand(BASE + "proxy.sh stop");
+		if (!proxyType.equals("HYK-Proxy"))
+			runRootCommand(BASE + "proxy.sh stop");
+		else {
+			stopHyk();
+		}
 
 	}
 

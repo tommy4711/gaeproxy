@@ -862,8 +862,8 @@ public class GAEProxy extends PreferenceActivity implements
 			} else {
 				String host = settings.getString("proxy", "");
 				Editor ed = settings.edit();
-				if (!host.startsWith("https://")) {
-					ed.putString("proxy", "https://" + host);
+				if (host.startsWith("http://")) {
+					ed.putString("proxy", host.replace("http://", "https://"));
 				}
 				ed.commit();
 				proxyText.setSummary(settings.getString("proxy", ""));

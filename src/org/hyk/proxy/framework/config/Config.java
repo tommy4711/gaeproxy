@@ -67,18 +67,19 @@ public class Config {
 
 	}
 
-//	public static Config reloadConfig() {
-//		if (instance != null) {
-//			Config cfg = new Config(instance.ctx);
-//			try {
-//				cfg.init();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//			instance = cfg;
-//		}
-//		return instance;
-//	}
+	public static Config reloadConfig(SimpleSocketAddress local, String appids) {
+		if (instance != null) {
+			Config cfg = new Config(instance.ctx);
+			try {
+				cfg.init(local, appids);
+			} catch (Exception e) {
+				// Nothing
+				Log.e(TAG, "fatal error", e);
+			}
+			instance = cfg;
+		}
+		return instance;
+	}
 
 	public static Config getInstance() {
 		return instance;

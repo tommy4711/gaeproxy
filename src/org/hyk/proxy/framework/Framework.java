@@ -19,7 +19,6 @@ import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.event.HttpProxyEventServiceFactory;
 import org.hyk.proxy.framework.httpserver.HttpLocalProxyServer;
 import org.hyk.proxy.framework.management.UDPManagementServer;
-import org.hyk.proxy.framework.trace.Trace;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 
 import android.util.Log;
@@ -46,8 +45,6 @@ public class Framework
 	private boolean isStarted = false;
 	private boolean isStarting = false;
 	
-	private Trace trace;
-
 	static
 	{
 		GoogleAvailableService.getInstance();
@@ -56,9 +53,8 @@ public class Framework
 	
 	private static Framework instance = null;
 	
-	private Framework(Trace trace)
+	private Framework()
 	{
-		this.trace = trace;
 		//Preferences.init();
 //		pm = PluginManager.getInstance();
 		ThreadPoolExecutor workerExecutor = new OrderedMemoryAwareThreadPoolExecutor(
@@ -66,17 +62,15 @@ public class Framework
 
 		//ThreadPoolExecutor workerExecutor = new ScheduledThreadPoolExecutor(config.getThreadPoolSize());
 		Misc.setGlobalThreadPool(workerExecutor);
-		Misc.setTrace(trace);
 		init();
 	}
 	
-	public static Framework getInstance(Trace trace)
+	public static Framework getInstance()
 	{
 		if(null == instance)
 		{
-			 instance = new Framework(trace);
+			 instance = new Framework();
 		}
-		instance.trace = trace;
 		return instance;
 	}
 	
@@ -149,14 +143,11 @@ public class Framework
 			        config.getLocalProxyServerAddress(),
 			        Misc.getGlobalThreadPool(), esf);
 			//Misc.getGlobalThreadPool().execute(commandServer);
-			trace.notice("Local HTTP(s) Proxy Server Running at "
-			        + config.getLocalProxyServerAddress());
 			isStarted = true;
 			return true;
 		}
 		catch (Exception e)
 		{
-			trace.error("Failed to launch local proxy server for reason:" + e.getMessage());
 			Log.e(TAG, "Failed to launch local proxy server.", e);
 			isStarted = false;
 			isStarting = false;

@@ -11,7 +11,7 @@
 			android:defaultValue="GoAgent"></ListPreference>
 		<EditTextPreference android:title="@string/proxy"
 			android:summary="@string/proxy_summary" android:key="proxy"
-			android:defaultValue="https://proxyofmax.appspot.com/fetch.py"></EditTextPreference>
+			android:defaultValue="proxyofmax"></EditTextPreference>
 		<EditTextPreference android:title="@string/port"
 			android:summary="@string/port_summary" android:key="port"
 			android:defaultValue="1984"></EditTextPreference>

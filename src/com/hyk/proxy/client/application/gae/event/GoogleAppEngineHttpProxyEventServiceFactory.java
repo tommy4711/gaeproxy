@@ -72,7 +72,6 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 				ClientUtils.checkRemoteServer();
 			}
 		});
-		Misc.getTrace().info("GAE connection mode:" + Config.getInstance().getClient2ServerConnectionMode());
 		int ret = ClientUtils.selectDefaultGoogleProxy();
 		List<FetchService> fetchServices = retriveFetchServices(Config
 				.getInstance());
@@ -97,13 +96,6 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 		}
 
 		selector = new FetchServiceSelector(fetchServices);
-		if (fetchServices.size() > 1) {
-			Misc.getTrace().info(
-					fetchServices.size() + " fetch services are working.");
-		} else {
-			Misc.getTrace().info(
-					fetchServices.size() + " fetch service is working.");
-		}
 
 	}
 

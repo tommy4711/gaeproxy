@@ -19,6 +19,7 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.util.SimpleSocketAddress;
 
 import android.util.Log;
@@ -59,9 +60,7 @@ public class UDPManagementServer implements Runnable
 	{
 		DatagramSocket socket = new DatagramSocket();
 		byte[] data = (resourceName + " " + cmd).getBytes();
-		// TODO: here
-//		SimpleSocketAddress addr = config.getLocalProxyServerAddress();
-		SimpleSocketAddress addr = null;
+		SimpleSocketAddress addr = Config.getInstance().getLocalProxyServerAddress();
 		DatagramPacket packet = new DatagramPacket(data, data.length, new InetSocketAddress(addr.host, addr.port));
 		socket.send(packet);
 		socket.close();

@@ -14,6 +14,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.hyk.proxy.framework.config.Config;
+
+import android.util.Log;
+
 /**
  *
  */
@@ -66,6 +70,9 @@ public class SecurityServiceFactory
 		RegistSecurityService reg = new RegistSecurityService(service, id);
 		NAME_TO_REGISTE_SECURITY_SERVICE_TABLE.put(service.getName(), reg);
 		ID_TO_REGISTE_SECURITY_SERVICE_TABLE.put(id, reg);
+		if (Config.isDebug()) {
+			Log.d("hyk-proxy", "Secure ID: " + id + " Name: " + service.getName());
+		}
 		return reg;
 	}
 }

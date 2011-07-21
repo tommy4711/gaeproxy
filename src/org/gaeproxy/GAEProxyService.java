@@ -121,7 +121,7 @@ public class GAEProxyService extends Service {
 	private DataOutputStream httpOS = null;
 
 	private String proxy;
-	private String appHost = "203.208.37.22";
+	private String appHost = "203.208.46.176";
 	private String appMask = "203.208.0.0";
 	private int port;
 	private String sitekey;
@@ -486,7 +486,7 @@ public class GAEProxyService extends Service {
 		// }
 
 		if (isDNSBlocked) {
-			appHost = settings.getString("appHost", "203.208.37.22");
+			appHost = settings.getString("appHost", "203.208.46.176");
 
 			try {
 				URL aURL = new URL("http://myhosts.sinaapp.com/apphost");

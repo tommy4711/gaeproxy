@@ -23,80 +23,68 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import org.hyk.proxy.framework.common.Misc;
+import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.util.SimpleSocketAddress;
 
 /**
  *
  */
-public class HttpsReverseServer implements Runnable
-{
+public class HttpsReverseServer implements Runnable {
 	private SSLServerSocketFactory factory;
 	private SSLServerSocket server;
 	private boolean running = true;
 	private static HttpsReverseServer instance = null;
-	
-	private HttpsReverseServer(SSLContext ctx) throws IOException
-	{
+
+	private HttpsReverseServer(SSLContext ctx) throws IOException {
 		factory = ctx.getServerSocketFactory();
 		server = (SSLServerSocket) factory.createServerSocket();
 		server.bind(null);
 		Misc.getGlobalThreadPool().submit(this);
 	}
-	
-	public static void initSigletonInstance(SSLContext ctx) throws IOException
-	{
+
+	public static void initSigletonInstance(SSLContext ctx) throws IOException {
 		instance = new HttpsReverseServer(ctx);
 	}
-	
-	public static HttpsReverseServer getInstance()
-	{
+
+	public static HttpsReverseServer getInstance() {
 		return instance;
 	}
-	
-	public int getReverseServerPort()
-	{
+
+	public int getReverseServerPort() {
 		return server.getLocalPort();
 	}
-	
-	public SocketAddress getReverseServerSocketAddress()
-	{
+
+	public SocketAddress getReverseServerSocketAddress() {
 		return server.getLocalSocketAddress();
 	}
-	
-	public void stop()
-	{
+
+	public void stop() {
 		running = false;
 		InetSocketAddress addr = (InetSocketAddress) getReverseServerSocketAddress();
-		try
-        {
-	        Socket temp = new Socket(addr.getHostName(), getReverseServerPort());
-	        temp.close();
-        }
-        catch (Exception e)
-        {
-	        // TODO Auto-generated catch block
-	        e.printStackTrace();
-        }
+		try {
+			Socket temp = new Socket(addr.getHostName(), getReverseServerPort());
+			temp.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	@Override
-	public void run()
-	{
-		while (running)
-		{
-			try
-			{
+	public void run() {
+		while (running) {
+			try {
 				Socket client = server.accept();
-				// TODO: implemnet it
-//				SimpleSocketAddress addres = Config.getInstance()
-//				        .getLocalProxyServerAddress();
-				SimpleSocketAddress addres = null;
+				SimpleSocketAddress addres = Config.getInstance()
+						.getLocalProxyServerAddress();
 				Socket localRemote = new Socket(addres.host, addres.port);
-				Misc.getGlobalThreadPool().submit(new ForwardTask(client.getInputStream(), localRemote.getOutputStream()));
-				Misc.getGlobalThreadPool().submit(new ForwardTask(localRemote.getInputStream(), client.getOutputStream()));
-			}
-			catch (IOException e)
-			{
+				Misc.getGlobalThreadPool().submit(
+						new ForwardTask(client.getInputStream(), localRemote
+								.getOutputStream()));
+				Misc.getGlobalThreadPool().submit(
+						new ForwardTask(localRemote.getInputStream(), client
+								.getOutputStream()));
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 				running = false;
@@ -104,45 +92,34 @@ public class HttpsReverseServer implements Runnable
 		}
 	}
 
-	public static class ForwardTask implements Runnable
-	{
+	public static class ForwardTask implements Runnable {
 		private InputStream is;
 		private OutputStream os;
 
-		public ForwardTask(InputStream is, OutputStream os)
-		{
+		public ForwardTask(InputStream is, OutputStream os) {
 			this.is = is;
 			this.os = os;
 		}
 
 		@Override
-		public void run()
-		{
+		public void run() {
 			byte[] buffer = new byte[4096];
-			while (true)
-			{
-				try
-				{
+			while (true) {
+				try {
 					int len = is.read(buffer);
-					if (len > 0)
-					{
+					if (len > 0) {
 						os.write(buffer, 0, len);
 					}
-				}
-				catch (Exception e)
-				{
+				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					break;
 				}
 
 			}
-			try
-			{
+			try {
 				is.close();
 				os.close();
-			}
-			catch (IOException e)
-			{
+			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}

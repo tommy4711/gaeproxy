@@ -44,10 +44,6 @@ public class Framework
 	private boolean isStarted = false;
 	private boolean isStarting = false;
 	
-	static
-	{
-		ExtensionsLauncher.init();
-	}
 	
 	private static Framework instance = null;
 	
@@ -75,6 +71,7 @@ public class Framework
 	private void init()
 	{
 		HttpProxyEventServiceFactory.Registry.register(new GoogleAppEngineHttpProxyEventServiceFactory());
+		ExtensionsLauncher.init();
 	}
 
 	public void stop()

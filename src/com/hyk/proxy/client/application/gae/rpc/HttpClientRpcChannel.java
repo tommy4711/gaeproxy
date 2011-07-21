@@ -502,6 +502,13 @@ public class HttpClientRpcChannel extends AbstractDefaultRpcChannel {
 				return;
 			}
 			int secid = content.readInt();
+			
+			if (secid > 1)
+				secid = 1;
+			
+			if (Config.isDebug()) {
+				Log.d(TAG, "Secure id: " + secid);
+			}
 			RegistSecurityService reg = SecurityServiceFactory
 					.getRegistSecurityService(secid);
 			ByteBuffer data = content.toByteBuffer();

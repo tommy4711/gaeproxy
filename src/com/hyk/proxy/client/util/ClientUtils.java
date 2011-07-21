@@ -463,28 +463,28 @@ public class ClientUtils {
 	}
 
 	public static int selectDefaultGoogleProxy() {
-		String value = Config.getInstance().getPreferenceValue(
-				DEFAULT_GOOGLE_PROXY_TYPE);
-		int intValue = OVER_HTTPS;
-		if (null != value) {
-			intValue = Integer.parseInt(value);
-		}
-		switch (intValue) {
-		case OVER_HTTP: {
-			if (setDefaultGoogleHttpProxy()) {
-				return OVER_HTTP;
-			}
-			break;
-		}
-		case OVER_HTTPS: {
-			if (setDefaultGoogleHttpsProxy()) {
-				return OVER_HTTPS;
-			}
-			break;
-		}
-		default:
-			break;
-		}
+//		String value = Config.getInstance().getPreferenceValue(
+//				DEFAULT_GOOGLE_PROXY_TYPE);
+//		int intValue = OVER_HTTPS;
+//		if (null != value) {
+//			intValue = Integer.parseInt(value);
+//		}
+//		switch (intValue) {
+//		case OVER_HTTP: {
+//			if (setDefaultGoogleHttpProxy()) {
+//				return OVER_HTTP;
+//			}
+//			break;
+//		}
+//		case OVER_HTTPS: {
+//			if (setDefaultGoogleHttpsProxy()) {
+//				return OVER_HTTPS;
+//			}
+//			break;
+//		}
+//		default:
+//			break;
+//		}
 		return DIRECT;
 	}
 

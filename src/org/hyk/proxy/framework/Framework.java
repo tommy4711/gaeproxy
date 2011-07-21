@@ -24,7 +24,6 @@ import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import android.util.Log;
 
 import com.hyk.proxy.client.application.gae.event.GoogleAppEngineHttpProxyEventServiceFactory;
-import com.hyk.proxy.client.util.GoogleAvailableService;
 import com.hyk.proxy.common.ExtensionsLauncher;
 
 
@@ -47,7 +46,6 @@ public class Framework
 	
 	static
 	{
-		GoogleAvailableService.getInstance();
 		ExtensionsLauncher.init();
 	}
 	

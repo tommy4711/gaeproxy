@@ -25,7 +25,6 @@ import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.hyk.proxy.client.util.GoogleAvailableService;
 import com.hyk.proxy.common.Constants;
 import com.hyk.proxy.common.Version;
 import com.hyk.proxy.common.secure.NoneSecurityService;
@@ -47,7 +46,7 @@ public class Config {
 	}
 
 	public static boolean isDebug() {
-		return false;
+		return true;
 	}
 
 	public static void initSingletonInstance(Context ctx) {
@@ -583,30 +582,30 @@ public class Config {
 	}
 
 	public boolean selectDefaultHttpProxy() {
-		if (null == localProxy) {
-			ProxyInfo info = new ProxyInfo();
-			info.host = GoogleAvailableService.getInstance()
-					.getAvailableHttpService();
-			if (null != info.host) {
-				localProxy = info;
-				return true;
-			}
-		}
+//		if (null == localProxy) {
+//			ProxyInfo info = new ProxyInfo();
+//			info.host = GoogleAvailableService.getInstance()
+//					.getAvailableHttpService();
+//			if (null != info.host) {
+//				localProxy = info;
+//				return true;
+//			}
+//		}
 		return false;
 	}
 
 	public boolean selectDefaultHttpsProxy() {
-		if (null == localProxy) {
-			ProxyInfo info = new ProxyInfo();
-			info.host = GoogleAvailableService.getInstance()
-					.getAvailableHttpsService();
-			info.port = 443;
-			info.type = ProxyType.HTTPS;
-			if (null != info.host) {
-				localProxy = info;
-				return true;
-			}
-		}
+//		if (null == localProxy) {
+//			ProxyInfo info = new ProxyInfo();
+//			info.host = GoogleAvailableService.getInstance()
+//					.getAvailableHttpsService();
+//			info.port = 443;
+//			info.type = ProxyType.HTTPS;
+//			if (null != info.host) {
+//				localProxy = info;
+//				return true;
+//			}
+//		}
 		return false;
 	}
 

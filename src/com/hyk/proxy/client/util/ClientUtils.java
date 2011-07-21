@@ -81,8 +81,7 @@ import com.hyk.serializer.reflect.ReflectionCache;
 /**
  *
  */
-public class ClientUtils
-{
+public class ClientUtils {
 	private static final String TAG = "hyk-proxy";
 
 	private static byte[] STDIN_BUFFER = new byte[1024];
@@ -97,31 +96,32 @@ public class ClientUtils
 	public static final int OVER_HTTPS = 2;
 
 	public static AssetManager assetManager;
-static KeyManager[] tempkms;
-//	public static SSLSocket getSSLSocket(Channel ch, SSLSocketFactory fatory)
-//	{
-//		try
-//		{
-//			ArrayList<Field> fs = ReflectionCache.getAllDeaclaredFields(ch
-//			        .getClass());
-//			for (Field f : fs)
-//			{
-//				if (f.getType().equals(SocketChannel.class))
-//				{
-//					SocketChannel raw = (SocketChannel) f.get(ch);
-//					InetSocketAddress ss = (InetSocketAddress) raw.socket()
-//					        .getRemoteSocketAddress();
-//					return (SSLSocket) fatory.createSocket(raw.socket(), ss
-//					        .getAddress().getHostAddress(), ss.getPort(), true);
-//				}
-//			}
-//		}
-//		catch (Exception e)
-//		{
-//
-//		}
-//		return null;
-//	}
+	static KeyManager[] tempkms;
+
+	// public static SSLSocket getSSLSocket(Channel ch, SSLSocketFactory fatory)
+	// {
+	// try
+	// {
+	// ArrayList<Field> fs = ReflectionCache.getAllDeaclaredFields(ch
+	// .getClass());
+	// for (Field f : fs)
+	// {
+	// if (f.getType().equals(SocketChannel.class))
+	// {
+	// SocketChannel raw = (SocketChannel) f.get(ch);
+	// InetSocketAddress ss = (InetSocketAddress) raw.socket()
+	// .getRemoteSocketAddress();
+	// return (SSLSocket) fatory.createSocket(raw.socket(), ss
+	// .getAddress().getHostAddress(), ss.getPort(), true);
+	// }
+	// }
+	// }
+	// catch (Exception e)
+	// {
+	//
+	// }
+	// return null;
+	// }
 
 	// public static SSLContext initSSLContext() throws Exception {
 	// String password = "hyk-proxy";
@@ -141,145 +141,131 @@ static KeyManager[] tempkms;
 	// return sslContext;
 	// }
 
-//	public static void printChoosedAlias( SSLEngine engine)
-//	{
-//		if(null == tempkms) return;
-//		for (KeyManager km:tempkms)
-//        {
-//			System.out.println("#######" + km.getClass().getName() );
-//			if(km instanceof X509ExtendedKeyManager)
-//			{
-//				System.out.println("@@@@@" + km.getClass().getName() );
-//				X509ExtendedKeyManager ekm = (X509ExtendedKeyManager) km;
-//				String alials = ekm.chooseEngineServerAlias("RSA", null,
-//						engine);
-//				System.out.println("@@@@@" +alials);
-//				Object obj = ekm.getCertificateChain(alials);
-//				if(null == obj)
-//				{
-//					System.out.println("#######NULL cert Chain" );
-//				}
-//				else
-//				{
-//					System.out.println("#######non NULL cert Chain" );
-//				}
-//			}
-//			else
-//			{
-//				System.out.println("^^^^^^" + km.getClass().getName() );
-//			}
-//        }
-//	}
-	
+	// public static void printChoosedAlias( SSLEngine engine)
+	// {
+	// if(null == tempkms) return;
+	// for (KeyManager km:tempkms)
+	// {
+	// System.out.println("#######" + km.getClass().getName() );
+	// if(km instanceof X509ExtendedKeyManager)
+	// {
+	// System.out.println("@@@@@" + km.getClass().getName() );
+	// X509ExtendedKeyManager ekm = (X509ExtendedKeyManager) km;
+	// String alials = ekm.chooseEngineServerAlias("RSA", null,
+	// engine);
+	// System.out.println("@@@@@" +alials);
+	// Object obj = ekm.getCertificateChain(alials);
+	// if(null == obj)
+	// {
+	// System.out.println("#######NULL cert Chain" );
+	// }
+	// else
+	// {
+	// System.out.println("#######non NULL cert Chain" );
+	// }
+	// }
+	// else
+	// {
+	// System.out.println("^^^^^^" + km.getClass().getName() );
+	// }
+	// }
+	// }
+
 	public static SSLContext getFakeSSLContext(String host, String port)
-	        throws Exception
-	{
+			throws Exception {
 		InputStream kstis = null;
-		if (null != assetManager)
-		{
+		if (null != assetManager) {
 			kstis = assetManager.open("cert/RootKeyStore.kst");
 		}
 		SSLContext sslContext = SSLContext.getInstance("TLS");
 		KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory
-		        .getDefaultAlgorithm());
+				.getDefaultAlgorithm());
 		KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
 
 		ks.load(kstis, "hyk-proxy".toCharArray());
 		kmf.init(ks, "hyk-proxy".toCharArray());
 		TrustManagerFactory trustManagerFactory = TrustManagerFactory
-		        .getInstance(TrustManagerFactory.getDefaultAlgorithm());
-		//kmf.getKeyManagers()
+				.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+		// kmf.getKeyManagers()
 		trustManagerFactory.init(ks);
-		//X509KeyManager km = null;
-//		KeyManager[] kms = kmf.getKeyManagers();
-//		tempkms = kms;
-//		for (KeyManager km:kms)
-//        {
-//			//System.out.println("#######" + km.getClass().getName() );
-//			if(km instanceof X509ExtendedKeyManager)
-//			{
-//				System.out.println("@@@@@" + km.getClass().getName() );
-//				X509ExtendedKeyManager ekm = (X509ExtendedKeyManager) km;
-//				String alials = ekm.chooseEngineServerAlias("RSA", null,
-//                       null);
-//				System.out.println("@@@@@" +alials);
-//				Object obj = ekm.getCertificateChain(alials);
-//				if(null == obj)
-//				{
-//					System.out.println("#######NULL cert Chain" );
-//				}
-//				else
-//				{
-//					System.out.println("#######non NULL cert Chain" );
-//				}
-//			}
-//			else
-//			{
-//				System.out.println("^^^^^^" + km.getClass().getName() );
-//			}
-//        }
-//		Object obj = ks.getCertificateChain(null);
-//		if(null == obj)
-//		{
-//			System.out.println("#######NULL cert Chain" );
-//		}
-//		else
-//		{
-//			System.out.println("#######non NULL cert Chain" );
-//		}
-		
+		// X509KeyManager km = null;
+		// KeyManager[] kms = kmf.getKeyManagers();
+		// tempkms = kms;
+		// for (KeyManager km:kms)
+		// {
+		// //System.out.println("#######" + km.getClass().getName() );
+		// if(km instanceof X509ExtendedKeyManager)
+		// {
+		// System.out.println("@@@@@" + km.getClass().getName() );
+		// X509ExtendedKeyManager ekm = (X509ExtendedKeyManager) km;
+		// String alials = ekm.chooseEngineServerAlias("RSA", null,
+		// null);
+		// System.out.println("@@@@@" +alials);
+		// Object obj = ekm.getCertificateChain(alials);
+		// if(null == obj)
+		// {
+		// System.out.println("#######NULL cert Chain" );
+		// }
+		// else
+		// {
+		// System.out.println("#######non NULL cert Chain" );
+		// }
+		// }
+		// else
+		// {
+		// System.out.println("^^^^^^" + km.getClass().getName() );
+		// }
+		// }
+		// Object obj = ks.getCertificateChain(null);
+		// if(null == obj)
+		// {
+		// System.out.println("#######NULL cert Chain" );
+		// }
+		// else
+		// {
+		// System.out.println("#######non NULL cert Chain" );
+		// }
+
 		sslContext.init(kmf.getKeyManagers(),
-		        trustManagerFactory.getTrustManagers(), null);
-		
+				trustManagerFactory.getTrustManagers(), null);
+
 		return sslContext;
 	}
 
-	public static boolean isIPV6Address(String address)
-	{
-		try
-		{
+	public static boolean isIPV6Address(String address) {
+		try {
 			return InetAddress.getByName(address) instanceof Inet6Address;
-		}
-		catch (Throwable e)
-		{
+		} catch (Throwable e) {
 			return false;
 		}
 	}
 
 	public static HttpResponse buildHttpServletResponse(
-	        HttpResponseExchange forwardResponse) throws IOException
-	{
+			HttpResponseExchange forwardResponse) throws IOException {
 
-		if (null == forwardResponse)
-		{
+		if (null == forwardResponse) {
 			return new DefaultHttpResponse(HttpVersion.HTTP_1_1,
-			        HttpResponseStatus.REQUEST_TIMEOUT);
+					HttpResponseStatus.REQUEST_TIMEOUT);
 		}
 		HttpResponse response = new DefaultHttpResponse(HttpVersion.HTTP_1_1,
-		        HttpResponseStatus.valueOf(forwardResponse.getResponseCode()));
+				HttpResponseStatus.valueOf(forwardResponse.getResponseCode()));
 
 		List<String[]> headers = forwardResponse.getHeaders();
-		for (String[] header : headers)
-		{
+		for (String[] header : headers) {
 			if (header[0].equalsIgnoreCase(HttpHeaders.Names.SET_COOKIE)
-			        || header[0]
-			                .equalsIgnoreCase(HttpHeaders.Names.SET_COOKIE2))
-			{
+					|| header[0]
+							.equalsIgnoreCase(HttpHeaders.Names.SET_COOKIE2)) {
 				List<SetCookieHeaderValue> cookies = SetCookieHeaderValue
-				        .parse(header[1]);
-				for (SetCookieHeaderValue cookie : cookies)
-				{
+						.parse(header[1]);
+				for (SetCookieHeaderValue cookie : cookies) {
 					response.addHeader(header[0], cookie.toString());
 				}
-			}
-			else
-			{
+			} else {
 				response.addHeader(header[0], header[1]);
 			}
 		}
 		byte[] content = forwardResponse.getBody();
-		if (null != content)
-		{
+		if (null != content) {
 			ChannelBuffer bufer = ChannelBuffers.wrappedBuffer(content);
 			response.setContent(bufer);
 		}
@@ -287,8 +273,7 @@ static KeyManager[] tempkms;
 		return response;
 	}
 
-	public static long[] parseContentRange(String value)
-	{
+	public static long[] parseContentRange(String value) {
 		String left = value.substring(ContentRangeValueHeader.length()).trim();
 		String[] split = left.split("/");
 		String[] split2 = split[0].split("-");
@@ -299,206 +284,149 @@ static KeyManager[] tempkms;
 		return ret;
 	}
 
-	public static boolean isCompleteResponse(HttpResponseExchange response)
-	{
+	public static boolean isCompleteResponse(HttpResponseExchange response) {
 		String contentRange = response
-		        .getHeaderValue(HttpHeaders.Names.CONTENT_RANGE);
-		if (null == contentRange)
-		{
+				.getHeaderValue(HttpHeaders.Names.CONTENT_RANGE);
+		if (null == contentRange) {
 			return true;
 		}
 		long[] lens = parseContentRange(contentRange);
-		if (lens[1] >= (lens[2] - 1))
-		{
+		if (lens[1] >= (lens[2] - 1)) {
 			return true;
 		}
 		return false;
 	}
 
-	public static HttpServerAddress createHttpServerAddress(String appid)
-	{
+	public static HttpServerAddress createHttpServerAddress(String appid) {
 		return new HttpServerAddress(appid + ".appspot.com",
-		        Constants.HTTP_INVOKE_PATH, Config.getInstance()
-		                .getClient2ServerConnectionMode()
-		                .equals(ConnectionMode.HTTPS2GAE));
+				Constants.HTTP_INVOKE_PATH, Config.getInstance()
+						.getClient2ServerConnectionMode()
+						.equals(ConnectionMode.HTTPS2GAE));
 	}
 
-	public static XmppAddress createXmppAddress(String appid)
-	{
+	public static XmppAddress createXmppAddress(String appid) {
 		return new XmppAddress(appid + "@appspot.com");
 	}
 
 	public static MasterNodeService getMasterNodeService(Config config)
-	        throws IOException, RpcException, XMPPException
-	{
-		if (null != master)
-		{
+			throws IOException, RpcException, XMPPException {
+		if (null != master) {
 			return master;
 		}
 		RPC rpc = null;
 		if (config.getClient2ServerConnectionMode().equals(
-		        ConnectionMode.HTTP2GAE))
-		{
+				ConnectionMode.HTTP2GAE)) {
 			rpc = ClientUtils.createHttpRPC(Executors.newCachedThreadPool());
 			int oldtimeout = rpc.getSessionManager().getSessionTimeout();
 			// wait 2s to retrieve remote object reference
 			rpc.getSessionManager().setSessionTimeout(20000);
-			try
-			{
+			try {
 				master = rpc
-				        .getRemoteService(
-				                MasterNodeService.class,
-				                MasterNodeService.NAME,
-				                ClientUtils
-				                        .createHttpServerAddress(Constants.MASTER_APPID));
-			}
-			catch (Rpctimeout e)
-			{
+						.getRemoteService(
+								MasterNodeService.class,
+								MasterNodeService.NAME,
+								ClientUtils
+										.createHttpServerAddress(Constants.MASTER_APPID));
+			} catch (Rpctimeout e) {
 				// TODO: handle exception
-			}
-			finally
-			{
+			} finally {
 				rpc.getSessionManager().setSessionTimeout(oldtimeout);
 			}
-		}
-		else
-		{
-			if (null != config.getXmppAccounts())
-			{
+		} else {
+			if (null != config.getXmppAccounts()) {
 				XmppAccount account = config.getXmppAccounts().get(0);
 				rpc = ClientUtils.createXmppRPC(account,
-				        Executors.newCachedThreadPool());
+						Executors.newCachedThreadPool());
 				master = rpc.getRemoteService(MasterNodeService.class,
-				        MasterNodeService.NAME,
-				        ClientUtils.createXmppAddress(Constants.MASTER_APPID));
+						MasterNodeService.NAME,
+						ClientUtils.createXmppAddress(Constants.MASTER_APPID));
 			}
 		}
 		return master;
 	}
 
 	public static RPC createHttpRPC(Executor workerExecutor)
-	        throws IOException, RpcException
-	{
+			throws IOException, RpcException {
 		Config config = Config.getInstance();
 		DefaultCompressPreference.init(CompressorFactory
-		        .getRegistCompressor(config.getCompressor()).compressor);
+				.getRegistCompressor(config.getCompressor()).compressor);
 		Properties initProps = new Properties();
 		initProps.setProperty(RpcConstants.SESSIN_TIMEOUT,
-		        Integer.toString(config.getRpcTimeOut() * 1000));
+				Integer.toString(config.getRpcTimeOut() * 1000));
 		initProps.setProperty(RpcConstants.COMPRESS_PREFER,
-		        DefaultCompressPreference.class.getName());
+				DefaultCompressPreference.class.getName());
 		// HttpServerAddress remoteAddress = new HttpServerAddress(appid +
 		// ".appspot.com", Constants.HTTP_INVOKE_PATH);
 		// HttpServerAddress remoteAddress = new HttpServerAddress("localhost",
 		// 8888, Constants.HTTP_INVOKE_PATH);
 		HttpClientRpcChannel httpCleintRpcchannle = new HttpClientRpcChannel(
-		        workerExecutor);
+				workerExecutor);
 		return new RPC(httpCleintRpcchannle, initProps);
 	}
 
 	public static RPC createXmppRPC(XmppAccount account, Executor workerExecutor)
-	        throws IOException, RpcException, XMPPException
-	{
+			throws IOException, RpcException, XMPPException {
 		Config config = Config.getInstance();
 		DefaultCompressPreference.init(CompressorFactory
-		        .getRegistCompressor(config.getCompressor()).compressor);
+				.getRegistCompressor(config.getCompressor()).compressor);
 		Properties initProps = new Properties();
 		initProps.setProperty(RpcConstants.SESSIN_TIMEOUT,
-		        Integer.toString(config.getRpcTimeOut() * 1000));
+				Integer.toString(config.getRpcTimeOut() * 1000));
 		initProps.setProperty(RpcConstants.COMPRESS_PREFER,
-		        DefaultCompressPreference.class.getName());
+				DefaultCompressPreference.class.getName());
 		XmppRpcChannel xmppRpcchannle = new XmppRpcChannel(workerExecutor,
-		        account);
+				account);
 		return new RPC(xmppRpcchannle, initProps);
 	}
 
-	public static String extractAppId(Address addr)
-	{
-		if (addr instanceof HttpServerAddress)
-		{
+	public static String extractAppId(Address addr) {
+		if (addr instanceof HttpServerAddress) {
 			String host = ((HttpServerAddress) addr).getHost();
 			return host.substring(0, host.indexOf('.'));
 		}
 
-		if (addr instanceof XmppAddress)
-		{
+		if (addr instanceof XmppAddress) {
 			String jid = ((XmppAddress) addr).getJid();
 			return jid.substring(0, jid.indexOf('@'));
 		}
 		return null;
 	}
 
-	public static boolean isHttpServerReachable(String appid, boolean viaGoogle)
-	{
+	public static boolean isHttpServerReachable(String appid, boolean viaGoogle) {
 		HttpURLConnection conn = null;
-		try
-		{
+		try {
 			String host = appid + ".appspot.com";
 			String server = "http://" + host;
 			URL url = new URL(server);
-			Proxy proxy = null;
 
-			if (viaGoogle)
-			{
-				proxy = new Proxy(Type.HTTP, new InetSocketAddress(
-				        GoogleAvailableService.getInstance()
-				                .getAvailableHttpService(), 80));
-				conn = (HttpURLConnection) (url.openConnection(proxy));
-			}
-			else if (GoogleAvailableService.getInstance().getMappingHost(host) != host)
-			{
-				proxy = new Proxy(Type.HTTP, new InetSocketAddress(
-				        GoogleAvailableService.getInstance().getMappingHost(
-				                host), 80));
-				conn = (HttpURLConnection) (url.openConnection(proxy));
-			}
-			else
-			{
-				conn = (HttpURLConnection) (url.openConnection());
-			}
+			conn = (HttpURLConnection) (url.openConnection());
+
 			return conn.getResponseCode() == 200;
-		}
-		catch (Exception e)
-		{
+		} catch (Exception e) {
 			return false;
-		}
-		finally
-		{
-			if (null != conn)
-			{
-				try
-				{
+		} finally {
+			if (null != conn) {
+				try {
 					conn.disconnect();
-				}
-				catch (Exception e2)
-				{
+				} catch (Exception e2) {
 					// TODO: handle exception
 				}
 			}
 		}
 	}
 
-	public static boolean isHttpsServerReachable(String appid)
-	{
+	public static boolean isHttpsServerReachable(String appid) {
 		String server = appid + ".appspot.com";
 		Socket socket = new Socket();
-		try
-		{
+		try {
 			socket.connect(new InetSocketAddress(server, 443));
 			return true;
-		}
-		catch (Throwable e)
-		{
+		} catch (Throwable e) {
 			return false;
-		}
-		finally
-		{
-			try
-			{
+		} finally {
+			try {
 				socket.close();
-			}
-			catch (IOException e)
-			{
+			} catch (IOException e) {
 				// do nothing
 			}
 		}
@@ -514,133 +442,106 @@ static KeyManager[] tempkms;
 	// return new String(console.readPassword()).trim();
 	// }
 
-	public static String httpMessage2String(HttpMessageExhange msg)
-	{
+	public static String httpMessage2String(HttpMessageExhange msg) {
 		StringBuilder buffer = new StringBuilder();
 		buffer.append("\r\n============================================\r\n");
-		if (msg instanceof HttpResponseExchange)
-		{
+		if (msg instanceof HttpResponseExchange) {
 			int resCode = ((HttpResponseExchange) msg).responseCode;
 			buffer.append(HttpResponseStatus.valueOf(resCode)).append("\r\n");
-		}
-		else
-		{
+		} else {
 			HttpRequestExchange req = (HttpRequestExchange) msg;
 			buffer.append(req.method).append("  ").append(req.url)
-			        .append("\r\n");
+					.append("\r\n");
 		}
 		List<String[]> hs = msg.getHeaders();
-		for (String[] header : hs)
-		{
+		for (String[] header : hs) {
 			buffer.append(header[0]).append(":").append(header[1])
-			        .append("\r\n");
+					.append("\r\n");
 		}
 		buffer.append("============================================\r\n");
 		return buffer.toString();
 	}
 
-	public static int selectDefaultGoogleProxy()
-	{
+	public static int selectDefaultGoogleProxy() {
 		String value = Config.getInstance().getPreferenceValue(
-		        DEFAULT_GOOGLE_PROXY_TYPE);
+				DEFAULT_GOOGLE_PROXY_TYPE);
 		int intValue = OVER_HTTPS;
-		if (null != value)
-		{
+		if (null != value) {
 			intValue = Integer.parseInt(value);
 		}
-		switch (intValue)
-		{
-			case OVER_HTTP:
-			{
-				if (setDefaultGoogleHttpProxy())
-				{
-					return OVER_HTTP;
-				}
-				break;
+		switch (intValue) {
+		case OVER_HTTP: {
+			if (setDefaultGoogleHttpProxy()) {
+				return OVER_HTTP;
 			}
-			case OVER_HTTPS:
-			{
-				if (setDefaultGoogleHttpsProxy())
-				{
-					return OVER_HTTPS;
-				}
-				break;
+			break;
+		}
+		case OVER_HTTPS: {
+			if (setDefaultGoogleHttpsProxy()) {
+				return OVER_HTTPS;
 			}
-			default:
-				break;
+			break;
+		}
+		default:
+			break;
 		}
 		return DIRECT;
 	}
 
-	public static boolean setDefaultGoogleHttpsProxy()
-	{
+	public static boolean setDefaultGoogleHttpsProxy() {
 		if (Config.getInstance().getHykProxyClientLocalProxy() != null
-		        || !Config.getInstance().getClient2ServerConnectionMode()
-		                .equals(ConnectionMode.HTTP2GAE))
-		{
+				|| !Config.getInstance().getClient2ServerConnectionMode()
+						.equals(ConnectionMode.HTTP2GAE)) {
 			return false;
 		}
 		return Config.getInstance().selectDefaultHttpsProxy();
 	}
 
-	public static boolean setDefaultGoogleHttpProxy()
-	{
+	public static boolean setDefaultGoogleHttpProxy() {
 		if (Config.getInstance().getHykProxyClientLocalProxy() != null
-		        || !Config.getInstance().getClient2ServerConnectionMode()
-		                .equals(ConnectionMode.HTTP2GAE))
-		{
+				|| !Config.getInstance().getClient2ServerConnectionMode()
+						.equals(ConnectionMode.HTTP2GAE)) {
 			return false;
 		}
 		return Config.getInstance().selectDefaultHttpProxy();
 	}
 
-	public static void checkRemoteServer()
-	{
+	public static void checkRemoteServer() {
 		if (Config.getInstance().getHykProxyClientLocalProxy() != null
-		        || !Config.getInstance().getClient2ServerConnectionMode()
-		                .equals(ConnectionMode.HTTP2GAE))
-		{
+				|| !Config.getInstance().getClient2ServerConnectionMode()
+						.equals(ConnectionMode.HTTP2GAE)) {
 			return;
 		}
-		if (Config.isDebug())
-		{
+		if (Config.isDebug()) {
 			Log.d(TAG, "Start check remote server reachable.");
 		}
 		List<HykProxyServerAuth> auths = Config.getInstance()
-		        .getHykProxyServerAuths();
-		if (auths.isEmpty())
-		{
+				.getHykProxyServerAuths();
+		if (auths.isEmpty()) {
 			auths = new LinkedList<Config.HykProxyServerAuth>();
 			HykProxyServerAuth master = new HykProxyServerAuth();
 			master.appid = Constants.MASTER_APPID;
 			auths.add(master);
 		}
 
-		for (HykProxyServerAuth auth : auths)
-		{
-			if (!ClientUtils.isHttpServerReachable(auth.appid, false))
-			{
-				if (ClientUtils.isHttpServerReachable(auth.appid, true))
-				{
+		for (HykProxyServerAuth auth : auths) {
+			if (!ClientUtils.isHttpServerReachable(auth.appid, false)) {
+				if (ClientUtils.isHttpServerReachable(auth.appid, true)) {
 					Config.getInstance().setPrefernceValue(
-					        DEFAULT_GOOGLE_PROXY_TYPE, OVER_HTTP + "");
-				}
-				else
-				{
+							DEFAULT_GOOGLE_PROXY_TYPE, OVER_HTTP + "");
+				} else {
 					Config.getInstance().setPrefernceValue(
-					        DEFAULT_GOOGLE_PROXY_TYPE, OVER_HTTPS + "");
+							DEFAULT_GOOGLE_PROXY_TYPE, OVER_HTTPS + "");
 					Log.e(TAG, "Can NOT reach remote appengine server:"
-					        + auth.appid);
+							+ auth.appid);
 				}
 				return;
-			}
-			else
-			{
+			} else {
 				break;
 			}
 		}
 		Config.getInstance().setPrefernceValue(DEFAULT_GOOGLE_PROXY_TYPE,
-		        DIRECT + "");
+				DIRECT + "");
 	}
 
 }

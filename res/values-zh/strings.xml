@@ -56,11 +56,6 @@
 	<string name="about">关于</string>
 
 	<string name="proxy_type">代理类型选择</string>
-	<array name="proxy_type_entry">
-		<item>GAppProxy</item>
-		<item>WallProxy</item>
-		<item>GoAgent</item>
-	</array>
 
 	<string name="connecting">正在连接...</string>
 	<string name="https_alert">请修改你的代理地址，以 "https://" 开头</string>

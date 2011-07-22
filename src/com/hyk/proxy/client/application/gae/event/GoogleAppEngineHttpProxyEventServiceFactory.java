@@ -19,7 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 import org.hyk.proxy.framework.common.Misc;
-import org.hyk.proxy.framework.config.*;
+import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.config.Config.ConnectionMode;
 import org.hyk.proxy.framework.config.Config.HykProxyServerAuth;
 import org.hyk.proxy.framework.config.Config.XmppAccount;
@@ -76,7 +76,18 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 		List<FetchService> fetchServices = retriveFetchServices(Config
 				.getInstance());
 		if (fetchServices.isEmpty()) {
-			fetchServices = retriveFetchServices(Config.getInstance());
+			if (Config.getInstance().selectDefaultHttpProxy()) {
+				if (ret != ClientUtils.DIRECT) {
+					Config.getInstance().clearProxy();
+				}
+				fetchServices = retriveFetchServices(Config.getInstance());
+				if (fetchServices.isEmpty()) {
+					if (Config.getInstance().selectDefaultHttpsProxy()) {
+						fetchServices = retriveFetchServices(Config
+								.getInstance());
+					}
+				}
+			}
 		}
 
 		if (fetchServices.isEmpty()) {
@@ -190,11 +201,10 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 			if (!mode.equals(ConnectionMode.XMPP2GAE)) {
 				rpc.getSessionManager().setSessionTimeout(oldtimeout);
 			}
-			// AsyncRemoteServiceManager asyncRemoteServiceManager = RpcUtil
-			// .asyncWrapper(remoteServiceManager,
-			// AsyncRemoteServiceManager.class);
-			// checkVersionCompatability(asyncRemoteServiceManager,
-			// appid.appid);
+			//AsyncRemoteServiceManager asyncRemoteServiceManager = RpcUtil
+			//		.asyncWrapper(remoteServiceManager,
+			//				AsyncRemoteServiceManager.class);
+			//checkVersionCompatability(asyncRemoteServiceManager, appid.appid);
 			User info = new User();
 			info.setEmail(appid.user);
 			info.setPasswd(appid.passwd);
@@ -217,8 +227,9 @@ public class GoogleAppEngineHttpProxyEventServiceFactory implements
 							|| serverVersion.contains(Version.value)) {
 						return;
 					}
-					// just return without warning for specific version
-					if (serverVersion.equalsIgnoreCase("0.9.1")) {
+					//just return without warning for specific version
+					if(serverVersion.equalsIgnoreCase("0.9.1"))
+					{
 						return;
 					}
 					String cause = String

@@ -14,6 +14,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+
 import org.hyk.proxy.framework.common.Misc;
 import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.event.HttpProxyEventServiceFactory;
@@ -21,9 +22,12 @@ import org.hyk.proxy.framework.httpserver.HttpLocalProxyServer;
 import org.hyk.proxy.framework.management.UDPManagementServer;
 import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 
+
+
 import android.util.Log;
 
 import com.hyk.proxy.client.application.gae.event.GoogleAppEngineHttpProxyEventServiceFactory;
+import com.hyk.proxy.client.util.GoogleAvailableService;
 import com.hyk.proxy.common.ExtensionsLauncher;
 
 
@@ -34,7 +38,7 @@ import com.hyk.proxy.common.ExtensionsLauncher;
 public class Framework 
 {
 	private static final String TAG = "hyk-proxy";
-	
+
 	private HttpLocalProxyServer server;
 	private UDPManagementServer commandServer;
 	private HttpProxyEventServiceFactory esf = null;
@@ -44,6 +48,11 @@ public class Framework
 	private boolean isStarted = false;
 	private boolean isStarting = false;
 	
+	static
+	{
+		GoogleAvailableService.getInstance();
+		ExtensionsLauncher.init();
+	}
 	
 	private static Framework instance = null;
 	
@@ -51,6 +60,7 @@ public class Framework
 	{
 		//Preferences.init();
 //		pm = PluginManager.getInstance();
+		Config config = Config.getInstance();
 		ThreadPoolExecutor workerExecutor = new OrderedMemoryAwareThreadPoolExecutor(
 				100, 0, 0);
 
@@ -71,7 +81,6 @@ public class Framework
 	private void init()
 	{
 		HttpProxyEventServiceFactory.Registry.register(new GoogleAppEngineHttpProxyEventServiceFactory());
-		ExtensionsLauncher.init();
 	}
 
 	public void stop()

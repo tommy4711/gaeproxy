@@ -32,7 +32,6 @@ import com.hyk.serializer.impl.SerailizerStream;
 public abstract class AbstractDefaultBufferRpcChannel extends
 		AbstractDefaultRpcChannel
 {
-	private static final String TAG = "hyk-proxy";
 	protected static final int HEADER_LEN = 6;
 	protected static final short						START_TAG	= 0xCA;
 
@@ -41,6 +40,7 @@ public abstract class AbstractDefaultBufferRpcChannel extends
 	protected Map<Address, BufferRpcChannelData>	readBuffer	= new ConcurrentHashMap<Address, BufferRpcChannelData>();
 	protected List<RpcChannelData>  msgList = new LinkedList<RpcChannelData>();
 	protected BufferRpcChannelData					writeBuffer;
+	private static final String TAG = "hyk-proxy";
 
 	protected enum State
 	{

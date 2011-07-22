@@ -31,7 +31,6 @@ public class Misc
 		Misc.managementServer = managementServer;
 	}
 
-
 	public static ExecutorService getGlobalThreadPool()
     {
     	return globalThreadPool;

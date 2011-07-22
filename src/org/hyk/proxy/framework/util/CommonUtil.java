@@ -20,6 +20,10 @@ import java.net.URLConnection;
 
 import org.hyk.proxy.framework.config.Config;
 
+
+
+
+
 import android.util.Log;
 
 import com.hyk.util.net.NetUtil;
@@ -44,7 +48,8 @@ public class CommonUtil
         }
         catch (Exception e)
         {
-			SimpleSocketAddress localServAddr = Config.getInstance()
+        	Config conf = Config.getInstance();
+			SimpleSocketAddress localServAddr = conf
 			        .getLocalProxyServerAddress();
 			Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(
 			        localServAddr.host, localServAddr.port));
@@ -75,7 +80,8 @@ public class CommonUtil
 		{
 			Log.e(TAG, "Failed to download file:" + url, e);
 			// Try use proxy again
-			SimpleSocketAddress localServAddr = Config.getInstance()
+			Config conf = Config.getInstance();
+			SimpleSocketAddress localServAddr = conf
 			        .getLocalProxyServerAddress();
 			Proxy proxy = new Proxy(Type.HTTP, new InetSocketAddress(
 			        localServAddr.host, localServAddr.port));

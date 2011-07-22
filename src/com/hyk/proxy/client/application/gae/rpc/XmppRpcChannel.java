@@ -25,6 +25,8 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.packet.Presence;
 
+
+
 import android.util.Log;
 
 import com.hyk.codec.Base64;

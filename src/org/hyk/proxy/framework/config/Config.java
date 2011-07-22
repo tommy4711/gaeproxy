@@ -121,6 +121,14 @@ public class Config {
 		// xmppAccounts.add(account);
 		// }
 		// }
+		
+		String localProxyStr = "http://www.google.cn:80";
+		localProxyStr = localProxyStr.trim();
+		if (localProxyStr.length() != 0)
+		{
+			ProxyInfo info = ProxyInfo.fromStr(localProxyStr);
+			localProxy = info;
+		}
 
 		postInit();
 	}
@@ -427,7 +435,7 @@ public class Config {
 	}
 
 	// @XmlElement
-	private ProxyInfo localProxy;
+	private ProxyInfo localProxy = null;
 
 	public void setHykProxyClientLocalProxy(ProxyInfo localProxy) {
 		this.localProxy = localProxy;

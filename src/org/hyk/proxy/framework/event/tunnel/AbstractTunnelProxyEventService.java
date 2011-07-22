@@ -9,6 +9,7 @@
  */
 package org.hyk.proxy.framework.event.tunnel;
 
+import org.hyk.proxy.framework.config.Config;
 import org.hyk.proxy.framework.event.HttpProxyEvent;
 import org.hyk.proxy.framework.event.HttpProxyEventCallback;
 import org.hyk.proxy.framework.event.HttpProxyEventService;
@@ -38,11 +39,14 @@ import org.jboss.netty.handler.codec.http.HttpVersion;
 
 import android.util.Log;
 
+
+
 /**
  *
  */
 public abstract class AbstractTunnelProxyEventService implements
-		HttpProxyEventService {
+        HttpProxyEventService
+{
 	private static final String TAG = "hyk-proxy";
 
 	protected Channel localChannel;
@@ -51,199 +55,264 @@ public abstract class AbstractTunnelProxyEventService implements
 
 	protected boolean isHttps;
 
-	public AbstractTunnelProxyEventService() {
+	public AbstractTunnelProxyEventService()
+	{
 	}
 
-	public interface CallBack {
+	public interface CallBack
+	{
 		public void callback(Channel remote) throws Exception;
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() throws Exception
+	{
 		closeChannel(localChannel);
 		closeChannel(remoteChannel);
 	}
 
-	protected void closeChannel(Channel channel) {
-		if (null != channel && channel.isConnected()) {
+	protected void closeChannel(Channel channel)
+	{
+		if (null != channel && channel.isConnected())
+		{
 			channel.close();
 		}
 	}
 
 	protected abstract void getRemoteChannel(HttpProxyEvent event,
-			CallBack callack) throws Exception;
+	        CallBack callack) throws Exception;
 
-	protected ChannelDownstreamHandler getEncrypter() {
+	protected ChannelDownstreamHandler getEncrypter()
+	{
 		return new SimpleEncrypter.SimpleEncryptEncoder();
 	}
 
-	protected ChannelUpstreamHandler getDecrypter() {
+	protected ChannelUpstreamHandler getDecrypter()
+	{
 		return new SimpleEncrypter.SimpleDecryptDecoder();
 	}
 
-	protected void initCodecHandler(Channel channel) {
+	protected void initCodecHandler(Channel channel)
+	{
 		ChannelPipeline pipeline = channel.getPipeline();
 
-		if (null != getDecrypter()) {
+		if(null != getDecrypter())
+		{
 			pipeline.addLast("decrypter", getDecrypter());
 		}
-
+		
 		pipeline.addLast("httpResponseDecoder", new HttpResponseDecoder());
 		// pipeline.addLast("aggregator", new HttpChunkAggregator(10240000));
-		if (null != getEncrypter()) {
+		if(null != getEncrypter())
+		{
 			pipeline.addLast("encrypter", getEncrypter());
 		}
-
+		
 		pipeline.addLast("httpRequestEncoder", new HttpRequestEncoder());
 
 		pipeline.addLast("handler", new ForwardResponseHandler());
 	}
 
-	protected void removeCodecHandler(ChannelFuture future) {
-		future.addListener(new ChannelFutureListener() {
+	protected void removeCodecHandler(ChannelFuture future)
+	{
+		future.addListener(new ChannelFutureListener()
+		{
 
 			@Override
-			public void operationComplete(ChannelFuture future)
-					throws Exception {
+			public void operationComplete(ChannelFuture future) throws Exception
+			{
 				localChannel.getPipeline().remove("decoder");
 				remoteChannel.getPipeline().remove("httpResponseDecoder");
 				remoteChannel.getPipeline().remove("httpRequestEncoder");
 				localChannel.getPipeline().remove("encoder");
-				Log.d(TAG, "Remove codec for https.");
+				if (Config.isDebug())
+				{
+					Log.d(TAG, "Remove codec for https.");
+				}
 			}
 
 		});
 	}
 
-	protected boolean needForwardConnect() {
+	protected boolean needForwardConnect()
+	{
 		return true;
 	}
 
-	protected boolean forceShortConnection() {
+	protected boolean forceShortConnection()
+	{
 		return true;
 	}
-
-	protected MessageEvent preProcessForwardMessageEvent(MessageEvent event) {
+	
+	protected MessageEvent preProcessForwardMessageEvent(MessageEvent event)
+	{
 		return event;
 	}
-
-	protected HttpProxyEvent preProcessForwardHttpProxyEvent(
-			HttpProxyEvent event) {
+	
+	protected HttpProxyEvent preProcessForwardHttpProxyEvent(HttpProxyEvent event)
+	{
 		return event;
 	}
 
 	@Override
-	public void handleEvent(final HttpProxyEvent evt,
-			HttpProxyEventCallback callback) {
-		Log.d(TAG, "Handle event:" + evt.getType());
+	public void handleEvent(final HttpProxyEvent evt, HttpProxyEventCallback callback)
+	{
+		if (Config.isDebug())
+		{
+			Log.d(TAG, "Handle event:" + evt.getType());
+		}
 		final HttpProxyEvent event = preProcessForwardHttpProxyEvent(evt);
-		switch (event.getType()) {
-		case RECV_HTTP_REQUEST:
-		case RECV_HTTPS_REQUEST: {
-			localChannel = event.getChannel();
+		switch (event.getType())
+		{
+			case RECV_HTTP_REQUEST:
+			case RECV_HTTPS_REQUEST:
+			{
+				localChannel = event.getChannel();
 
-			final HttpRequest request = (HttpRequest) event.getSource();
-			if (event.getType().equals(HttpProxyEventType.RECV_HTTPS_REQUEST)) {
-				isHttps = true;
-			} else {
-				if (forceShortConnection()) {
-					request.setHeader(HttpHeaders.Names.CONNECTION, "close");
+				final HttpRequest request = (HttpRequest) event.getSource();
+				if (event.getType().equals(
+				        HttpProxyEventType.RECV_HTTPS_REQUEST))
+				{
+					isHttps = true;
 				}
-			}
-			try {
-
-				// remoteChannel = getRemoteChannel(event);
-				getRemoteChannel(event, new CallBack() {
-					@Override
-					public void callback(Channel remote) throws Exception {
-						remoteChannel = remote;
-						if (null == remoteChannel) {
-							close();
-							return;
-						}
-						initCodecHandler(remoteChannel);
-						if (!isHttps || needForwardConnect()) {
-							Log.d(TAG, "Send proxy request");
-							Log.d(TAG, request.toString());
-							remoteChannel.write(request);
-						} else if (isHttps) {
-							HttpResponse res = new DefaultHttpResponse(
-									HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
-							ChannelFuture future = event.getChannel()
-									.write(res);
-							removeCodecHandler(future);
-						}
-
+				else
+				{
+					if (forceShortConnection())
+					{
+						request.setHeader(HttpHeaders.Names.CONNECTION, "close");
 					}
-				});
+				}
+				try
+				{
 
-			} catch (Exception e) {
-				Log.e(TAG, "Failed to create remote channel!", e);
-				closeChannel(localChannel);
+					// remoteChannel = getRemoteChannel(event);
+					getRemoteChannel(event, new CallBack()
+					{
+						@Override
+						public void callback(Channel remote) throws Exception
+						{
+							remoteChannel = remote;
+							if (null == remoteChannel)
+							{
+								close();
+								return;
+							}
+							initCodecHandler(remoteChannel);
+							if (!isHttps || needForwardConnect())
+							{
+								if (Config.isDebug())
+								{
+									Log.d(TAG, "Send proxy request");
+									Log.d(TAG, request.toString());
+								}
+								remoteChannel.write(request);
+							}
+							else if (isHttps)
+							{
+								HttpResponse res = new DefaultHttpResponse(
+								        HttpVersion.HTTP_1_1,
+								        HttpResponseStatus.OK);
+								ChannelFuture future = event.getChannel()
+								        .write(res);
+								removeCodecHandler(future);
+							}
+
+						}
+					});
+
+				}
+				catch (Exception e)
+				{
+					Log.e(TAG, "Failed to create remote channel!", e);
+					closeChannel(localChannel);
+				}
+				break;
 			}
-			break;
-		}
-		case RECV_HTTP_CHUNK:
-		case RECV_HTTPS_CHUNK: {
-			remoteChannel.write(event.getSource());
-			break;
-		}
+			case RECV_HTTP_CHUNK:
+			case RECV_HTTPS_CHUNK:
+			{
+				remoteChannel.write(event.getSource());
+				break;
+			}
 		}
 	}
 
 	@ChannelPipelineCoverage("one")
-	class ForwardResponseHandler extends SimpleChannelUpstreamHandler {
+	class ForwardResponseHandler extends SimpleChannelUpstreamHandler
+	{
 		ChannelFuture locaChannelFuture;
 
 		@Override
 		public void channelClosed(ChannelHandlerContext ctx, ChannelStateEvent e)
-				throws Exception {
-			Log.d(TAG, "Tunnel server close this connection.");
+		        throws Exception
+		{
+			if (Config.isDebug())
+			{
+				Log.d(TAG, "Tunnel server close this connection.");
+			}
 			close();
 		}
 
 		@Override
 		public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
-				throws Exception {
-			Log.d(TAG, "Tunnel connection have an exception!.", e.getCause());
+		        throws Exception
+		{
+			if (Config.isDebug())
+			{
+				Log.d(TAG, "Tunnel connection have an exception!.",
+				        e.getCause());
+			}
 		}
 
 		@Override
 		public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
-				throws Exception {
+		        throws Exception
+		{
 			e = preProcessForwardMessageEvent(e);
-			if (e.getMessage() instanceof HttpResponse) {
-				Log.d(TAG, "Recv proxy response");
-				Log.d(TAG, e.getMessage().toString());
-				// if (isHttps)
-				// {
-				// // http request decoder
-				// localChannel.getPipeline().remove("decoder");
-				// }
+			if (e.getMessage() instanceof HttpResponse)
+			{
+				if (Config.isDebug())
+				{
+					Log.d(TAG, "Recv proxy response");
+					Log.d(TAG, e.getMessage().toString());
+				}
+//				if (isHttps)
+//				{
+//					// http request decoder
+//					localChannel.getPipeline().remove("decoder");
+//				}
 				HttpResponse res = (HttpResponse) e.getMessage();
-
+				
 				ChannelFuture future = localChannel.write(res);
-				if (!res.isChunked() && !isHttps) {
+				if (!res.isChunked() && !isHttps)
+				{
 					future.addListener(ChannelFutureListener.CLOSE);
 				}
-				if (isHttps) {
+				if (isHttps)
+				{
 					removeCodecHandler(future);
 				}
 
-			} else if (e.getMessage() instanceof HttpChunk) {
+			}
+			else if (e.getMessage() instanceof HttpChunk)
+			{
 				HttpChunk chunk = (HttpChunk) e.getMessage();
 				ChannelFuture future = localChannel.write(chunk);
-				if (chunk.isLast()) {
+				if (chunk.isLast())
+				{
 					future.addListener(ChannelFutureListener.CLOSE);
 				}
-			} else {
+			}
+			else
+			{
 				localChannel.write(e.getMessage());
 			}
 		}
 	}
-
+	
 	@ChannelPipelineCoverage("one")
-	public static class EmptyHandler extends SimpleChannelUpstreamHandler {
+    public static class EmptyHandler extends SimpleChannelUpstreamHandler
+	{
 
 	}
 }

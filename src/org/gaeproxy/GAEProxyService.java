@@ -466,22 +466,7 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleCommand() {
 
-		if (proxyType.equals("HYK-Proxy")) {
-			try {
-				InetAddress addr = InetAddress.getByName("www.google.com.hk");
-				appHost = addr.getHostAddress();
-
-				if (appHost.length() > 8) {
-					String[] ips = appHost.split("\\.");
-					if (ips.length == 4)
-						appHost = ips[0] + "." + ips[1] + ".0.0";
-					Log.d(TAG, appHost);
-				}
-
-			} catch (Exception ignore) {
-				return false;
-			}
-		} else if (isDNSBlocked) {
+		if (isDNSBlocked) {
 			appHost = settings.getString("appHost", "203.208.37.22");
 
 			try {

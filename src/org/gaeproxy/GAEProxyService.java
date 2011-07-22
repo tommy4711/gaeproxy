@@ -113,7 +113,7 @@ public class GAEProxyService extends Service {
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
-	
+
 	private Executor frameworkExecutor = Executors.newFixedThreadPool(1);
 	private Framework fr = null;
 
@@ -159,37 +159,33 @@ public class GAEProxyService extends Service {
 			Log.w("ApiDemos", "Unable to invoke method", e);
 		}
 	}
-	
-	public void startHyk() throws RemoteException
-	{
+
+	public void startHyk() throws RemoteException {
 		Config.initSingletonInstance(GAEProxyService.this);
 		SimpleSocketAddress local = new SimpleSocketAddress();
 		local.host = "127.0.0.1";
 		local.port = port;
 		Config.reloadConfig(local, proxy);
-		System.setProperty(RpcConstants.SERIALIZE_REFLECTIOON_SORT_FIELD, "true");
+		System.setProperty(RpcConstants.SERIALIZE_REFLECTIOON_SORT_FIELD,
+				"true");
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		System.setProperty("java.net.preferIPv6Addresses", "false");
-		
+
 		ClientUtils.assetManager = getAssets();
-		
-		frameworkExecutor.execute(new Runnable()
-		{
+
+		frameworkExecutor.execute(new Runnable() {
 			@Override
-			public void run()
-			{
+			public void run() {
 				fr.start();
 			}
 		});
 
 	}
-	
+
 	public void stopHyk() {
-		frameworkExecutor.execute(new Runnable()
-		{
+		frameworkExecutor.execute(new Runnable() {
 			@Override
-			public void run()
-			{
+			public void run() {
 				fr.stop();
 			}
 		});
@@ -344,7 +340,7 @@ public class GAEProxyService extends Service {
 			} else if (proxyType.equals("HYK-Proxy")) {
 				fr = Framework.getInstance();
 				startHyk();
-				
+
 			}
 			Log.e(TAG, cmd);
 
@@ -470,22 +466,22 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleCommand() {
 
-		// try {
-		// InetAddress addr = InetAddress.getByName("www.google.co.jp");
-		// appHost = addr.getHostAddress();
-		//
-		// if (appHost.length() > 8) {
-		// String[] ips = appHost.split("\\.");
-		// if (ips.length == 4)
-		// appHost = ips[0] + "." + ips[1] + ".0.0";
-		// Log.d(TAG, appHost);
-		// }
-		//
-		// } catch (Exception ignore) {
-		// return false;
-		// }
+		if (proxyType.equals("HYK-Proxy")) {
+			try {
+				InetAddress addr = InetAddress.getByName("www.google.com.hk");
+				appHost = addr.getHostAddress();
 
-		if (isDNSBlocked) {
+				if (appHost.length() > 8) {
+					String[] ips = appHost.split("\\.");
+					if (ips.length == 4)
+						appHost = ips[0] + "." + ips[1] + ".0.0";
+					Log.d(TAG, appHost);
+				}
+
+			} catch (Exception ignore) {
+				return false;
+			}
+		} else if (isDNSBlocked) {
 			appHost = settings.getString("appHost", "203.208.37.22");
 
 			try {

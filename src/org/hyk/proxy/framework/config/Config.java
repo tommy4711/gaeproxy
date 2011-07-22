@@ -122,7 +122,7 @@ public class Config {
 		// }
 		// }
 		
-		String localProxyStr = "http://www.google.cn:80";
+		String localProxyStr = "https://www.google.com.hk:443";
 		localProxyStr = localProxyStr.trim();
 		if (localProxyStr.length() != 0)
 		{

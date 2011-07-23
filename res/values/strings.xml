@@ -74,7 +74,6 @@
 	</array>
 
 	<string-array name="gfw_list">
-		<item>173.0.0.0/8</item>
 		<item>209.0.0.0/8</item>
 		<item>72.0.0.0/8</item>
 		<item>74.0.0.0/8</item>

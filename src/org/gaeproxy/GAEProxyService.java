@@ -519,7 +519,7 @@ public class GAEProxyService extends Service {
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
 			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(10);
+			int n = random.nextInt(20);
 			if (n > 0)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);

@@ -315,37 +315,46 @@ public class GAEProxyService extends Service {
 	private void preConnection() {
 
 		try {
-			InputStream is = null;
-			String socksIp = "173.192.90.214";
-			String socksPort = "16976";
+			// InputStream is = null;
+			// String socksIp = "173.192.90.214";
+			// String socksPort = "16976";
+			// try {
+			// URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
+			// HttpURLConnection conn = (HttpURLConnection) aURL
+			// .openConnection();
+			// conn.connect();
+			// is = conn.getInputStream();
+			//
+			// BufferedReader reader = new BufferedReader(
+			// new InputStreamReader(is));
+			//
+			// String line = reader.readLine();
+			// if (!line.startsWith("#ip"))
+			// throw new Exception("Format error");
+			// line = reader.readLine();
+			// socksIp = line.trim().toLowerCase();
+			//
+			// line = reader.readLine();
+			// if (!line.startsWith("#port"))
+			// throw new Exception("Format error");
+			// line = reader.readLine();
+			// socksPort = line.trim().toLowerCase();
+			// } catch (Exception e) {
+			// Log.e(TAG, "cannot get remote port info", e);
+			// }
+			
+			String socksIp = "173.224.211.42";
 			try {
-				URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
-				conn.connect();
-				is = conn.getInputStream();
+				InetAddress addr = InetAddress.getByName("apps.madeye.me");
+				socksIp = addr.getHostAddress();
 
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(is));
-
-				String line = reader.readLine();
-				if (!line.startsWith("#ip"))
-					throw new Exception("Format error");
-				line = reader.readLine();
-				socksIp = line.trim().toLowerCase();
-
-				line = reader.readLine();
-				if (!line.startsWith("#port"))
-					throw new Exception("Format error");
-				line = reader.readLine();
-				socksPort = line.trim().toLowerCase();
-			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote port info", e);
+			} catch (Exception ignore) {
+				socksIp = "173.224.211.42";
 			}
 
 			Log.e(TAG, "Forward Successful");
 			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
-					+ " " + socksPort);
+					+ " " + "1984");
 
 			StringBuffer cmd = new StringBuffer();
 

@@ -30,7 +30,9 @@ redsocks {
  local_port = 8124;
  ip = $3;
  port = $4;
- type = socks5;
+ type = http-connect;
+ login = "gaeproxy";
+ password = "gaeproxy";
 } 
 " >>$DIR/redsocks.conf
 

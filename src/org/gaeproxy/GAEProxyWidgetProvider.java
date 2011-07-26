@@ -137,7 +137,6 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
 			Log.d(TAG, "Proxy switch action");
 			
-			Toast.makeText(context, R.string.toast_start, Toast.LENGTH_SHORT);
 			// do some really cool stuff here
 			if (isWorked(context, SERVICE_NAME)) {
 				// Service is working, so stop it
@@ -157,6 +156,9 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				boolean isInstalled = settings.getBoolean("isInstalled", false);
 
 				if (isInstalled) {
+					
+					Toast.makeText(context, R.string.toast_start, Toast.LENGTH_SHORT);
+					
 					proxy = settings.getString("proxy", "");
 					proxyType = settings.getString("proxyType", "GoAgent");
 					String portText = settings.getString("port", "");

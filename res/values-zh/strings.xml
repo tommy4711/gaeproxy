@@ -74,5 +74,6 @@
 
 	<string name="auto_set_gfwlist">启用GFW列表</string>
 	<string name="auto_set_gfwlist_summary">为部分被屏蔽网站设置代理（实验性）</string>
+	<string name="toast_start">GAE代理正在启动</string>
 
 </resources>

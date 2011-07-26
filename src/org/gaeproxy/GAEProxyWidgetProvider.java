@@ -53,6 +53,7 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
@@ -135,6 +136,8 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			}
 
 			Log.d(TAG, "Proxy switch action");
+			
+			Toast.makeText(context, R.string.toast_start, Toast.LENGTH_SHORT);
 			// do some really cool stuff here
 			if (isWorked(context, SERVICE_NAME)) {
 				// Service is working, so stop it
@@ -155,7 +158,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
 				if (isInstalled) {
 					proxy = settings.getString("proxy", "");
-					proxyType = settings.getString("proxyType", "GAppProxy");
+					proxyType = settings.getString("proxyType", "GoAgent");
 					String portText = settings.getString("port", "");
 					if (portText != null && portText.length() > 0) {
 						port = Integer.valueOf(portText);
@@ -177,6 +180,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					bundle.putString("sitekey", sitekey);
 					bundle.putBoolean("isGlobalProxy", isGlobalProxy);
 					bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
+					bundle.putBoolean("isGFWList", isGFWList);
 
 					it.putExtras(bundle);
 					context.startService(it);

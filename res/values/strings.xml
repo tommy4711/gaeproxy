@@ -109,4 +109,5 @@
 	<string name="auto_set_gfwlist_summary">Set proxy only for blocked sites (needs ROOT
 		permission and
 		IPTABLES support)</string>
+	<string name="toast_start">Connecting to GAE Proxy</string>
 </resources>

@@ -48,19 +48,13 @@
 	<string name="proxyed_apps_summary">为应用单独设置代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
 	<string name="proxyed_help">选择使用GAE代理的应用:</string>
 
-	<string name="crash_alert">检测到本程序正在从一次崩溃中恢复。\n\n请将您的情况提交到项目网站，谢谢！
-		\n\n(gaeproxy.googlecode.com) </string>
+	<string name="crash_alert">检测到一次非正常退出，状态已重置</string>
 	<string name="copy_rights">关于：\n\nGAE代理是一款开源软件，基于 GPLV3
 		发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
 		\n\n(gaeproxy.googlecode.com)</string>
 	<string name="about">关于</string>
 
 	<string name="proxy_type">代理类型选择</string>
-	<array name="proxy_type_entry">
-		<item>GAppProxy</item>
-		<item>WallProxy</item>
-		<item>GoAgent</item>
-	</array>
 
 	<string name="connecting">正在连接...</string>
 	<string name="https_alert">请修改你的代理地址，以 "https://" 开头</string>

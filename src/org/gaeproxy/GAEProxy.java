@@ -92,6 +92,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -551,17 +552,6 @@ public class GAEProxy extends PreferenceActivity implements
 		isGFWListCheck = (CheckBoxPreference) findPreference ("isGFWList");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
-		if (this.isWorked(SERVICE_NAME)) {
-			isRunningCheck.setChecked(true);
-		} else {
-			SharedPreferences settings = PreferenceManager
-					.getDefaultSharedPreferences(this);
-			if (settings.getBoolean("isRunning", false)) {
-				showAToast(getString(R.string.crash_alert));
-				recovery();
-			}
-			isRunningCheck.setChecked(false);
-		}
 
 		if (!runRootCommand("")) {
 			isRoot = false;
@@ -569,18 +559,31 @@ public class GAEProxy extends PreferenceActivity implements
 			isRoot = true;
 		}
 
-		if (!isWorked(SERVICE_NAME)) {
-			CopyAssets("");
-
-			runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
-			runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
-			runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
-			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-			runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
-		}
-
 		new Thread() {
 			public void run() {
+				
+				if (isWorked(SERVICE_NAME)) {
+					isRunningCheck.setChecked(true);
+				} else {
+					SharedPreferences settings = PreferenceManager
+							.getDefaultSharedPreferences(GAEProxy.this);
+					if (settings.getBoolean("isRunning", false)) {
+						Toast.makeText(GAEProxy.this, R.string.crash_alert, Toast.LENGTH_SHORT);
+						recovery();
+					}
+					isRunningCheck.setChecked(false);
+				}
+
+				if (!isWorked(SERVICE_NAME)) {
+					CopyAssets("");
+
+					runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
+					runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
+					runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
+					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
+				}
+				
 				try {
 					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 					InputStream input = new BufferedInputStream(

@@ -87,6 +87,7 @@ public class GAEProxyService extends Service {
 	private static final int MSG_CONNECT_SUCCESS = 2;
 	private static final int MSG_CONNECT_FAIL = 3;
 	private static final int MSG_HOST_CHANGE = 4;
+	private static final int MSG_STOP_SELF = 5;
 
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = BASE
 			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
@@ -301,6 +302,19 @@ public class GAEProxyService extends Service {
 			// httpOS.writeBytes(cmd + "\n");
 			// httpOS.flush();
 
+			Thread t = new Thread() {
+				public void run() {
+					try {
+						httpProcess.waitFor();
+					} catch (InterruptedException e) {
+						// Interrupted
+					}
+					handler.sendEmptyMessage(MSG_STOP_SELF);
+				}
+			};
+			t.setDaemon(true);
+			t.start();
+
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
 		}
@@ -342,7 +356,7 @@ public class GAEProxyService extends Service {
 			// } catch (Exception e) {
 			// Log.e(TAG, "cannot get remote port info", e);
 			// }
-			
+
 			String socksIp = "173.224.211.42";
 			try {
 				InetAddress addr = InetAddress.getByName("apps.madeye.me");
@@ -705,6 +719,9 @@ public class GAEProxyService extends Service {
 				break;
 			case MSG_HOST_CHANGE:
 				ed.putString("appHost", appHost);
+				break;
+			case MSG_STOP_SELF:
+				stopSelf();
 				break;
 			}
 			ed.commit();

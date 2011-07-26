@@ -64,6 +64,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 	private String sitekey;
 	private boolean isGlobalProxy;
 	private boolean isHTTPSProxy;
+	private boolean isGFWList = false;
 
 	private static final String TAG = "GAEProxy";
 
@@ -123,6 +124,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			sitekey = settings.getString("sitekey", "");
 			isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
 			isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
+			isGFWList = settings.getBoolean("isGFWList", false);
 
 			Intent it = new Intent(context, GAEProxyService.class);
 			Bundle bundle = new Bundle();
@@ -132,6 +134,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 			bundle.putString("sitekey", sitekey);
 			bundle.putBoolean("isGlobalProxy", isGlobalProxy);
 			bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
+			bundle.putBoolean("isGFWList", isGFWList);
 
 			it.putExtras(bundle);
 			context.startService(it);

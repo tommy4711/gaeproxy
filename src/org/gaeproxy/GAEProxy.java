@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.flurry.android.FlurryAgent;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
@@ -503,6 +504,20 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 		}
 		return false;
+	}
+	
+	@Override
+	public void onStart()
+	{
+	   super.onStart();
+	   FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
+	}
+	
+	@Override
+	public void onStop()
+	{
+	   super.onStop();
+	   FlurryAgent.onEndSession(this);
 	}
 
 	/** Called when the activity is first created. */

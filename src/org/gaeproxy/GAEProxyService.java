@@ -52,6 +52,8 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.util.Random;
 
+import com.flurry.android.FlurryAgent;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -626,6 +628,8 @@ public class GAEProxyService extends Service {
 		stopForegroundCompat(1);
 
 		// runRootCommand(BASE + "host.sh remove");
+		
+		FlurryAgent.onEndSession(this);
 
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
@@ -737,7 +741,9 @@ public class GAEProxyService extends Service {
 
 		super.onStart(intent, startId);
 
-		Log.e(TAG, "Service Start");
+		Log.d(TAG, "Service Start");
+		
+		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
 		Bundle bundle = intent.getExtras();
 		proxy = bundle.getString("proxy");

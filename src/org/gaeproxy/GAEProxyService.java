@@ -389,8 +389,9 @@ public class GAEProxyService extends Service {
 			}
 
 			Log.e(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + socksIp
-					+ " " + "1984");
+			runCommand(BASE + "proxy.sh stop");
+			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
+					+ "1984");
 
 			StringBuffer cmd = new StringBuffer();
 
@@ -702,7 +703,7 @@ public class GAEProxyService extends Service {
 		}
 
 		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
-		
+
 		super.onDestroy();
 	}
 

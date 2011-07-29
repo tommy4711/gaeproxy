@@ -167,7 +167,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 				if (isInstalled) {
 					Toast.makeText(context,
 							context.getString(R.string.toast_start),
-							Toast.LENGTH_SHORT);
+							Toast.LENGTH_LONG).show();
 
 					proxy = settings.getString("proxy", "");
 					proxyType = settings.getString("proxyType", "GoAgent");

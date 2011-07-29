@@ -299,7 +299,7 @@ public class GAEProxy extends PreferenceActivity implements
 				break;
 			case MSG_CRASH_RECOVER:
 				Toast.makeText(GAEProxy.this, R.string.crash_alert,
-						Toast.LENGTH_SHORT);
+						Toast.LENGTH_LONG).show();
 				break;
 			}
 			ed.commit();
@@ -580,18 +580,6 @@ public class GAEProxy extends PreferenceActivity implements
 		new Thread() {
 			public void run() {
 
-				if (isWorked(SERVICE_NAME)) {
-					isRunningCheck.setChecked(true);
-				} else {
-					SharedPreferences settings = PreferenceManager
-							.getDefaultSharedPreferences(GAEProxy.this);
-					if (settings.getBoolean("isRunning", false)) {
-						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
-						recovery();
-					}
-					isRunningCheck.setChecked(false);
-				}
-
 				if (!isWorked(SERVICE_NAME)) {
 					CopyAssets("");
 
@@ -718,8 +706,12 @@ public class GAEProxy extends PreferenceActivity implements
 			edit.putBoolean("isRunning", true);
 		} else {
 			if (settings.getBoolean("isRunning", false)) {
-				showAToast(getString(R.string.crash_alert));
-				recovery();
+				new Thread() {
+					public void run() {
+						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
+						recovery();
+					}
+				}.start();
 			}
 			edit.putBoolean("isRunning", false);
 		}

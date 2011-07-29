@@ -45,9 +45,6 @@ stop)
   killall -9 python
   killall -9 redsocks
 
-  rm $DIR/redsocks.pid
-  rm $DIR/python.pid
-  
   rm $DIR/redsocks.conf
   
   ;;

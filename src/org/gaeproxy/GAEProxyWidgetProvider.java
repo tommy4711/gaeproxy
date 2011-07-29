@@ -125,14 +125,14 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
 		
-		if (settings.getBoolean("isConnecting", false)) {
-			// only one request a time
-			return;
-		} else {
-			Editor ed = settings.edit();
-			ed.putBoolean("isConnecting", true);
-			ed.commit();
-		}
+//		if (settings.getBoolean("isConnecting", false)) {
+//			// only one request a time
+//			return;
+//		} else {
+//			Editor ed = settings.edit();
+//			ed.putBoolean("isConnecting", true);
+//			ed.commit();
+//		}
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 			RemoteViews views = new RemoteViews(context.getPackageName(),

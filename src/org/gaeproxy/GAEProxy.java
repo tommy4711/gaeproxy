@@ -277,6 +277,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private static final int MSG_INSTALL_START = 0;
 	private static final int MSG_INSTALL_SUCCESS = 1;
 	private static final int MSG_INSTALL_FAIL = 2;
+	private static final int MSG_CRASH_RECOVER = 3;
 
 	final Handler handler = new Handler() {
 		@Override
@@ -295,6 +296,10 @@ public class GAEProxy extends PreferenceActivity implements
 			case MSG_INSTALL_FAIL:
 				ed.putBoolean("isInstalling", false);
 				ed.putBoolean("isInstalled", false);
+				break;
+			case MSG_CRASH_RECOVER:
+				Toast.makeText(GAEProxy.this, R.string.crash_alert,
+						Toast.LENGTH_SHORT);
 				break;
 			}
 			ed.commit();
@@ -505,19 +510,17 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 		return false;
 	}
-	
+
 	@Override
-	public void onStart()
-	{
-	   super.onStart();
-	   FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
+	public void onStart() {
+		super.onStart();
+		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 	}
-	
+
 	@Override
-	public void onStop()
-	{
-	   super.onStop();
-	   FlurryAgent.onEndSession(this);
+	public void onStop() {
+		super.onStop();
+		FlurryAgent.onEndSession(this);
 	}
 
 	/** Called when the activity is first created. */
@@ -564,7 +567,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isGlobalProxyCheck = (CheckBoxPreference) findPreference("isGlobalProxy");
 		isInstalledCheck = (CheckBoxPreference) findPreference("isInstalled");
 		proxyTypeList = (ListPreference) findPreference("proxyType");
-		isGFWListCheck = (CheckBoxPreference) findPreference ("isGFWList");
+		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 
@@ -576,14 +579,14 @@ public class GAEProxy extends PreferenceActivity implements
 
 		new Thread() {
 			public void run() {
-				
+
 				if (isWorked(SERVICE_NAME)) {
 					isRunningCheck.setChecked(true);
 				} else {
 					SharedPreferences settings = PreferenceManager
 							.getDefaultSharedPreferences(GAEProxy.this);
 					if (settings.getBoolean("isRunning", false)) {
-						Toast.makeText(GAEProxy.this, R.string.crash_alert, Toast.LENGTH_SHORT);
+						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
 						recovery();
 					}
 					isRunningCheck.setChecked(false);
@@ -598,7 +601,7 @@ public class GAEProxy extends PreferenceActivity implements
 					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
 				}
-				
+
 				try {
 					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 					InputStream input = new BufferedInputStream(
@@ -816,8 +819,7 @@ public class GAEProxy extends PreferenceActivity implements
 			if (settings.getBoolean("isGFWList", false)) {
 				isGlobalProxyCheck.setEnabled(false);
 				proxyedApps.setEnabled(false);
-			}
-			else {
+			} else {
 				isGlobalProxyCheck.setEnabled(true);
 				if (settings.getBoolean("isGlobalProxy", false))
 					proxyedApps.setEnabled(false);

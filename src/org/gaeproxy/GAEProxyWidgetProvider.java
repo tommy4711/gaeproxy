@@ -49,6 +49,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -119,8 +120,19 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	}
 
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public synchronized void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
+		
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
+		
+		if (settings.getBoolean("isConnecting", false)) {
+			// only one request a time
+			return;
+		} else {
+			Editor ed = settings.edit();
+			ed.putBoolean("isConnecting", true);
+			ed.commit();
+		}
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 			RemoteViews views = new RemoteViews(context.getPackageName(),
@@ -136,7 +148,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			}
 
 			Log.d(TAG, "Proxy switch action");
-			
+
 			// do some really cool stuff here
 			if (isWorked(context, SERVICE_NAME)) {
 				// Service is working, so stop it
@@ -150,15 +162,13 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			} else {
 
 				// Service is not working, then start it
-				SharedPreferences settings = PreferenceManager
-						.getDefaultSharedPreferences(context);
-
 				boolean isInstalled = settings.getBoolean("isInstalled", false);
 
 				if (isInstalled) {
-					
-					Toast.makeText(context, R.string.toast_start, Toast.LENGTH_SHORT);
-					
+					Toast.makeText(context,
+							context.getString(R.string.toast_start),
+							Toast.LENGTH_SHORT);
+
 					proxy = settings.getString("proxy", "");
 					proxyType = settings.getString("proxyType", "GoAgent");
 					String portText = settings.getString("port", "");

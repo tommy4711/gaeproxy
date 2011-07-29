@@ -266,6 +266,26 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
+	public static boolean runCommand(String command) {
+		Process process = null;
+		Log.d(TAG, command);
+		try {
+			process = Runtime.getRuntime().exec(command);
+			process.waitFor();
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			return false;
+		} finally {
+			try {
+				if (process != null)
+					process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+		return true;
+	}
+
 	public boolean connect() {
 
 		try {
@@ -369,7 +389,7 @@ public class GAEProxyService extends Service {
 			}
 
 			Log.e(TAG, "Forward Successful");
-			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
+			runCommand(BASE + "proxy.sh start " + port + " " + socksIp
 					+ " " + "1984");
 
 			StringBuffer cmd = new StringBuffer();
@@ -628,7 +648,7 @@ public class GAEProxyService extends Service {
 		stopForegroundCompat(1);
 
 		// runRootCommand(BASE + "host.sh remove");
-		
+
 		FlurryAgent.onEndSession(this);
 
 		notifyAlert(getString(R.string.forward_stop),
@@ -672,6 +692,7 @@ public class GAEProxyService extends Service {
 
 		Editor ed = settings.edit();
 		ed.putBoolean("isRunning", false);
+		ed.putBoolean("isConnecting", false);
 		ed.commit();
 
 		try {
@@ -681,7 +702,7 @@ public class GAEProxyService extends Service {
 		}
 
 		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
-
+		
 		super.onDestroy();
 	}
 
@@ -689,7 +710,7 @@ public class GAEProxyService extends Service {
 
 		runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		runRootCommand(BASE + "proxy.sh stop");
+		runCommand(BASE + "proxy.sh stop");
 
 	}
 
@@ -742,7 +763,7 @@ public class GAEProxyService extends Service {
 		super.onStart(intent, startId);
 
 		Log.d(TAG, "Service Start");
-		
+
 		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
 		Bundle bundle = intent.getExtras();

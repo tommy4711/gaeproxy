@@ -586,6 +586,7 @@ public class GAEProxy extends PreferenceActivity implements
 					runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
 					runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 					runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+					runCommand("chmod 777 /data/data/org.gaeproxy/proxy_socks.sh");
 					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
 				}
@@ -1032,6 +1033,7 @@ public class GAEProxy extends PreferenceActivity implements
 		runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
 		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
 		runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
+		runCommand("chmod 777 /data/data/org.gaeproxy/proxy_socks.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
 

@@ -348,36 +348,44 @@ public class GAEProxyService extends Service {
 	 * Internal method to request actual PTY terminal once we've finished
 	 * authentication. If called before authenticated, it will just fail.
 	 */
-	private void preConnection() {
+	private boolean preConnection() {
 
-		try {
-			// InputStream is = null;
-			// String socksIp = "173.192.90.214";
-			// String socksPort = "16976";
-			// try {
-			// URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
-			// HttpURLConnection conn = (HttpURLConnection) aURL
-			// .openConnection();
-			// conn.connect();
-			// is = conn.getInputStream();
-			//
-			// BufferedReader reader = new BufferedReader(
-			// new InputStreamReader(is));
-			//
-			// String line = reader.readLine();
-			// if (!line.startsWith("#ip"))
-			// throw new Exception("Format error");
-			// line = reader.readLine();
-			// socksIp = line.trim().toLowerCase();
-			//
-			// line = reader.readLine();
-			// if (!line.startsWith("#port"))
-			// throw new Exception("Format error");
-			// line = reader.readLine();
-			// socksPort = line.trim().toLowerCase();
-			// } catch (Exception e) {
-			// Log.e(TAG, "cannot get remote port info", e);
-			// }
+		if (isHTTPSProxy) {
+			InputStream is = null;
+			String socksIp = "173.192.90.214";
+			String socksPort = "16976";
+			try {
+				URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
+				HttpURLConnection conn = (HttpURLConnection) aURL
+						.openConnection();
+				conn.connect();
+				is = conn.getInputStream();
+
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(is));
+
+				String line = reader.readLine();
+				if (!line.startsWith("#ip"))
+					throw new Exception("Format error");
+				line = reader.readLine();
+				socksIp = line.trim().toLowerCase();
+
+				line = reader.readLine();
+				if (!line.startsWith("#port"))
+					throw new Exception("Format error");
+				line = reader.readLine();
+				socksPort = line.trim().toLowerCase();
+			} catch (Exception e) {
+				Log.e(TAG, "cannot get remote port info", e);
+				return false;
+			}
+
+			Log.d(TAG, "Forward Successful");
+			runCommand(BASE + "proxy_socks.sh stop");
+			runCommand(BASE + "proxy_socks.sh start " + port + " " + socksIp
+					+ " " + socksPort);
+
+		} else {
 
 			String socksIp = "173.224.211.42";
 			try {
@@ -388,76 +396,70 @@ public class GAEProxyService extends Service {
 				socksIp = "173.224.211.42";
 			}
 
-			Log.e(TAG, "Forward Successful");
+			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh stop");
 			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
 					+ "1984");
-
-			StringBuffer cmd = new StringBuffer();
-
-			if (hasRedirectSupport) {
-				cmd.append(BASE
-						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-			} else {
-				cmd.append(BASE
-						+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-			}
-
-			if (isGFWList) {
-				String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-						: CMD_IPTABLES_DNAT_ADD_HTTP;
-				String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-						: CMD_IPTABLES_DNAT_ADD_HTTPS;
-
-				String[] gfw_list = getResources().getStringArray(
-						R.array.gfw_list);
-
-				for (String item : gfw_list) {
-					cmd.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
-							+ item));
-					if (isHTTPSProxy) {
-						cmd.append(cmd_https.replace("! -d 203.208.0.0/16",
-								"-d " + item));
-					}
-				}
-			} else if (isGlobalProxy) {
-				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-						: CMD_IPTABLES_DNAT_ADD_HTTP);
-				if (isHTTPSProxy) {
-					cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-							: CMD_IPTABLES_DNAT_ADD_HTTPS);
-				}
-			} else {
-				// for proxy specified apps
-				if (apps == null || apps.length <= 0)
-					apps = AppManager.getProxyedApps(this);
-
-				for (int i = 0; i < apps.length; i++) {
-					if (apps[i].isProxyed()) {
-						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-								: CMD_IPTABLES_DNAT_ADD_HTTP).replace(
-								"-t nat",
-								"-t nat -m owner --uid-owner "
-										+ apps[i].getUid()));
-						if (isHTTPSProxy) {
-							cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-									: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
-									"-t nat", "-t nat -m owner --uid-owner "
-											+ apps[i].getUid()));
-						}
-					}
-				}
-			}
-
-			String iptables_rules = cmd.toString().replace("203.208.0.0",
-					appMask);
-
-			runRootCommand(iptables_rules);
-			// runRootCommand(cmd.toString());
-
-		} catch (Exception e) {
-			Log.e(TAG, "Error setting up port forward during connect", e);
 		}
+
+		StringBuffer cmd = new StringBuffer();
+
+		if (hasRedirectSupport) {
+			cmd.append(BASE
+					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+		} else {
+			cmd.append(BASE
+					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+		}
+
+		if (isGFWList) {
+			String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+					: CMD_IPTABLES_DNAT_ADD_HTTP;
+			String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+					: CMD_IPTABLES_DNAT_ADD_HTTPS;
+
+			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
+
+			for (String item : gfw_list) {
+				cmd.append(cmd_http
+						.replace("! -d 203.208.0.0/16", "-d " + item));
+				if (isHTTPSProxy) {
+					cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
+							+ item));
+				}
+			}
+		} else if (isGlobalProxy) {
+			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+					: CMD_IPTABLES_DNAT_ADD_HTTP);
+			if (isHTTPSProxy) {
+				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+						: CMD_IPTABLES_DNAT_ADD_HTTPS);
+			}
+		} else {
+			// for proxy specified apps
+			if (apps == null || apps.length <= 0)
+				apps = AppManager.getProxyedApps(this);
+
+			for (int i = 0; i < apps.length; i++) {
+				if (apps[i].isProxyed()) {
+					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+							: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
+							"-t nat -m owner --uid-owner " + apps[i].getUid()));
+					if (isHTTPSProxy) {
+						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+								: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
+								"-t nat", "-t nat -m owner --uid-owner "
+										+ apps[i].getUid()));
+					}
+				}
+			}
+		}
+
+		String iptables_rules = cmd.toString().replace("203.208.0.0", appMask);
+
+		runRootCommand(iptables_rules);
+
+		return true;
 
 	}
 
@@ -562,7 +564,8 @@ public class GAEProxyService extends Service {
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}
 
-		preConnection();
+		if (!preConnection())
+			return false;
 
 		Thread dnsThread = new Thread(dnsServer);
 		dnsThread.setDaemon(true);

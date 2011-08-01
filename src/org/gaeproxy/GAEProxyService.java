@@ -423,18 +423,14 @@ public class GAEProxyService extends Service {
 			for (String item : gfw_list) {
 				cmd.append(cmd_http
 						.replace("! -d 203.208.0.0/16", "-d " + item));
-				if (isHTTPSProxy) {
-					cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
-							+ item));
-				}
+				cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
+						+ item));
 			}
 		} else if (isGlobalProxy) {
 			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 					: CMD_IPTABLES_DNAT_ADD_HTTP);
-			if (isHTTPSProxy) {
-				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-						: CMD_IPTABLES_DNAT_ADD_HTTPS);
-			}
+			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+					: CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
 			if (apps == null || apps.length <= 0)
@@ -445,12 +441,9 @@ public class GAEProxyService extends Service {
 					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 							: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 							"-t nat -m owner --uid-owner " + apps[i].getUid()));
-					if (isHTTPSProxy) {
-						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-								: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
-								"-t nat", "-t nat -m owner --uid-owner "
-										+ apps[i].getUid()));
-					}
+					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
+							"-t nat -m owner --uid-owner " + apps[i].getUid()));
 				}
 			}
 		}

@@ -794,7 +794,7 @@ public class GAEProxyService extends Service {
 					BufferedReader input = new BufferedReader(
 							new InputStreamReader(is));
 					String code = input.readLine();
-					if (code != null && code.length() > 0) {
+					if (code != null && code.length() > 0 && code.length() < 5) {
 						Log.d(TAG, "Location: " + code);
 						if (!code.contains("CN") && !code.contains("ZZ"))
 							isDNSBlocked = false;

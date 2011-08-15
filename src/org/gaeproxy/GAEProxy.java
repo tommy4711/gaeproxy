@@ -365,8 +365,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private ListPreference proxyTypeList;
 	private CheckBoxPreference isHTTPSProxyCheck;
 	private CheckBoxPreference isGFWListCheck;
-
 	private CheckBoxPreference isRunningCheck;
+	private AdView adView;
 
 	private void CopyAssets(String path) {
 
@@ -531,7 +531,7 @@ public class GAEProxy extends PreferenceActivity implements
 		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.gae_proxy_preference);
 		// Create the adView
-		AdView adView = new AdView(this, AdSize.BANNER, "a14d8be8a284afc");
+		adView = new AdView(this, AdSize.BANNER, "a14d8be8a284afc");
 		// Lookup your LinearLayout assuming it’s been given
 		// the attribute android:id="@+id/mainLayout"
 		LinearLayout layout = (LinearLayout) findViewById(R.id.ad);
@@ -623,8 +623,10 @@ public class GAEProxy extends PreferenceActivity implements
 
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean("isConnected", isWorked(SERVICE_NAME));
-
 		editor.commit();
+		
+		adView.destroy();
+		
 		super.onDestroy();
 	}
 

@@ -300,6 +300,8 @@ public class GAEProxy extends PreferenceActivity implements
 			case MSG_CRASH_RECOVER:
 				Toast.makeText(GAEProxy.this, R.string.crash_alert,
 						Toast.LENGTH_LONG).show();
+				ed.putBoolean("isInstalling", false);
+				ed.putBoolean("isRunning", false);
 				break;
 			}
 			ed.commit();
@@ -711,8 +713,8 @@ public class GAEProxy extends PreferenceActivity implements
 			if (settings.getBoolean("isRunning", false)) {
 				new Thread() {
 					public void run() {
-						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
 						recovery();
+						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
 					}
 				}.start();
 			}
@@ -1038,14 +1040,7 @@ public class GAEProxy extends PreferenceActivity implements
 		runCommand("chmod 777 /data/data/org.gaeproxy/proxy_socks.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
-
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		Editor ed = settings.edit();
-		ed.putBoolean("isInstalling", false);
-		ed.putBoolean("isRunning", false);
-		ed.commit();
+		
 	}
 
 }

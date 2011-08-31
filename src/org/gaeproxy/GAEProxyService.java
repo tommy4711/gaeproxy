@@ -309,7 +309,8 @@ public class GAEProxyService extends Service {
 			if (proxyType.equals("GAppProxy")) {
 				cmd += " gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += " wallproxy " + proxy + " " + port + " " + sitekey;
+				cmd += " wallproxy " + proxy + " " + port + " " + appHost
+						+ " " + sitekey;
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)

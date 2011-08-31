@@ -54,9 +54,16 @@ https = $4
 server['listen'] = ('127.0.0.1', $3)
 server['log_file'] = None 
 
+hosts = '''
+$4  .appspot.com
+$4 www.youtube.com
+'''
+
+plugins['plugins.hosts'] = 'hosts'
+
 gaeproxy = [{
     'url': '$2',
-    'key': '$4',
+    'key': '$5',
     'crypto':'XOR--0',
     'max_threads':5
 }]

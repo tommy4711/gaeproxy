@@ -42,10 +42,11 @@ redsocks {
 stop)
   kill -9 `cat $DIR/redsocks.pid`
   kill -9 `cat $DIR/python.pid`
+  rm $DIR/redsocks.conf
+  echo "" >> $DIR/python.pid
+  
   killall -9 python
   killall -9 redsocks
-
-  rm $DIR/redsocks.conf
   
   ;;
 esac

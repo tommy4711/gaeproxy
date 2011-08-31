@@ -24,7 +24,8 @@ except ImportError:
     openssl_enabled = False
     
 pid = str(os.getpid())
-f = open('/data/data/org.gaeproxy/python.pid','w')
+f = open('/data/data/org.gaeproxy/python.pid','a')
+f.write(" ")
 f.write(pid)
 f.close()
 
@@ -249,19 +250,16 @@ class RootCA(object):
         return (self.dumpPEM(pkey, 0), self.dumpPEM(cert, 2))
 
     def getCertificate(self, host):
-        keyFile = '/sdcard/cert/ca.key'
-        crtFile = '/sdcard/cert/ca.crt'
+        keyFile = '/data/data/org.gaeproxy/LocalProxyServer.key'
+        crtFile = '/data/data/org.gaeproxy/LocalProxyServer.cert'
         return (keyFile, crtFile)
 
     def checkCA(self):
         #Check CA file
-        cakeyFile = '/sdcard/cert/ca.key'
-        cacrtFile = '/sdcard/cert/ca.crt'
-        serialFile = '/sdcard/cert/serial'
+        cakeyFile = '/data/data/org.gaeproxy/LocalProxyServer.key'
+        cacrtFile = '/data/data/org.gaeproxy/LocalProxyServer.cert'
         cakey = self.readFile(cakeyFile)
         cacrt = self.readFile(cacrtFile)
-        self.SERIAL = self.readFile(serialFile)
-        self.SERIAL = int(self.SERIAL)
         self.CA = (self.loadPEM(cakey, 0), self.loadPEM(cacrt, 2))
 
 rootca = RootCA()

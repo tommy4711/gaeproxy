@@ -479,7 +479,8 @@ if __name__ == "__main__":
     
         
     pid = str(os.getpid())
-    f = open('/data/data/org.gaeproxy/python.pid','w')
+    f = open('/data/data/org.gaeproxy/python.pid','a')
+    f.write(" ")
     f.write(pid)
     f.close()
 

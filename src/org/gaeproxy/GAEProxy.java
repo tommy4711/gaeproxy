@@ -359,7 +359,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isGlobalProxyCheck;
-	private Preference proxyedApps;
 	private CheckBoxPreference isInstalledCheck;
 	private EditTextPreference proxyText;
 	private EditTextPreference portText;
@@ -369,6 +368,9 @@ public class GAEProxy extends PreferenceActivity implements
 	private CheckBoxPreference isGFWListCheck;
 	private CheckBoxPreference isRunningCheck;
 	private AdView adView;
+
+	private Preference proxyedApps;
+	private Preference browser;
 
 	private void CopyAssets(String path) {
 
@@ -562,6 +564,7 @@ public class GAEProxy extends PreferenceActivity implements
 		portText = (EditTextPreference) findPreference("port");
 		sitekeyText = (EditTextPreference) findPreference("sitekey");
 		proxyedApps = (Preference) findPreference("proxyedApps");
+		browser = (Preference) findPreference("browser");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
@@ -626,9 +629,9 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean("isConnected", isWorked(SERVICE_NAME));
 		editor.commit();
-		
+
 		adView.destroy();
-		
+
 		super.onDestroy();
 	}
 
@@ -650,6 +653,9 @@ public class GAEProxy extends PreferenceActivity implements
 		if (preference.getKey() != null
 				&& preference.getKey().equals("proxyedApps")) {
 			Intent intent = new Intent(this, AppManager.class);
+			startActivity(intent);
+		} else if(preference.getKey() != null && preference.getKey().equals("browser")) {
+			Intent intent = new Intent(this, org.zirco.ui.activities.ZircoMain.class);
 			startActivity(intent);
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {
@@ -726,12 +732,14 @@ public class GAEProxy extends PreferenceActivity implements
 		if (settings.getBoolean("isRunning", false)) {
 			isRunningCheck.setChecked(true);
 			disableAll();
+			browser.setEnabled(true);
 		} else {
 			if (settings.getBoolean("isInstalling", false)) {
 				disableAll();
 			} else {
 				enableAll();
 			}
+			browser.setEnabled(false);
 			isRunningCheck.setChecked(false);
 		}
 
@@ -837,6 +845,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (key.equals("isRunning")) {
 			if (settings.getBoolean("isRunning", false)) {
 				disableAll();
+				browser.setEnabled(true);
 				isRunningCheck.setChecked(true);
 			} else {
 				if (settings.getBoolean("isInstalling", false)) {
@@ -844,6 +853,7 @@ public class GAEProxy extends PreferenceActivity implements
 				} else {
 					enableAll();
 				}
+				browser.setEnabled(false);
 				isRunningCheck.setChecked(false);
 			}
 		}
@@ -879,8 +889,8 @@ public class GAEProxy extends PreferenceActivity implements
 			} else {
 				String host = settings.getString("proxy", "");
 				Editor ed = settings.edit();
-				if (!host.startsWith("https://")) {
-					ed.putString("proxy", "https://" + host);
+				if (!host.startsWith("http://") && !host.startsWith("https://")) {
+					ed.putString("proxy", "http://" + host);
 				}
 				ed.commit();
 				proxyText.setSummary(settings.getString("proxy", ""));
@@ -914,10 +924,10 @@ public class GAEProxy extends PreferenceActivity implements
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
 
-		if (!proxy.startsWith("https://")) {
-			showAToast(getString(R.string.https_alert));
-			return false;
-		}
+//		if (!proxy.startsWith("https://")) {
+//			showAToast(getString(R.string.https_alert));
+//			return false;
+//		}
 
 		String portText = settings.getString("port", "");
 		if (isTextEmpty(portText, getString(R.string.port_empty)))
@@ -1026,7 +1036,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
 
-		runRootCommand(GAEProxyService.BASE + "proxy.sh stop");
+		runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
 		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
@@ -1040,7 +1050,7 @@ public class GAEProxy extends PreferenceActivity implements
 		runCommand("chmod 777 /data/data/org.gaeproxy/proxy_socks.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
 		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
-		
+
 	}
 
 }

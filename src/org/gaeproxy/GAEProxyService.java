@@ -764,7 +764,18 @@ public class GAEProxyService extends Service {
 
 		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
+		if (intent == null) {
+			stopSelf();
+			return;
+		}
+		
 		Bundle bundle = intent.getExtras();
+		
+		if (bundle == null) {
+			stopSelf();
+			return;
+		}
+		
 		proxy = bundle.getString("proxy");
 		proxyType = bundle.getString("proxyType");
 		port = bundle.getInt("port");

@@ -23,7 +23,6 @@ import org.greendroid.QuickAction;
 import org.greendroid.QuickActionGrid;
 import org.greendroid.QuickActionWidget;
 import org.greendroid.QuickActionWidget.OnQuickActionClickListener;
-import org.gaeproxy.GAEProxy;
 import org.gaeproxy.ProxySettings;
 import org.gaeproxy.R;
 import org.zirco.controllers.Controller;
@@ -1571,10 +1570,11 @@ public class ZircoMain extends Activity implements IToolbarsContainer, OnTouchLi
 	public void onPageFinished(String url) {
 		updateUI();			
 		
-		if ((Controller.getInstance().getPreferences().getBoolean(Constants.PREFERENCES_ADBLOCKER_ENABLE, true)) &&
-				(!checkInAdBlockWhiteList(mCurrentWebView.getUrl()))) {
-			mCurrentWebView.loadAdSweep();
-		}
+		// no ad sweep 
+//		if ((Controller.getInstance().getPreferences().getBoolean(Constants.PREFERENCES_ADBLOCKER_ENABLE, true)) &&
+//				(!checkInAdBlockWhiteList(mCurrentWebView.getUrl()))) {
+//			mCurrentWebView.loadAdSweep();
+//		}
 		
 		WebIconDatabase.getInstance().retainIconForPageUrl(mCurrentWebView.getUrl());
 		

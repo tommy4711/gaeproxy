@@ -399,7 +399,7 @@ public class GAEProxyService extends Service {
 
 			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh stop");
-			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
+			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
 					+ "1984");
 		}
 

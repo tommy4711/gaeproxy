@@ -281,6 +281,12 @@ public class ZircoMain extends Activity implements IToolbarsContainer, OnTouchLi
 		if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Constants.PREFERENCES_PRIVACY_CLEAR_CACHE_ON_EXIT, false)) {
 			mCurrentWebView.clearCache(true);
 		}
+		
+        try {
+			ProxySettings.resetProxy(this);
+		} catch (Exception ignore) {
+			// Nothing
+		}
 
 		super.onDestroy();
 	}

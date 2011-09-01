@@ -698,6 +698,12 @@ public class GAEProxyService extends Service {
 		} catch (Exception ignore) {
 			// Nothing
 		}
+		
+        try {
+			ProxySettings.resetProxy(this);
+		} catch (Exception ignore) {
+			// Nothing
+		}
 
 		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
 

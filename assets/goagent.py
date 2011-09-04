@@ -36,7 +36,7 @@ class Common(object):
     def __init__(self):
         '''read proxy.ini config'''
         self.config = ConfigParser.ConfigParser()
-        self.config.read(os.path.splitext(__file__)[0] + '.ini')
+        self.config.read('/data/data/org.gaeproxy/proxy.ini')
 
         self.LISTEN_IP      = self.config.get('listen', 'ip')
         self.LISTEN_PORT    = self.config.getint('listen', 'port')
@@ -315,7 +315,7 @@ class CertUtil(object):
 
     @staticmethod
     def getCertificate(host):
-        #basedir = os.path.dirname(__file__)
+        basedir = '/data/data/org.gaeproxy'
         #keyFile = os.path.join(basedir, 'certs/%s.key' % host)
         #crtFile = os.path.join(basedir, 'certs/%s.crt' % host)
         #if os.path.exists(keyFile):
@@ -724,4 +724,11 @@ if __name__ == '__main__':
     sys.stdout.write(common.info())
     LocalProxyServer.address_family = (socket.AF_INET, socket.AF_INET6)[':' in common.LISTEN_IP]
     httpd = LocalProxyServer((common.LISTEN_IP, common.LISTEN_PORT), LocalProxyHandler)
+    
+    pid = str(os.getpid())
+    f = open('/data/data/org.gaeproxy/python.pid','a')
+    f.write(" ")
+    f.write(pid)
+    f.close()
+    
     httpd.serve_forever()

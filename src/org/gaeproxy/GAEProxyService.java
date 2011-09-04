@@ -315,7 +315,10 @@ public class GAEProxyService extends Service {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)
 					return false;
-				cmd += " goagent " + proxyString[2] + " " + port + " "
+				String[] appid = proxyString[2].split("\\.");
+				if (appid.length < 3)
+					return false;
+				cmd += " goagent " + appid[0] + " " + port + " "
 						+ appHost + " " + proxyString[3] + " " + sitekey;
 			}
 			Log.e(TAG, cmd);

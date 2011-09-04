@@ -359,7 +359,7 @@ public class GAEProxyService extends Service {
 			String socksIp = "173.192.90.214";
 			String socksPort = "16976";
 			try {
-				URL aURL = new URL("http://www.madeye.dotcloud.com/port.php");
+				URL aURL = new URL("http://myhosts.sinaapp.com/port.php");
 				HttpURLConnection conn = (HttpURLConnection) aURL
 						.openConnection();
 				conn.connect();

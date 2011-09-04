@@ -136,7 +136,7 @@ public class ZircoWebViewClient extends WebViewClient {
 		
 		// Mobile youTube video link
 		if (url.contains("m.youtube.com")) {
-			String playVideo = "www.youtube.com/?nomobile=1";
+			String playVideo = "http://www.youtube.com/?nomobile=1";
 			view.loadUrl(playVideo);
 			return true;
 			

@@ -123,7 +123,16 @@
 
 	<string name="browser">Start GAE Browser</string>
 	<string name="browser_summary">Start a browser through GAE proxy, for users
-		without root permission or iptables support</string>
+		without root permission or iptables support
+	</string>
+
+	<string name="default_proxy_alert">You are using the default proxy, which has a quota
+		of only 10G bandwidth every day. Please deploy your own
+		servers to get
+		more free bandwidth quota with Google App Engine.\n\nYou can find more
+		information from here: https://github.com/phus/goagent
+	</string>
+	<string name="warning">Warning</string>
 
 
 	<!-- Zirco Browser for Android Copyright (C) 2010 - 2011 J. Devauchelle 
@@ -205,10 +214,12 @@
 	<string name="PreferencesActivity.HomePagePreferenceSummary">Define your default home page.</string>
 	<string name="PreferencesActivity.FullScreenPreferenceTitle">Full screen</string>
 	<string name="PreferencesActivity.FullScreenPreferenceSummary">Display browser in full screen mode (need
-		application restart).</string>
+		application restart).
+	</string>
 	<string name="PreferencesActivity.ShowToastOnTabSwitchPreferenceTitle">Show alert on tab switch</string>
 	<string name="PreferencesActivity.ShowToastOnTabSwitchPreferenceSummary">If checked, a small alert is briefly show when
-		switching tabs.</string>
+		switching tabs.
+	</string>
 
 	<string name="PreferencesActivity.BrowserSettingsCategoryTitle">Browser settings</string>
 	<string name="PreferencesActivity.HistorySizePreferenceTitle">History size</string>
@@ -276,7 +287,8 @@
 	<string name="PreferencesActivity.AdBlockerSettingsCategoryTitle">Ad-blocker settings</string>
 	<string name="PreferencesActivity.EnableAdBlockerPreferenceTitle">Enable Ad-blocker</string>
 	<string name="PreferencesActivity.EnableAdBlockerPreferenceSummary">Ad-blocker will not work if JavaScript is not
-		enabled.</string>
+		enabled.
+	</string>
 	<string name="PreferencesActivity.AdBlockerWhiteListPreferenceTitle">White list</string>
 	<string name="PreferencesActivity.AdBlockerWhiteListPreferenceSummary">Manage Ad-blocker white list.</string>
 
@@ -286,7 +298,8 @@
 	<string name="Commons.Yes">Yes</string>
 	<string name="Commons.No">No</string>
 	<string name="Commons.NoUndoMessage">This operation cannot be undone. Do you wish to
-		proceed?</string>
+		proceed?
+	</string>
 	<string name="Commons.Today">Today (%s)</string>
 	<string name="Commons.Yesterday">Yesterday (%s)</string>
 	<string name="Commons.DaysAgo">%1$s days ago (%2$s)</string>
@@ -437,7 +450,8 @@
 
 	<string name="PreferencesActivity.ClearCacheOnExitPreferenceTitle">Clear cache on exit</string>
 	<string name="PreferencesActivity.ClearCacheOnExitPreferenceSummary">If checked, the browser cache will be cleared when
-		the application exit.</string>
+		the application exit.
+	</string>
 
 	<string name="PreferencesActivity.UIPreferenceTitle">User interface settings</string>
 	<string name="PreferencesActivity.UIPreferenceSummary">Customize the user interface.</string>
@@ -446,7 +460,8 @@
 
 	<string name="PreferencesActivity.RestartDialogTitle">Restart required</string>
 	<string name="PreferencesActivity.RestartDialogMessage">This change will not take effect until the
-		application restart. Do you want to do it now?</string>
+		application restart. Do you want to do it now?
+	</string>
 
 	<!-- 0.3.5 -->
 	<string name="PreferencesActivity.EnablePluginsTitle">Enable plug-ins</string>
@@ -470,11 +485,13 @@
 
 	<string name="Commons.SslWarning">Security warning</string>
 	<string name="Commons.SslWarningsHeader">There are problems with the security certificate
-		for this site.</string>
+		for this site.
+	</string>
 	<string name="Commons.SslUntrusted">This certificate is not from a trusted authority.
 	</string>
 	<string name="Commons.SslIDMismatch">The name of the site does not match the name on the
-		certificate.</string>
+		certificate.
+	</string>
 	<string name="Commons.SslExpired">This certificate has expired.</string>
 	<string name="Commons.SslNotYetValid">This certificate is not valid yet.</string>
 
@@ -489,7 +506,8 @@
 	<string name="PreferencesActivity.MobileViewCategoryTitle">Mobile view settings</string>
 	<string name="PreferencesActivity.MobileViewListPreferenceTitle">Manage websites</string>
 	<string name="PreferencesActivity.MobileViewListPreferenceSummary">Websites in this list will be loaded using Google
-		mobile view (GWT).</string>
+		mobile view (GWT).
+	</string>
 
 	<string name="Commons.Add">Add</string>
 	<string name="Commons.Clear">Clear</string>
@@ -529,15 +547,18 @@
 	<!-- 0.3.8 -->
 	<string name="PreferencesActivity.HideTitleBarPreferenceTitle">Hide title bars</string>
 	<string name="PreferencesActivity.HideTitleBarPreferenceSummary">If checked, windows title bars will not be
-		displayed (need application restart).</string>
+		displayed (need application restart).
+	</string>
 
 	<string name="PreferencesActivity.UseWideViewPortPreferenceTitle">Use wide viewport</string>
 	<string name="PreferencesActivity.UseWideViewPortPreferenceSummary">If checked, browser will use a viewport similar to
-		desktop browsers.</string>
+		desktop browsers.
+	</string>
 
 	<string name="PreferencesActivity.LoadWithOverviewPreferenceTitle">Load pages with overview</string>
 	<string name="PreferencesActivity.LoadWithOverviewPreferenceSummary">If checked, pages will load zoomed out to show an
-		overview of the page.</string>
+		overview of the page.
+	</string>
 
 	<string name="PreferencesActivity.SwitchTabsMethodPreferenceTitle">Switch tabs method</string>
 	<string name="PreferencesActivity.SwitchTabsMethodPreferenceSummary">Define how you can switch between open tabs.
@@ -571,14 +592,16 @@
 
 	<string name="AboutActivity.OtherLicenseText">This application include code from the GreenDroid
 		project (https://github.com/cyrilmottier/GreenDroid/), licensed under
-		the Apache license, version 2.</string>
+		the Apache license, version 2.
+	</string>
 
 	<!-- 0.4.0 -->
 	<string name="PreferencesActivity.WeavePreferenceTitle">Firefox Sync</string>
 	<string name="PreferencesActivity.WeavePreferenceSummary">Manage Firefox Sync settings.</string>
 	<string name="PreferencesActivity.UseWeavePreferenceTitle">Use Firefox Sync</string>
 	<string name="PreferencesActivity.UseWeavePreferenceSummary">If checked, you can retrieve your bookmarks from
-		Firefox Sync.</string>
+		Firefox Sync.
+	</string>
 	<string name="PreferencesActivity.WeaveServerPreferenceTitle">Server</string>
 	<string name="PreferencesActivity.WeaveServerPreferenceSummary">Set the Firefox Sync server.</string>
 	<string name="PreferencesActivity.WeaveUsernameTitle">User name</string>
@@ -593,7 +616,8 @@
 	<string name="WeaveBookmarksListActivity.MenuClear">Clear</string>
 	<string name="WeaveBookmarksListActivity.WeaveRootFolder">Places</string>
 	<string name="WeaveBookmarksListActivity.EmptyText">Firefox bookmarks are not synchronized. Setup your
-		account informations and do a synchronization.</string>
+		account informations and do a synchronization.
+	</string>
 	<string name="WeaveBookmarksListActivity.EmptyFolderText">No bookmarks in this folder.</string>
 	<string name="WeaveBookmarksListActivity.SetupButton">Setup</string>
 	<string name="WeaveBookmarksListActivity.SyncButton">Synchronize</string>

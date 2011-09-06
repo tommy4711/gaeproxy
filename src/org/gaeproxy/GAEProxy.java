@@ -87,12 +87,16 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.telephony.TelephonyManager;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class GAEProxy extends PreferenceActivity implements
@@ -654,8 +658,10 @@ public class GAEProxy extends PreferenceActivity implements
 				&& preference.getKey().equals("proxyedApps")) {
 			Intent intent = new Intent(this, AppManager.class);
 			startActivity(intent);
-		} else if(preference.getKey() != null && preference.getKey().equals("browser")) {
-			Intent intent = new Intent(this, org.zirco.ui.activities.ZircoMain.class);
+		} else if (preference.getKey() != null
+				&& preference.getKey().equals("browser")) {
+			Intent intent = new Intent(this,
+					org.zirco.ui.activities.ZircoMain.class);
 			startActivity(intent);
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {
@@ -924,10 +930,35 @@ public class GAEProxy extends PreferenceActivity implements
 		if (isTextEmpty(proxy, getString(R.string.proxy_empty)))
 			return false;
 
-//		if (!proxy.startsWith("https://")) {
-//			showAToast(getString(R.string.https_alert));
-//			return false;
-//		}
+		// if (!proxy.startsWith("https://")) {
+		// showAToast(getString(R.string.https_alert));
+		// return false;
+		// }
+
+		if (proxy.contains("proxyofmax.appspot.com")) {
+			final TextView message = new TextView(this);
+			message.setPadding(10, 5, 10, 5);
+			// i.e.: R.string.dialog_message =>
+			// "Test this dialog following the link to dtmilano.blogspot.com"
+			final SpannableString s = new SpannableString(
+					getText(R.string.default_proxy_alert));
+			Linkify.addLinks(s, Linkify.WEB_URLS);
+			message.setText(s);
+			message.setMovementMethod(LinkMovementMethod.getInstance());
+
+			new AlertDialog.Builder(this)
+					.setTitle(R.string.warning)
+					.setCancelable(false)
+					.setIcon(android.R.drawable.ic_dialog_info)
+					.setNegativeButton(getString(R.string.ok_iknow),
+							new DialogInterface.OnClickListener() {
+								@Override
+								public void onClick(DialogInterface dialog,
+										int id) {
+									dialog.cancel();
+								}
+							}).setView(message).create().show();
+		}
 
 		String portText = settings.getString("port", "");
 		if (isTextEmpty(portText, getString(R.string.port_empty)))

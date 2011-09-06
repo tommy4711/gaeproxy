@@ -80,6 +80,10 @@
 	<string name="browser">启动GAE浏览器</string>
 	<string name="browser_summary">启动内置代理浏览器, 只针对没有ROOT权限或IPTABLES支持的用户</string>
 
+	<string name="default_proxy_alert">您正在使用默认的代理地址，此地址每天只有10G的带宽配额，也就说您将随时无法正常使用本应用\n\n因此，请尽快部署自己的服务器端，具体步骤和说明见：http://code.google.com/p/goagent/
+	</string>
+	<string name="warning">警告</string>
+
 	<!-- Zirco Browser for Android Copyright (C) 2010 - 2011 J. Devauchelle 
 		and contributors. This program is free software; you can redistribute it 
 		and/or modify it under the terms of the GNU General Public License version 
@@ -113,7 +117,7 @@
 	<string name="Main.VndErrorTitle">不能打开网址</string>
 	<string name="Main.VndErrorMessage">本程序不支持这个网址: %s.</string>
 
-	<string name="BookmarksListActivity.Title">i码书签</string>
+	<string name="BookmarksListActivity.Title">书签</string>
 	<string name="BookmarksListActivity.MenuSortMode">排序方式</string>
 	<string name="BookmarksListActivity.MenuAddBookmark">增加书签</string>
 	<string name="BookmarksListActivity.Empty">没有书签</string>

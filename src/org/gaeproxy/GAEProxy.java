@@ -170,7 +170,7 @@ public class GAEProxy extends PreferenceActivity implements
 			mWakeLock.acquire();
 
 			Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					"www.google.com.hk", 80));
+					"www.google.cn", 80));
 
 			try {
 

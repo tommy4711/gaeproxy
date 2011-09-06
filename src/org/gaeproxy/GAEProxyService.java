@@ -338,11 +338,11 @@ public class GAEProxyService extends Service {
 					handler.sendEmptyMessage(MSG_STOP_SELF);
 				}
 			};
-			t.setDaemon(true);
 			t.start();
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
+			return false;
 		}
 
 		return true;

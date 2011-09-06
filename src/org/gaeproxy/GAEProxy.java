@@ -345,15 +345,25 @@ public class GAEProxy extends PreferenceActivity implements
 
 	public static boolean runCommand(String command) {
 		Process process = null;
+		DataOutputStream os = null;
+		Log.d(TAG, command);
 		try {
-			process = Runtime.getRuntime().exec(command);
+			process = Runtime.getRuntime().exec("sh");
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
 			process.waitFor();
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
 			return false;
 		} finally {
 			try {
-				process.destroy();
+				if (os != null) {
+					os.close();
+				}
+				if (process != null)
+					process.destroy();
 			} catch (Exception e) {
 				// nothing
 			}

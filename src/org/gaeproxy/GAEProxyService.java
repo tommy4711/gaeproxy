@@ -268,15 +268,23 @@ public class GAEProxyService extends Service {
 
 	public static boolean runCommand(String command) {
 		Process process = null;
+		DataOutputStream os = null;
 		Log.d(TAG, command);
 		try {
-			process = Runtime.getRuntime().exec(command);
+			process = Runtime.getRuntime().exec("sh");
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
 			process.waitFor();
 		} catch (Exception e) {
 			Log.e(TAG, e.getMessage());
 			return false;
 		} finally {
 			try {
+				if (os != null) {
+					os.close();
+				}
 				if (process != null)
 					process.destroy();
 			} catch (Exception e) {
@@ -309,8 +317,8 @@ public class GAEProxyService extends Service {
 			if (proxyType.equals("GAppProxy")) {
 				cmd += " gappproxy";
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += " wallproxy " + proxy + " " + port + " " + appHost
-						+ " " + sitekey;
+				cmd += " wallproxy " + proxy + " " + port + " " + appHost + " "
+						+ sitekey;
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)
@@ -318,15 +326,15 @@ public class GAEProxyService extends Service {
 				String[] appid = proxyString[2].split("\\.");
 				if (appid.length < 3)
 					return false;
-				cmd += " goagent " + appid[0] + " " + port + " "
-						+ appHost + " " + proxyString[3] + " " + sitekey;
+				cmd += " goagent " + appid[0] + " " + port + " " + appHost
+						+ " " + proxyString[3] + " " + sitekey;
 			}
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec(cmd);
-			// httpOS = new DataOutputStream(httpProcess.getOutputStream());
-			// httpOS.writeBytes(cmd + "\n");
-			// httpOS.flush();
+			httpProcess = Runtime.getRuntime().exec("sh");
+			httpOS = new DataOutputStream(httpProcess.getOutputStream());
+			httpOS.writeBytes(cmd + "\n");
+			httpOS.flush();
 
 			Thread t = new Thread() {
 				public void run() {
@@ -338,6 +346,7 @@ public class GAEProxyService extends Service {
 					handler.sendEmptyMessage(MSG_STOP_SELF);
 				}
 			};
+			t.setDaemon(true);
 			t.start();
 
 		} catch (Exception e) {
@@ -402,8 +411,8 @@ public class GAEProxyService extends Service {
 
 			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh stop");
-			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
-					+ "1984");
+			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
+					+ " " + "1984");
 		}
 
 		StringBuffer cmd = new StringBuffer();
@@ -701,8 +710,8 @@ public class GAEProxyService extends Service {
 		} catch (Exception ignore) {
 			// Nothing
 		}
-		
-        try {
+
+		try {
 			ProxySettings.resetProxy(this);
 		} catch (Exception ignore) {
 			// Nothing
@@ -777,14 +786,14 @@ public class GAEProxyService extends Service {
 			stopSelf();
 			return;
 		}
-		
+
 		Bundle bundle = intent.getExtras();
-		
+
 		if (bundle == null) {
 			stopSelf();
 			return;
 		}
-		
+
 		proxy = bundle.getString("proxy");
 		proxyType = bundle.getString("proxyType");
 		port = bundle.getInt("port");

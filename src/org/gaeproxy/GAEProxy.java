@@ -169,14 +169,14 @@ public class GAEProxy extends PreferenceActivity implements
 
 			mWakeLock.acquire();
 
-			Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
-					"www.google.cn", 80));
+			// Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(
+			// "www.google.com.hk", 80));
 
 			try {
 
 				File zip = new File(path[1]);
 				URL url = new URL(path[0]);
-				URLConnection conexion = url.openConnection(proxy);
+				URLConnection conexion = url.openConnection();
 				conexion.connect();
 				int lenghtOfFile = conexion.getContentLength();
 
@@ -213,7 +213,7 @@ public class GAEProxy extends PreferenceActivity implements
 				zip = new File(path[4]);
 
 				url = new URL(path[3]);
-				conexion = url.openConnection(proxy);
+				conexion = url.openConnection();
 				conexion.connect();
 
 				lenghtOfFile = conexion.getContentLength();
@@ -497,12 +497,24 @@ public class GAEProxy extends PreferenceActivity implements
 		Editor ed = settings.edit();
 		ed.putBoolean("isInstalling", true);
 		ed.commit();
+		DownloadFileRunnable progress;
+		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+		String countryCode = tm.getSimCountryIso();
+		if (countryCode.toLowerCase().equals("cn")) {
 
-		DownloadFileRunnable progress = new DownloadFileRunnable(
-				"http://gaeproxy.googlecode.com/files/python_r2.zip",
-				"/sdcard/python.zip", "/data/data/org.gaeproxy/",
-				"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",
-				"/sdcard/python-extras.zip", "/sdcard/");
+			progress = new DownloadFileRunnable(
+					"http://myhosts.sinaapp.com/python_r2.zip",
+					"/sdcard/python.zip", "/data/data/org.gaeproxy/",
+					"http://myhosts.sinaapp.com/python-extras_r2.zip",
+					"/sdcard/python-extras.zip", "/sdcard/");
+		} else {
+			progress = new DownloadFileRunnable(
+					"http://gaeproxy.googlecode.com/files/python_r2.zip",
+					"/sdcard/python.zip",
+					"/data/data/org.gaeproxy/",
+					"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",
+					"/sdcard/python-extras.zip", "/sdcard/");
+		}
 		new Thread(progress).start();
 		showAToast(getString(R.string.downloading));
 		return true;

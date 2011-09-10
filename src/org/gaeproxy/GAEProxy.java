@@ -67,12 +67,17 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.os.Bundle;
 import android.os.Environment;
@@ -283,6 +288,13 @@ public class GAEProxy extends PreferenceActivity implements
 	private static final int MSG_INSTALL_FAIL = 2;
 	private static final int MSG_CRASH_RECOVER = 3;
 
+	final BroadcastReceiver receiver = new BroadcastReceiver() {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			install(true);
+		}
+	};
+
 	final Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {
@@ -483,7 +495,22 @@ public class GAEProxy extends PreferenceActivity implements
 		return super.onKeyDown(keyCode, event);
 	}
 
-	private boolean install() {
+	private boolean checkApkExist(String packageName) {
+		if (packageName == null || "".equals(packageName))
+			return false;
+		try {
+			ApplicationInfo info = getPackageManager().getApplicationInfo(
+					packageName, 0);
+			if (info != null)
+				return true;
+			else
+				return false;
+		} catch (NameNotFoundException e) {
+			return false;
+		}
+	}
+
+	private boolean install(boolean fromReceiver) {
 
 		if (!Environment.MEDIA_MOUNTED.equals(Environment
 				.getExternalStorageState()))
@@ -493,6 +520,20 @@ public class GAEProxy extends PreferenceActivity implements
 				.getDefaultSharedPreferences(this);
 		if (settings.getBoolean("isInstalling", false))
 			return false;
+
+		if (checkApkExist("org.gaeproxy.runtime.module")) {
+			if (fromReceiver) {
+				unregisterReceiver(receiver);
+			} else {
+				IntentFilter filter = new IntentFilter(
+						"org.gaeproxy.runtime.module.INSTALLED");
+				registerReceiver(receiver, filter);
+				Intent intent = new Intent(
+						"org.gaeproxy.runtime.module.INSTALL");
+				sendBroadcast(intent);
+				return false;
+			}
+		}
 
 		Editor ed = settings.edit();
 		ed.putBoolean("isInstalling", true);
@@ -688,15 +729,18 @@ public class GAEProxy extends PreferenceActivity implements
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {
 			if (settings.getBoolean("isInstalled", false)) {
-				if (install()) {
+				if (install(false)) {
 				} else {
-					showAToast(getString(R.string.sdcard_alert));
+					if (!Environment.MEDIA_MOUNTED.equals(Environment
+							.getExternalStorageState())) {
+						showAToast(getString(R.string.sdcard_alert));
+					}
 					Editor ed = settings.edit();
 					ed.putBoolean("isInstalled", false);
 					ed.commit();
+
 				}
 			} else {
-				uninstall();
 			}
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isRunning")) {
@@ -1039,15 +1083,6 @@ public class GAEProxy extends PreferenceActivity implements
 		alert.show();
 	}
 
-	private void uninstall() {
-		File f = new File("/sdcard/python.zip");
-		if (f.exists())
-			f.delete();
-		f = new File("/sdcard/python-extras.zip");
-		if (f.exists())
-			f.delete();
-	}
-
 	// 点击Menu时，系统调用当前Activity的onCreateOptionsMenu方法，并传一个实现了一个Menu接口的menu对象供你使用
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -1096,6 +1131,8 @@ public class GAEProxy extends PreferenceActivity implements
 			cache.delete();
 
 		CopyAssets("");
+
+		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 
 		runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
 		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");

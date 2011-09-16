@@ -365,10 +365,10 @@ public class GAEProxyService extends Service {
 
 		if (isHTTPSProxy) {
 			InputStream is = null;
-			String socksIp = "173.192.90.214";
-			String socksPort = "16976";
+			String socksIp = "174.140.163.57";
+			String socksPort = "1984";
 			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/port.php");
+				URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
 				HttpURLConnection conn = (HttpURLConnection) aURL
 						.openConnection();
 				conn.connect();
@@ -394,8 +394,8 @@ public class GAEProxyService extends Service {
 			}
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy_socks.sh stop");
-			runCommand(BASE + "proxy_socks.sh start " + port + " " + socksIp
+			runCommand(BASE + "proxy.sh stop");
+			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
 					+ " " + socksPort);
 
 		} else {

@@ -43,6 +43,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
@@ -108,7 +109,6 @@ public class GAEProxyService extends Service {
 	private static final String TAG = "GAEProxyService";
 
 	private Process httpProcess = null;
-	private DataOutputStream httpOS = null;
 
 	private String proxy;
 	private String appHost = "203.208.46.1";
@@ -125,6 +125,7 @@ public class GAEProxyService extends Service {
 	private boolean isHTTPSProxy = false;
 	private boolean isDNSBlocked = true;
 	private boolean isGFWList = false;
+	private boolean isStopped = false;
 
 	private ProxyedApp apps[];
 
@@ -308,17 +309,17 @@ public class GAEProxyService extends Service {
 			is.flush();
 			is.close();
 
-			String cmd = BASE;
+			StringBuffer sb = new StringBuffer();
 			if (isDNSBlocked)
-				cmd = BASE + "localproxy.sh";
+				sb.append(BASE + "localproxy.sh");
 			else
-				cmd = BASE + "localproxy_en.sh";
+				sb.append(BASE + "localproxy_en.sh");
 
 			if (proxyType.equals("GAppProxy")) {
-				cmd += " gappproxy";
+				sb.append(" gappproxy");
 			} else if (proxyType.equals("WallProxy")) {
-				cmd += " wallproxy " + proxy + " " + port + " " + appHost + " "
-						+ sitekey;
+				sb.append(" wallproxy " + proxy + " " + port + " " + appHost
+						+ " " + sitekey);
 			} else if (proxyType.equals("GoAgent")) {
 				String[] proxyString = proxy.split("\\/");
 				if (proxyString.length < 4)
@@ -326,20 +327,27 @@ public class GAEProxyService extends Service {
 				String[] appid = proxyString[2].split("\\.");
 				if (appid.length < 3)
 					return false;
-				cmd += " goagent " + appid[0] + " " + port + " " + appHost
-						+ " " + proxyString[3] + " " + sitekey;
+				sb.append(" goagent " + appid[0] + " " + port + " " + appHost
+						+ " " + proxyString[3] + " " + sitekey);
 			}
+
+			final String cmd = sb.toString();
+
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec("sh");
-			httpOS = new DataOutputStream(httpProcess.getOutputStream());
-			httpOS.writeBytes(cmd + "\n");
-			httpOS.flush();
+			httpProcess = Runtime.getRuntime().exec(cmd);
 
 			Thread t = new Thread() {
 				public void run() {
 					try {
-						httpProcess.waitFor();
+						while (true) {
+							httpProcess.waitFor();
+							if (!isStopped) {
+								httpProcess.destroy();
+								httpProcess = Runtime.getRuntime().exec(cmd);
+							}
+						}
+					} catch (IOException e) {
 					} catch (InterruptedException e) {
 						// Interrupted
 					}
@@ -657,6 +665,8 @@ public class GAEProxyService extends Service {
 
 		stopForegroundCompat(1);
 
+		isStopped = true;
+
 		// runRootCommand(BASE + "host.sh remove");
 
 		FlurryAgent.onEndSession(this);
@@ -669,12 +679,12 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null) {
-				httpOS.writeBytes("\\cC");
-				httpOS.writeBytes("exit\n");
-				httpOS.flush();
-				httpOS.close();
-			}
+			// if (httpOS != null) {
+			// httpOS.writeBytes("\\cC");
+			// httpOS.writeBytes("exit\n");
+			// httpOS.flush();
+			// httpOS.close();
+			// }
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {
@@ -812,7 +822,6 @@ public class GAEProxyService extends Service {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
 
-				int tries = 0;
 				try {
 					URL url = new URL("http://gae-ip-country.appspot.com/");
 					HttpURLConnection conn = (HttpURLConnection) url
@@ -834,7 +843,6 @@ public class GAEProxyService extends Service {
 					Log.d(TAG, "Cannot get country info", e);
 					// Nothing
 				}
-				tries++;
 
 				// Test for Redirect Support
 				initHasRedirectSupported();

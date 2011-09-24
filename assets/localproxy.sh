@@ -45,7 +45,7 @@ local =
 server =
 
 [autorange]
-hosts = .youtube.com|video.*.fbcdn.net|av.vimeo.com
+hosts = .youtube.com|video.*.fbcdn.net|av.vimeo.com|.googlevideo.com
 endswith = .jpg|.jpeg|.png|.bmp|.gif
 
 [hosts]

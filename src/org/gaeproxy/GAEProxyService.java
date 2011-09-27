@@ -341,13 +341,13 @@ public class GAEProxyService extends Service {
 					try {
 						for (int tries = 0; tries < 3; tries++) {
 							if (!isStopped) {
-								if (httpProcess != null) {
-									httpProcess.destroy();
-									httpProcess = null;
-								}
 								if (httpOS != null) {
 									httpOS.close();
 									httpOS = null;
+								}
+								if (httpProcess != null) {
+									httpProcess.destroy();
+									httpProcess = null;
 								}
 								httpProcess = Runtime.getRuntime().exec("sh");
 								httpOS = new DataOutputStream(
@@ -693,12 +693,8 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null) {
-				httpOS.writeBytes("\\cC");
-				httpOS.writeBytes("exit\n");
-				httpOS.flush();
+			if (httpOS != null)
 				httpOS.close();
-			}
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {

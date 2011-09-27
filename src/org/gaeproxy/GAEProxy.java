@@ -524,6 +524,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (checkApkExist("org.gaeproxy.runtime.module")) {
 			if (fromReceiver) {
 				unregisterReceiver(receiver);
+				isInstalledCheck.setEnabled(true);
 			} else {
 				IntentFilter filter = new IntentFilter(
 						"org.gaeproxy.runtime.module.INSTALLED");
@@ -531,6 +532,7 @@ public class GAEProxy extends PreferenceActivity implements
 				Intent intent = new Intent(
 						"org.gaeproxy.runtime.module.INSTALL");
 				sendBroadcast(intent);
+				isInstalledCheck.setEnabled(false);
 				return false;
 			}
 		}
@@ -538,6 +540,7 @@ public class GAEProxy extends PreferenceActivity implements
 		Editor ed = settings.edit();
 		ed.putBoolean("isInstalling", true);
 		ed.commit();
+		
 		DownloadFileRunnable progress;
 		TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
 		String countryCode = tm.getSimCountryIso();

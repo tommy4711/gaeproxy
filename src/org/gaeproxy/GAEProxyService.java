@@ -109,6 +109,7 @@ public class GAEProxyService extends Service {
 	private static final String TAG = "GAEProxyService";
 
 	private Process httpProcess = null;
+	private DataOutputStream httpOS = null;
 
 	private String proxy;
 	private String appHost = "203.208.46.1";
@@ -125,7 +126,7 @@ public class GAEProxyService extends Service {
 	private boolean isHTTPSProxy = false;
 	private boolean isDNSBlocked = true;
 	private boolean isGFWList = false;
-	private boolean isStopped = false;
+	private volatile boolean isStopped = false;
 
 	private ProxyedApp apps[];
 
@@ -335,17 +336,30 @@ public class GAEProxyService extends Service {
 
 			Log.e(TAG, cmd);
 
-			httpProcess = Runtime.getRuntime().exec(cmd);
-
 			Thread t = new Thread() {
 				public void run() {
 					try {
-						while (true) {
-							httpProcess.waitFor();
+						for (int tries = 0; tries < 3; tries++) {
 							if (!isStopped) {
-								httpProcess.destroy();
-								httpProcess = Runtime.getRuntime().exec(cmd);
+								if (httpProcess != null) {
+									httpProcess.destroy();
+									httpProcess = null;
+								}
+								if (httpOS != null) {
+									httpOS.close();
+									httpOS = null;
+								}
+								httpProcess = Runtime.getRuntime().exec("sh");
+								httpOS = new DataOutputStream(
+										httpProcess.getOutputStream());
+								httpOS.write((cmd + "\n").getBytes());
+								httpOS.write("exit\n".getBytes());
+								httpOS.flush();
+							} else {
+								// no handler here, just normally exit
+								return;
 							}
+							httpProcess.waitFor();
 						}
 					} catch (IOException e) {
 					} catch (InterruptedException e) {
@@ -403,8 +417,8 @@ public class GAEProxyService extends Service {
 
 			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh stop");
-			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
-					+ " " + socksPort);
+			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
+					+ socksPort);
 
 		} else {
 
@@ -419,8 +433,8 @@ public class GAEProxyService extends Service {
 
 			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh stop");
-			runRootCommand(BASE + "proxy.sh start " + port + " " + socksIp
-					+ " " + "1984");
+			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
+					+ "1984");
 		}
 
 		StringBuffer cmd = new StringBuffer();
@@ -679,12 +693,12 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			// if (httpOS != null) {
-			// httpOS.writeBytes("\\cC");
-			// httpOS.writeBytes("exit\n");
-			// httpOS.flush();
-			// httpOS.close();
-			// }
+			if (httpOS != null) {
+				httpOS.writeBytes("\\cC");
+				httpOS.writeBytes("exit\n");
+				httpOS.flush();
+				httpOS.close();
+			}
 			if (httpProcess != null)
 				httpProcess.destroy();
 		} catch (Exception e) {

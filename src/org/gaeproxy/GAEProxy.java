@@ -547,20 +547,11 @@ public class GAEProxy extends PreferenceActivity implements
 		String countryCode = tm.getSimCountryIso();
 		if (countryCode.toLowerCase().equals("cn")) {
 
-			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(2);
-			if (n > 0)
-				progress = new DownloadFileRunnable(
-						"http://madeye.me/python_r2.zip", "/sdcard/python.zip",
-						"/data/data/org.gaeproxy/",
-						"http://madeye.me/python-extras_r2.zip",
-						"/sdcard/python-extras.zip", "/sdcard/");
-			else
-				progress = new DownloadFileRunnable(
-						"http://myhosts.sinaapp.com/python_r2.zip",
-						"/sdcard/python.zip", "/data/data/org.gaeproxy/",
-						"http://myhosts.sinaapp.com/python-extras_r2.zip",
-						"/sdcard/python-extras.zip", "/sdcard/");
+			progress = new DownloadFileRunnable(
+					"http://myhosts.sinaapp.com/python_r2.zip",
+					"/sdcard/python.zip", "/data/data/org.gaeproxy/",
+					"http://myhosts.sinaapp.com/python-extras_r2.zip",
+					"/sdcard/python-extras.zip", "/sdcard/");
 		} else {
 			progress = new DownloadFileRunnable(
 					"http://gaeproxy.googlecode.com/files/python_r2.zip",

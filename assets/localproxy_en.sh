@@ -5,8 +5,10 @@ export LD_LIBRARY_PATH=/data/data/org.gaeproxy/python/lib
 export PYTHONHOME=$PYTHONHOME:/data/data/org.gaeproxy/python
 export TEMP=/sdcard/python-extras
 
-echo "" > /data/data/org.gaeproxy/python.pid
 chmod 777 /data/data/org.gaeproxy/python.pid
+kill -9 `cat /data/data/org.gaeproxy/python.pid`
+rm /data/data/org.gaeproxy/python.pid
+killall -9 python
 
 case $1 in
 
@@ -20,36 +22,48 @@ port = $3
 visible = 1
 
 [gae]
+enable = 1
 appid = $2
 password = $6
 path = /$5
 debuglevel = 0
 
+[php]
+enable = 0
+ip = 127.0.0.1
+port = 8088
+fetchserver = http://scan.org/fetch.php
+
 [proxy]
 enable = 0
-host = 10.0.0.172
-port = 80
-username = 
-password = 
+host = 10.64.1.63
+port = 8080
+username = domain\username
+password = 123456
+
+[appspot]
+mode = http
+autoswitch = 0
+hosts = hk
+cn = 203.208.46.1|203.208.46.2|203.208.46.3|203.208.46.4|203.208.46.5|203.208.46.6|203.208.46.7|203.208.46.8
+hk = $4|74.125.71.103|74.125.71.104|74.125.71.105|74.125.71.106|74.125.71.147|74.125.71.17|74.125.71.18|74.125.71.19|74.125.71.83|74.125.71.99
+ipv6 = 2404:6800:8005::6a|2404:6800:8005::62|2404:6800:8005::2c
 
 [google]
-prefer = http
-autoswitch = 0
 sites = .google.com|.googleusercontent.com|.googleapis.com|.google-analytics.com|.googlecode.com|.google.com.hk|.appspot.com|.android.com
-forcehttps = http://groups.google.com|http://code.google.com|http://mail.google.com|http://plus.google.com|http://docs.google.com|http://profiles.google.com|http://www.google.com/reader|http://developer.android.com
-http = $4
-https = $4
+forcehttps = groups.google.com|code.google.com|mail.google.com|docs.google.com|profiles.google.com|developer.android.com
+withgae = plus.google.com|reader.googleusercontent.com|music.google.com
+hosts = $4|74.125.71.103|74.125.71.104|74.125.71.105|74.125.71.106|74.125.71.147|74.125.71.17|74.125.71.18|74.125.71.19|74.125.71.83|74.125.71.99
 
 [fetchmax]
 local =
 server =
 
 [autorange]
-hosts = .youtube.com|video.*.fbcdn.net|av.vimeo.com
+hosts = .youtube.com|.googlevideo.com|video.*.fbcdn.net|av.vimeo.com
 endswith = .jpg|.jpeg|.png|.bmp|.gif
 
 [hosts]
-__merge__ = 0
 www.253874.com = 76.73.90.170
 
 "> /data/data/org.gaeproxy/proxy.ini

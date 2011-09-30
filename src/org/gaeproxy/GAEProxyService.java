@@ -297,18 +297,17 @@ public class GAEProxyService extends Service {
 	}
 
 	public boolean connect() {
+		
+		// pid
+		try {
+			File pid = new File(BASE + "python.pid");
+			if (pid.exists())
+				pid.createNewFile();
+		} catch (IOException e1) {
+			return false;
+		}
 
 		try {
-
-			File conf = new File(BASE + "proxy.conf");
-			if (!conf.exists())
-				conf.createNewFile();
-			FileOutputStream is = new FileOutputStream(conf);
-			byte[] buffer = ("listen_port = " + port + "\n" + "fetch_server = "
-					+ proxy + "\n").getBytes();
-			is.write(buffer);
-			is.flush();
-			is.close();
 
 			StringBuffer sb = new StringBuffer();
 			if (isDNSBlocked)
@@ -317,6 +316,17 @@ public class GAEProxyService extends Service {
 				sb.append(BASE + "localproxy_en.sh");
 
 			if (proxyType.equals("GAppProxy")) {
+
+				File conf = new File(BASE + "proxy.conf");
+				if (!conf.exists())
+					conf.createNewFile();
+				FileOutputStream is = new FileOutputStream(conf);
+				byte[] buffer = ("listen_port = " + port + "\n"
+						+ "fetch_server = " + proxy + "\n").getBytes();
+				is.write(buffer);
+				is.flush();
+				is.close();
+
 				sb.append(" gappproxy");
 			} else if (proxyType.equals("WallProxy")) {
 				sb.append(" wallproxy " + proxy + " " + port + " " + appHost
@@ -416,7 +426,6 @@ public class GAEProxyService extends Service {
 			}
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh stop");
 			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
 					+ socksPort);
 
@@ -432,7 +441,6 @@ public class GAEProxyService extends Service {
 			}
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh stop");
 			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
 					+ "1984");
 		}

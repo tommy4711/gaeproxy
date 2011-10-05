@@ -480,13 +480,9 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         #self.end_headers()
         
         # rewrite as wallproxy
-        tmp_headers = ''
-        tmp_headers += 'Content-Type: ' + data['headers']['content-type'] + '\r\n'
-        tmp_headers += 'Connection: close\r\n'
-        tmp_headers += 'Accept-Ranges: bytes\r\n'
-        tmp_headers += 'Content-Length: ' + str(end-start+1) + '\r\n';
-        #logging.info('%s' % tmp_headers)
-        self.wfile.write('HTTP/1.0 %d %s\r\n%s\r\n' % (data['code'],'',tmp_headers))
+        respline = '%s %d %s\r\n' % (self.protocol_version, data['code'], '')
+        strheaders = ''.join('%s: %s\r\n' % ('-'.join(x.title() for x in k.split('-')), v) for k, v in data['headers'].iteritems())  
+        self.wfile.write(respline+strheaders+'\r\n')
         
         if start == m[0]:
             self.wfile.write(data['content'])

@@ -659,11 +659,11 @@ public class GAEProxy extends PreferenceActivity implements
 				if (!isWorked(SERVICE_NAME)) {
 					CopyAssets("");
 
-					runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
-					runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
-					runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
-					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-					runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
+					runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+					runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+					runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+					runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+					runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 				}
 
 				try {
@@ -872,7 +872,7 @@ public class GAEProxy extends PreferenceActivity implements
 								+ "setprop gsm.operator.numeric 31026\n"
 								+ "setprop gsm.sim.operator.iso-country us\n"
 								+ "setprop gsm.operator.iso-country us\n"
-								+ "chmod 777 /data/data/com.android.vending/shared_prefs\n"
+								+ "chmod 755 /data/data/com.android.vending/shared_prefs\n"
 								+ "chmod 666 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
 								+ "setpref com.android.vending vending_preferences boolean metadata_paid_apps_enabled true\n"
 								+ "chmod 660 /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
@@ -988,7 +988,7 @@ public class GAEProxy extends PreferenceActivity implements
 			return false;
 		}
 
-		runCommand("chmod 777 /data/data/org.gaeproxy/python/bin/python");
+		runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
@@ -1137,11 +1137,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 
-		runCommand("chmod 777 /data/data/org.gaeproxy/iptables");
-		runCommand("chmod 777 /data/data/org.gaeproxy/redsocks");
-		runCommand("chmod 777 /data/data/org.gaeproxy/proxy.sh");
-		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy.sh");
-		runCommand("chmod 777 /data/data/org.gaeproxy/localproxy_en.sh");
+		runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+		runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+		runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+		runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+		runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 
 	}
 

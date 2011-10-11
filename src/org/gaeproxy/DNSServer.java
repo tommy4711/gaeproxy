@@ -570,7 +570,7 @@ public class DNSServer implements WrapServer {
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
-					Log.d(TAG, "Custom DNS resolver" + orgCache);
+					Log.d(TAG, "Custom DNS resolver");
 				} else if (questDomain.toLowerCase().contains("appspot.com")) { // 如果为apphost域名解析
 					byte[] ips = parseIPString(appHost);
 					byte[] answer = createDNSResponse(udpreq, ips);

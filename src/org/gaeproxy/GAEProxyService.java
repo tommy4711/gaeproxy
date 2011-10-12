@@ -269,12 +269,12 @@ public class GAEProxyService extends Service {
 	}
 
 	public static boolean runCommand(String command) {
-		
+
 		// if got root permission, always execute as root
 		if (GAEProxy.isRoot) {
 			return runRootCommand(command);
 		}
-		
+
 		Process process = null;
 		DataOutputStream os = null;
 		Log.d(TAG, command);
@@ -303,7 +303,7 @@ public class GAEProxyService extends Service {
 	}
 
 	public boolean connect() {
-		
+
 		// pid
 		try {
 			File pid = new File(BASE + "python.pid");
@@ -599,10 +599,22 @@ public class GAEProxyService extends Service {
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
+			String[] mirror_list = null;
+			int mirror_num = 0;
+			try {
+				String mirror_string = new String(Base64.decode(getString(R.string.mirror_list)));
+				mirror_list = mirror_string.split("\\|");
+			} catch (IOException e) {
+			}
+			
+			if (mirror_list != null)
+				mirror_num = mirror_list.length;
 			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(20);
-			if (n > 0)
+			int n = random.nextInt(20 + mirror_num);
+			if (n > 0 && n < 20)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
+			else
+				proxy = "https://" + mirror_list[n - 20] + ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}
 

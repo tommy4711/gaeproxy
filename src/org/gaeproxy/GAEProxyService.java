@@ -269,6 +269,12 @@ public class GAEProxyService extends Service {
 	}
 
 	public static boolean runCommand(String command) {
+		
+		// if got root permission, always execute as root
+		if (GAEProxy.isRoot) {
+			return runRootCommand(command);
+		}
+		
 		Process process = null;
 		DataOutputStream os = null;
 		Log.d(TAG, command);

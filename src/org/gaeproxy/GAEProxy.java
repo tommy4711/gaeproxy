@@ -111,9 +111,11 @@ public class GAEProxy extends PreferenceActivity implements
 	class DownloadFileRunnable implements Runnable {
 
 		private String[] path;
+		private boolean fromReceiver;
 
-		public DownloadFileRunnable(String... path) {
+		public DownloadFileRunnable(boolean fromReceiver, String... path) {
 			this.path = path;
+			this.fromReceiver = fromReceiver;
 			notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
 			nm.notify(notification_id, notification);
 		}
@@ -181,35 +183,40 @@ public class GAEProxy extends PreferenceActivity implements
 			try {
 
 				File zip = new File(path[1]);
-				URL url = new URL(path[0]);
-				URLConnection conexion = url.openConnection();
-				conexion.connect();
-				int lenghtOfFile = conexion.getContentLength();
 
-				if (!zip.exists() || lenghtOfFile != zip.length()) {
+				if (!fromReceiver) {
 
-					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+					URL url = new URL(path[0]);
+					URLConnection conexion = url.openConnection();
+					conexion.connect();
+					int lenghtOfFile = conexion.getContentLength();
 
-					InputStream input = new BufferedInputStream(
-							url.openStream());
-					OutputStream output = new FileOutputStream(path[1]);
+					if (!zip.exists() || lenghtOfFile != zip.length()) {
 
-					byte data[] = new byte[1024];
+						Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
-					long total = 0;
+						InputStream input = new BufferedInputStream(
+								url.openStream());
+						OutputStream output = new FileOutputStream(path[1]);
 
-					while ((count = input.read(data)) != -1) {
-						total += count;
-						publishProgress(""
-								+ (int) ((total * 50) / lenghtOfFile));
-						output.write(data, 0, count);
+						byte data[] = new byte[1024];
+
+						long total = 0;
+
+						while ((count = input.read(data)) != -1) {
+							total += count;
+							publishProgress(""
+									+ (int) ((total * 50) / lenghtOfFile));
+							output.write(data, 0, count);
+						}
+
+						output.flush();
+						output.close();
+						input.close();
+					} else {
+						publishProgress("" + 50);
 					}
 
-					output.flush();
-					output.close();
-					input.close();
-				} else {
-					publishProgress("" + 50);
 				}
 
 				// Unzip now
@@ -218,36 +225,39 @@ public class GAEProxy extends PreferenceActivity implements
 				// Unzip another file
 				zip = new File(path[4]);
 
-				url = new URL(path[3]);
-				conexion = url.openConnection();
-				conexion.connect();
+				if (!fromReceiver) {
 
-				lenghtOfFile = conexion.getContentLength();
+					URL url = new URL(path[3]);
+					URLConnection conexion = url.openConnection();
+					conexion.connect();
 
-				if (!zip.exists() || zip.length() != lenghtOfFile) {
+					int lenghtOfFile = conexion.getContentLength();
 
-					Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
+					if (!zip.exists() || zip.length() != lenghtOfFile) {
 
-					InputStream input = new BufferedInputStream(
-							url.openStream());
-					OutputStream output = new FileOutputStream(path[4]);
+						Log.d("ANDRO_ASYNC", "Lenght of file: " + lenghtOfFile);
 
-					byte data[] = new byte[1024];
+						InputStream input = new BufferedInputStream(
+								url.openStream());
+						OutputStream output = new FileOutputStream(path[4]);
 
-					long total = 0;
+						byte data[] = new byte[1024];
 
-					while ((count = input.read(data)) != -1) {
-						total += count;
-						publishProgress(""
-								+ (int) (50 + (total * 50) / lenghtOfFile));
-						output.write(data, 0, count);
+						long total = 0;
+
+						while ((count = input.read(data)) != -1) {
+							total += count;
+							publishProgress(""
+									+ (int) (50 + (total * 50) / lenghtOfFile));
+							output.write(data, 0, count);
+						}
+
+						output.flush();
+						output.close();
+						input.close();
+					} else {
+						publishProgress("" + 100);
 					}
-
-					output.flush();
-					output.close();
-					input.close();
-				} else {
-					publishProgress("" + 100);
 				}
 
 				// Unzip File
@@ -547,13 +557,14 @@ public class GAEProxy extends PreferenceActivity implements
 		String countryCode = tm.getSimCountryIso();
 		if (countryCode.toLowerCase().equals("cn")) {
 
-			progress = new DownloadFileRunnable(
+			progress = new DownloadFileRunnable(fromReceiver,
 					"http://myhosts.sinaapp.com/python_r2.zip",
 					"/sdcard/python.zip", "/data/data/org.gaeproxy/",
 					"http://myhosts.sinaapp.com/python-extras_r2.zip",
 					"/sdcard/python-extras.zip", "/sdcard/");
 		} else {
 			progress = new DownloadFileRunnable(
+					fromReceiver,
 					"http://gaeproxy.googlecode.com/files/python_r2.zip",
 					"/sdcard/python.zip",
 					"/data/data/org.gaeproxy/",
@@ -647,7 +658,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 
-		if (!runRootCommand("")) {
+		if (!runRootCommand("exit")) {
 			isRoot = false;
 		} else {
 			isRoot = true;

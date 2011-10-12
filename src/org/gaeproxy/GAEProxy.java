@@ -213,12 +213,11 @@ public class GAEProxy extends PreferenceActivity implements
 						output.flush();
 						output.close();
 						input.close();
-					} else {
-						publishProgress("" + 50);
 					}
 
 				}
 
+				publishProgress("" + 50);
 				// Unzip now
 				unzip(path[1], path[2]);
 
@@ -255,11 +254,10 @@ public class GAEProxy extends PreferenceActivity implements
 						output.flush();
 						output.close();
 						input.close();
-					} else {
-						publishProgress("" + 100);
 					}
 				}
 
+				publishProgress("" + 100);
 				// Unzip File
 				unzip(path[4], path[5]);
 				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);

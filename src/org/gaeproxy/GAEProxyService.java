@@ -613,7 +613,7 @@ public class GAEProxyService extends Service {
 			int n = random.nextInt(20 + mirror_num);
 			if (n > 0 && n < 20)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
-			else
+			else if (n >= 20)
 				proxy = "https://" + mirror_list[n - 20] + ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}

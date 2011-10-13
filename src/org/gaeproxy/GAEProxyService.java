@@ -93,17 +93,17 @@ public class GAEProxyService extends Service {
 	private static final int MSG_STOP_SELF = 5;
 
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p 6 " + "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p 6 " + "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_DNAT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p 6 " + "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
 	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+			+ "iptables -t nat -A OUTPUT -p 6 " + "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
@@ -160,7 +160,7 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
+		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p 17 --dport 54 -j REDIRECT --to 8154";
 
 		try {
 			process = Runtime.getRuntime().exec("su");
@@ -455,10 +455,10 @@ public class GAEProxyService extends Service {
 
 		if (hasRedirectSupport) {
 			cmd.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+					+ "iptables -t nat -A OUTPUT -p 17 --dport 53 -j REDIRECT --to 8153\n");
 		} else {
 			cmd.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					+ "iptables -t nat -A OUTPUT -p 17 --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 		}
 
 		if (isGFWList) {

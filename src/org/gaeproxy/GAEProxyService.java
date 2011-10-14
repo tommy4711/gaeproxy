@@ -317,9 +317,9 @@ public class GAEProxyService extends Service {
 
 			StringBuffer sb = new StringBuffer();
 			if (isDNSBlocked)
-				sb.append(BASE + "localproxy.sh");
+				sb.append(BASE + "localproxy.sh \"" + GAEProxy.data_path + "\"");
 			else
-				sb.append(BASE + "localproxy_en.sh");
+				sb.append(BASE + "localproxy_en.sh \"" + GAEProxy.data_path + "\"");
 
 			if (proxyType.equals("GAppProxy")) {
 

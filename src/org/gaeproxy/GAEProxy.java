@@ -286,6 +286,8 @@ public class GAEProxy extends PreferenceActivity implements
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
 	private boolean isGFWList = false;
+	
+	public static String data_path = "/sdcard";
 
 	// Notification Progress Bar
 	int notification_id = 19172439;
@@ -557,17 +559,17 @@ public class GAEProxy extends PreferenceActivity implements
 
 			progress = new DownloadFileRunnable(fromReceiver,
 					"http://myhosts.sinaapp.com/python_r2.zip",
-					"/sdcard/python.zip", "/data/data/org.gaeproxy/",
+					data_path + "/python.zip", "/data/data/org.gaeproxy/",
 					"http://myhosts.sinaapp.com/python-extras_r2.zip",
-					"/sdcard/python-extras.zip", "/sdcard/");
+					data_path + "/python-extras.zip", data_path + "/");
 		} else {
 			progress = new DownloadFileRunnable(
 					fromReceiver,
 					"http://gaeproxy.googlecode.com/files/python_r2.zip",
-					"/sdcard/python.zip",
+					data_path + "/python.zip",
 					"/data/data/org.gaeproxy/",
 					"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",
-					"/sdcard/python-extras.zip", "/sdcard/");
+					data_path + "/python-extras.zip", data_path + "/");
 		}
 		new Thread(progress).start();
 		showAToast(getString(R.string.downloading));
@@ -625,6 +627,15 @@ public class GAEProxy extends PreferenceActivity implements
 		AdRequest aq = new AdRequest();
 		// aq.setTesting(true);
 		adView.loadAd(aq);
+		
+		if (Environment.MEDIA_MOUNTED.equals(Environment
+				.getExternalStorageState())) {
+			data_path = Environment.getExternalStorageDirectory().getAbsolutePath();
+		} else {
+			data_path = Environment.getDataDirectory().getAbsolutePath();
+		}
+		
+		Log.d(TAG, "Python Data Path: " + data_path);
 
 		nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		notification = new Notification(R.drawable.icon,
@@ -722,6 +733,7 @@ public class GAEProxy extends PreferenceActivity implements
 		getPreferenceScreen().getSharedPreferences()
 				.unregisterOnSharedPreferenceChangeListener(this);
 	}
+	
 
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
@@ -743,10 +755,7 @@ public class GAEProxy extends PreferenceActivity implements
 			if (settings.getBoolean("isInstalled", false)) {
 				if (install(false)) {
 				} else {
-					if (!Environment.MEDIA_MOUNTED.equals(Environment
-							.getExternalStorageState())) {
-						showAToast(getString(R.string.sdcard_alert));
-					}
+
 					Editor ed = settings.edit();
 					ed.putBoolean("isInstalled", false);
 					ed.commit();

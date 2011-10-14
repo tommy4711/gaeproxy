@@ -528,7 +528,7 @@ public class GAEProxy extends PreferenceActivity implements
 		if (settings.getBoolean("isInstalling", false))
 			return false;
 
-		if (checkApkExist("org.gaeproxy.runtime.module")) {
+		if (data_path.contains("sdcard") && checkApkExist("org.gaeproxy.runtime.module")) {
 			if (fromReceiver) {
 				unregisterReceiver(receiver);
 				isInstalledCheck.setEnabled(true);

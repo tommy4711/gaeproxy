@@ -523,10 +523,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private boolean install(boolean fromReceiver) {
 
-		if (!Environment.MEDIA_MOUNTED.equals(Environment
-				.getExternalStorageState()))
-			return false;
-
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 		if (settings.getBoolean("isInstalling", false))
@@ -632,7 +628,7 @@ public class GAEProxy extends PreferenceActivity implements
 				.getExternalStorageState())) {
 			data_path = Environment.getExternalStorageDirectory().getAbsolutePath();
 		} else {
-			data_path = Environment.getDataDirectory().getAbsolutePath();
+			data_path = getFilesDir().getAbsolutePath();
 		}
 		
 		Log.d(TAG, "Python Data Path: " + data_path);

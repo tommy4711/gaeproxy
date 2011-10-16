@@ -107,6 +107,8 @@ public class GAEProxyService extends Service {
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
+	
+	public static volatile boolean statusLock = false;
 
 	private Process httpProcess = null;
 	private DataOutputStream httpOS = null;
@@ -319,7 +321,8 @@ public class GAEProxyService extends Service {
 			if (isDNSBlocked)
 				sb.append(BASE + "localproxy.sh \"" + GAEProxy.data_path + "\"");
 			else
-				sb.append(BASE + "localproxy_en.sh \"" + GAEProxy.data_path + "\"");
+				sb.append(BASE + "localproxy_en.sh \"" + GAEProxy.data_path
+						+ "\"");
 
 			if (proxyType.equals("GAppProxy")) {
 
@@ -403,33 +406,47 @@ public class GAEProxyService extends Service {
 
 		if (isHTTPSProxy) {
 			InputStream is = null;
-			String socksIp = "174.140.163.57";
-			String socksPort = "1984";
-			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
-				conn.connect();
-				is = conn.getInputStream();
 
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(is));
+			String socksIp = settings.getString("socksIp", null);
+			String socksPort = settings.getString("socksPort", null);
 
-				String line = reader.readLine();
-				if (!line.startsWith("#ip"))
-					throw new Exception("Format error");
-				line = reader.readLine();
-				socksIp = line.trim().toLowerCase();
+			for (int tries = 0; tries < 3; tries++) {
+				try {
+					URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
+					HttpURLConnection conn = (HttpURLConnection) aURL
+							.openConnection();
+					conn.connect();
+					is = conn.getInputStream();
 
-				line = reader.readLine();
-				if (!line.startsWith("#port"))
-					throw new Exception("Format error");
-				line = reader.readLine();
-				socksPort = line.trim().toLowerCase();
-			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote port info", e);
-				return false;
+					BufferedReader reader = new BufferedReader(
+							new InputStreamReader(is));
+
+					String line = reader.readLine();
+					if (!line.startsWith("#ip"))
+						throw new Exception("Format error");
+					line = reader.readLine();
+					socksIp = line.trim().toLowerCase();
+
+					line = reader.readLine();
+					if (!line.startsWith("#port"))
+						throw new Exception("Format error");
+					line = reader.readLine();
+					socksPort = line.trim().toLowerCase();
+
+					Editor ed = settings.edit();
+					ed.putString("socksIp", socksIp);
+					ed.putString("socksPort", socksPort);
+					ed.commit();
+
+				} catch (Exception e) {
+					Log.e(TAG, "cannot get remote port info", e);
+					continue;
+				}
+				break;
 			}
+
+			if (socksIp == null || socksPort == null)
+				return false;
 
 			Log.d(TAG, "Forward Successful");
 			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
@@ -437,18 +454,9 @@ public class GAEProxyService extends Service {
 
 		} else {
 
-			String socksIp = "173.224.211.42";
-			try {
-				InetAddress addr = InetAddress.getByName("apps.madeye.me");
-				socksIp = addr.getHostAddress();
-
-			} catch (Exception ignore) {
-				socksIp = "173.224.211.42";
-			}
-
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
-					+ "1984");
+			runCommand(BASE + "proxy.sh start " + port + " " + "127.0.0.1"
+					+ " " + port);
 		}
 
 		StringBuffer cmd = new StringBuffer();
@@ -602,11 +610,12 @@ public class GAEProxyService extends Service {
 			String[] mirror_list = null;
 			int mirror_num = 0;
 			try {
-				String mirror_string = new String(Base64.decode(getString(R.string.mirror_list)));
+				String mirror_string = new String(
+						Base64.decode(getString(R.string.mirror_list)));
 				mirror_list = mirror_string.split("\\|");
 			} catch (IOException e) {
 			}
-			
+
 			if (mirror_list != null)
 				mirror_num = mirror_list.length;
 			Random random = new Random(System.currentTimeMillis());
@@ -614,7 +623,8 @@ public class GAEProxyService extends Service {
 			if (n > 0 && n < 20)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
 			else if (n >= 20)
-				proxy = "https://" + mirror_list[n - 20] + ".appspot.com/fetch.py";
+				proxy = "https://" + mirror_list[n - 20]
+						+ ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}
 
@@ -702,6 +712,8 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
+		
+		statusLock = true;
 
 		stopForegroundCompat(1);
 
@@ -766,6 +778,8 @@ public class GAEProxyService extends Service {
 		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
 
 		super.onDestroy();
+		
+		statusLock = false; 
 	}
 
 	private void onDisconnect() {
@@ -783,6 +797,7 @@ public class GAEProxyService extends Service {
 			switch (msg.what) {
 			case MSG_CONNECT_START:
 				ed.putBoolean("isConnecting", true);
+				statusLock = true;
 
 				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
@@ -793,6 +808,7 @@ public class GAEProxyService extends Service {
 				break;
 			case MSG_CONNECT_FINISH:
 				ed.putBoolean("isConnecting", false);
+				statusLock = false;
 
 				if (mWakeLock != null && mWakeLock.isHeld())
 					mWakeLock.release();

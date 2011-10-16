@@ -51,6 +51,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -125,14 +126,17 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
 		
-//		if (settings.getBoolean("isConnecting", false)) {
-//			// only one request a time
-//			return;
-//		} else {
-//			Editor ed = settings.edit();
-//			ed.putBoolean("isConnecting", true);
-//			ed.commit();
-//		}
+		// Get instance of Vibrator from current Context
+		Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+		 
+		// Vibrate for 300 milliseconds
+		v.vibrate(100);
+
+		
+		if (GAEProxyService.statusLock) {
+			// only one request a time
+			return;
+		}
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 			RemoteViews views = new RemoteViews(context.getPackageName(),
@@ -215,7 +219,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 						// Nothing
 					}
 				}
-
+				
 			}
 
 		}

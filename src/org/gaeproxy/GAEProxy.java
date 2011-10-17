@@ -580,19 +580,6 @@ public class GAEProxy extends PreferenceActivity implements
 		return false;
 	}
 
-	public boolean isWorked(String service) {
-		ActivityManager myManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
-		ArrayList<RunningServiceInfo> runningService = (ArrayList<RunningServiceInfo>) myManager
-				.getRunningServices(30);
-		for (int i = 0; i < runningService.size(); i++) {
-			if (runningService.get(i).service.getClassName().toString()
-					.equals(service)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public void onStart() {
 		super.onStart();
@@ -672,7 +659,7 @@ public class GAEProxy extends PreferenceActivity implements
 		new Thread() {
 			public void run() {
 
-				if (!isWorked(SERVICE_NAME)) {
+				if (!GAEProxyService.isServiceStarted()) {
 					CopyAssets("");
 
 					runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
@@ -713,7 +700,7 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
 
 		SharedPreferences.Editor editor = settings.edit();
-		editor.putBoolean("isConnected", isWorked(SERVICE_NAME));
+		editor.putBoolean("isConnected", GAEProxyService.isServiceStarted());
 		editor.commit();
 
 		adView.destroy();
@@ -802,7 +789,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		Editor edit = settings.edit();
 
-		if (this.isWorked(SERVICE_NAME)) {
+		if (GAEProxyService.isServiceStarted()) {
 			edit.putBoolean("isRunning", true);
 		} else {
 			if (settings.getBoolean("isRunning", false)) {
@@ -993,7 +980,7 @@ public class GAEProxy extends PreferenceActivity implements
 	 */
 	public boolean serviceStart() {
 
-		if (isWorked(SERVICE_NAME)) {
+		if (GAEProxyService.isServiceStarted()) {
 			try {
 				stopService(new Intent(this, GAEProxyService.class));
 			} catch (Exception e) {

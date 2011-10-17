@@ -92,7 +92,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					R.layout.gaeproxy_appwidget);
 			views.setOnClickPendingIntent(R.id.serviceToggle, pendingIntent);
 
-			if (isWorked(context, SERVICE_NAME)) {
+			if (GAEProxyService.isServiceStarted()) {
 				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
 				Log.d(TAG, "Service running");
 			} else {
@@ -154,7 +154,7 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			Log.d(TAG, "Proxy switch action");
 
 			// do some really cool stuff here
-			if (isWorked(context, SERVICE_NAME)) {
+			if (GAEProxyService.isServiceStarted()) {
 				// Service is working, so stop it
 				try {
 					context.stopService(new Intent(context,

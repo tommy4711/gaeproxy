@@ -107,7 +107,7 @@ public class GAEProxyService extends Service {
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
-	
+
 	public static volatile boolean statusLock = false;
 
 	private Process httpProcess = null;
@@ -368,7 +368,13 @@ public class GAEProxyService extends Service {
 									httpProcess.destroy();
 									httpProcess = null;
 								}
-								httpProcess = Runtime.getRuntime().exec("sh");
+								if (GAEProxy.isRoot) {
+									httpProcess = Runtime.getRuntime().exec(
+											"su");
+								} else {
+									httpProcess = Runtime.getRuntime().exec(
+											"sh");
+								}
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());
 								httpOS.write((cmd + "\n").getBytes());
@@ -380,7 +386,10 @@ public class GAEProxyService extends Service {
 							}
 							httpProcess.waitFor();
 						}
+					} catch (NullPointerException e) {
+						// Cannot get runtime
 					} catch (IOException e) {
+						// Cannot allocate stdin
 					} catch (InterruptedException e) {
 						// Interrupted
 					}
@@ -712,7 +721,7 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
-		
+
 		statusLock = true;
 
 		stopForegroundCompat(1);
@@ -778,8 +787,8 @@ public class GAEProxyService extends Service {
 		// APNManager.clearAPNProxy("127.0.0.1", Integer.toString(port), this);
 
 		super.onDestroy();
-		
-		statusLock = false; 
+
+		statusLock = false;
 	}
 
 	private void onDisconnect() {

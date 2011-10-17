@@ -281,7 +281,7 @@ public class GAEProxyService extends Service {
 		DataOutputStream os = null;
 		Log.d(TAG, command);
 		try {
-			process = Runtime.getRuntime().exec("sh");
+			process = Runtime.getRuntime().exec("/system/bin/sh");
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes(command + "\n");
 			os.writeBytes("exit\n");
@@ -373,7 +373,7 @@ public class GAEProxyService extends Service {
 											"su");
 								} else {
 									httpProcess = Runtime.getRuntime().exec(
-											"sh");
+											"/system/bin/sh");
 								}
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());

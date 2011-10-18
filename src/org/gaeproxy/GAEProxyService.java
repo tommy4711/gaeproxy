@@ -154,36 +154,35 @@ public class GAEProxyService extends Service {
 			Log.w("ApiDemos", "Unable to invoke method", e);
 		}
 	}
-	
-	/* This is a hack
-	 * see http://www.mail-archive.com/android-developers@googlegroups.com/msg18298.html
-	 * we are not really able to decide if the service was started.
-	 * So we remember a week reference to it. We set it if we are running and clear it
-	 * if we are stopped. If anything goes wrong, the reference will hopefully vanish
-	 */	
+
+	/*
+	 * This is a hack see
+	 * http://www.mail-archive.com/android-developers@googlegroups
+	 * .com/msg18298.html we are not really able to decide if the service was
+	 * started. So we remember a week reference to it. We set it if we are
+	 * running and clear it if we are stopped. If anything goes wrong, the
+	 * reference will hopefully vanish
+	 */
 	private static WeakReference<GAEProxyService> sRunningInstance = null;
-	public final static boolean isServiceStarted()
-	{
+
+	public final static boolean isServiceStarted() {
 		final boolean isServiceStarted;
-		if ( sRunningInstance == null )
-		{
+		if (sRunningInstance == null) {
 			isServiceStarted = false;
-		}
-		else if ( sRunningInstance.get() == null )
-		{
+		} else if (sRunningInstance.get() == null) {
 			isServiceStarted = false;
 			sRunningInstance = null;
-		}
-		else
-		{
+		} else {
 			isServiceStarted = true;
 		}
 		return isServiceStarted;
 	}
-	private void markServiceStarted(){
-		sRunningInstance = new WeakReference<GAEProxyService>( this );
+
+	private void markServiceStarted() {
+		sRunningInstance = new WeakReference<GAEProxyService>(this);
 	}
-	private void markServiceStopped(){
+
+	private void markServiceStopped() {
 		sRunningInstance = null;
 	}
 
@@ -306,7 +305,7 @@ public class GAEProxyService extends Service {
 	public static boolean runCommand(String command) {
 
 		// if got root permission, always execute as root
-		if (GAEProxy.isRoot) {
+		if (GAEProxy.isRoot()) {
 			return runRootCommand(command);
 		}
 
@@ -401,7 +400,7 @@ public class GAEProxyService extends Service {
 									httpProcess.destroy();
 									httpProcess = null;
 								}
-								if (GAEProxy.isRoot) {
+								if (GAEProxy.isRoot()) {
 									httpProcess = Runtime.getRuntime().exec(
 											"su");
 								} else {
@@ -522,14 +521,16 @@ public class GAEProxyService extends Service {
 			for (String item : gfw_list) {
 				cmd.append(cmd_http
 						.replace("! -d 203.208.0.0/16", "-d " + item));
-				cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
-						+ item));
+				if (isHTTPSProxy)
+					cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
+							+ item));
 			}
 		} else if (isGlobalProxy) {
 			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 					: CMD_IPTABLES_DNAT_ADD_HTTP);
-			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-					: CMD_IPTABLES_DNAT_ADD_HTTPS);
+			if (isHTTPSProxy)
+				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+						: CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
 			if (apps == null || apps.length <= 0)
@@ -540,9 +541,11 @@ public class GAEProxyService extends Service {
 					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 							: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 							"-t nat -m owner --uid-owner " + apps[i].getUid()));
-					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
-							"-t nat -m owner --uid-owner " + apps[i].getUid()));
+					if (isHTTPSProxy)
+						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+								: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
+								"-t nat", "-t nat -m owner --uid-owner "
+										+ apps[i].getUid()));
 				}
 			}
 		}
@@ -822,7 +825,7 @@ public class GAEProxyService extends Service {
 		super.onDestroy();
 
 		statusLock = false;
-		
+
 		markServiceStopped();
 	}
 

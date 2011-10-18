@@ -133,7 +133,7 @@
 		of only 10G bandwidth every day. Please deploy your own
 		servers to get
 		more free bandwidth quota with Google App Engine.\n\nYou can find more
-		information from here: https://github.com/phus/goagent
+		information here: https://github.com/phus/goagent
 	</string>
 	<string name="warning">Warning</string>
 

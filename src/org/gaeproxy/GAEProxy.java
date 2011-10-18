@@ -39,6 +39,7 @@
 package org.gaeproxy;
 
 import java.io.BufferedInputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -339,6 +340,52 @@ public class GAEProxy extends PreferenceActivity implements
 	private ProgressDialog pd = null;
 
 	public static boolean isRoot = false;
+	
+	public static boolean isRoot() {
+		
+		if (isRoot)
+			return isRoot;
+		
+		Process process = null;
+		DataInputStream es = null;
+		DataOutputStream os = null;
+		String line = null;
+		
+		try {
+			process = Runtime.getRuntime().exec("su");
+			es = new DataInputStream(process.getInputStream());
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes("ls /\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+			
+			while (null != (line = es.readLine())) {
+				if (line.contains("system")) {
+					isRoot = true;
+					break;
+				}
+			}
+			
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			return false;
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (es != null) {
+					es.close();
+				}
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+		
+		return isRoot;
+	}
 
 	public static boolean runRootCommand(String command) {
 		Process process = null;
@@ -367,6 +414,12 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	public static boolean runCommand(String command) {
+		
+		// if got root permission, always execute as root
+		if (GAEProxy.isRoot()) {
+			return runRootCommand(command);
+		}
+		
 		Process process = null;
 		DataOutputStream os = null;
 		Log.d(TAG, command);
@@ -649,12 +702,8 @@ public class GAEProxy extends PreferenceActivity implements
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
 		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
-
-		if (!runRootCommand("exit")) {
-			isRoot = false;
-		} else {
-			isRoot = true;
-		}
+		
+		Log.d(TAG, "ROOT Permission: " + isRoot());
 
 		new Thread() {
 			public void run() {

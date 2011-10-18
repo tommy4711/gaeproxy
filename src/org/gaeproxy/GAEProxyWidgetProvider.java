@@ -110,24 +110,23 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	public synchronized void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
 
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(context);
+		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 
-		if (GAEProxyService.statusLock) {
-			// only one request a time
-			return;
-		}
+			SharedPreferences settings = PreferenceManager
+					.getDefaultSharedPreferences(context);
 
-		if (settings.getBoolean("settings_key_notif_vibrate", false)) {
+			if (GAEProxyService.statusLock) {
+				// only one request a time
+				return;
+			}
+			
 			// Get instance of Vibrator from current Context
 			Vibrator v = (Vibrator) context
 					.getSystemService(Context.VIBRATOR_SERVICE);
 
 			// Vibrate for 10 milliseconds
 			v.vibrate(10);
-		}
-
-		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
+			
 			RemoteViews views = new RemoteViews(context.getPackageName(),
 					R.layout.gaeproxy_appwidget);
 			try {

@@ -698,7 +698,7 @@ public class GAEProxyService extends Service {
 			notification.defaults |= Notification.DEFAULT_SOUND;
 
 		if (settings.getBoolean("settings_key_notif_vibrate", false)) {
-			long[] vibrate = { 0, 500, 500 };
+			long[] vibrate = { 500 };
 			notification.vibrate = vibrate;
 		}
 

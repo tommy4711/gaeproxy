@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/403/trunk/src/org/zirco/ui/activities/preferences
+END
+BaseSpinnerCustomPreferenceActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/152/trunk/src/org/zirco/ui/activities/preferences/BaseSpinnerCustomPreferenceActivity.java
+END
+HomepagePreferenceActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 95
+/svn/!svn/ver/152/trunk/src/org/zirco/ui/activities/preferences/HomepagePreferenceActivity.java
+END
+SearchUrlPreferenceActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/158/trunk/src/org/zirco/ui/activities/preferences/SearchUrlPreferenceActivity.java
+END
+WeavePreferencesActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 93
+/svn/!svn/ver/384/trunk/src/org/zirco/ui/activities/preferences/WeavePreferencesActivity.java
+END
+UserAgentPreferenceActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svn/!svn/ver/158/trunk/src/org/zirco/ui/activities/preferences/UserAgentPreferenceActivity.java
+END
+WeaveServerPreferenceActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/376/trunk/src/org/zirco/ui/activities/preferences/WeaveServerPreferenceActivity.java
+END
+PreferencesActivity.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/!svn/ver/403/trunk/src/org/zirco/ui/activities/preferences/PreferencesActivity.java
+END

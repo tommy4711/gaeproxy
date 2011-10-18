@@ -780,7 +780,7 @@ public class GAEProxy extends PreferenceActivity implements
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("browser")) {
 			Intent intent = new Intent(this,
-					org.zirco.ui.activities.ZircoMain.class);
+					org.zirco.ui.activities.MainActivity.class);
 			startActivity(intent);
 		} else if (preference.getKey() != null
 				&& preference.getKey().equals("isInstalled")) {

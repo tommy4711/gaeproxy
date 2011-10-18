@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/400/trunk/src/org/zirco/ui/runnables
+END
+FaviconUpdaterRunnable.java
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/!svn/ver/382/trunk/src/org/zirco/ui/runnables/FaviconUpdaterRunnable.java
+END
+XmlHistoryBookmarksExporter.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/400/trunk/src/org/zirco/ui/runnables/XmlHistoryBookmarksExporter.java
+END
+HideToolbarsRunnable.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/!svn/ver/88/trunk/src/org/zirco/ui/runnables/HideToolbarsRunnable.java
+END
+HistoryUpdater.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/382/trunk/src/org/zirco/ui/runnables/HistoryUpdater.java
+END
+XmlHistoryBookmarksImporter.java
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/!svn/ver/391/trunk/src/org/zirco/ui/runnables/XmlHistoryBookmarksImporter.java
+END
+DownloadRunnable.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/!svn/ver/382/trunk/src/org/zirco/ui/runnables/DownloadRunnable.java
+END

@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/403/trunk/src/org/zirco/utils
+END
+UrlUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/196/trunk/src/org/zirco/utils/UrlUtils.java
+END
+ApplicationUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/403/trunk/src/org/zirco/utils/ApplicationUtils.java
+END
+IOUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/!svn/ver/384/trunk/src/org/zirco/utils/IOUtils.java
+END
+AnimationManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/334/trunk/src/org/zirco/utils/AnimationManager.java
+END
+Constants.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/376/trunk/src/org/zirco/utils/Constants.java
+END
+DateUtils.java
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/391/trunk/src/org/zirco/utils/DateUtils.java
+END

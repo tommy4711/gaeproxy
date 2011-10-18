@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/385/trunk/src/org/zirco/sync
+END
+WeaveSyncTask.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/385/trunk/src/org/zirco/sync/WeaveSyncTask.java
+END
+ISyncListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/385/trunk/src/org/zirco/sync/ISyncListener.java
+END

@@ -514,5 +514,97 @@
 		the Apache license, version 2.
 	</string>
 
+	<!-- 0.4.0 -->
+	<string name="PreferencesActivity.WeavePreferenceTitle">Firefox bookmarks synchronization</string>
+	<string name="PreferencesActivity.WeavePreferenceSummary">Manage the settings of the bookmarks
+		synchronization with Firefox Sync.</string>
+	<string name="PreferencesActivity.UseWeavePreferenceTitle">Use Firefox Sync</string>
+	<string name="PreferencesActivity.UseWeavePreferenceSummary">If checked, you can retrieve your bookmarks from
+		Firefox Sync.</string>
+	<string name="PreferencesActivity.WeaveServerPreferenceTitle">Server</string>
+	<string name="PreferencesActivity.WeaveServerPreferenceSummary">Set the Firefox Sync server.</string>
+	<string name="PreferencesActivity.WeaveUsernameTitle">User name</string>
+	<string name="PreferencesActivity.WeaveUsernameSummary">Enter your Firefox Sync user name.</string>
+	<string name="PreferencesActivity.WeavePasswordTitle">Password</string>
+	<string name="PreferencesActivity.WeavePasswordSummary">Enter your Firefox Sync password.</string>
+	<string name="PreferencesActivity.WeaveKeyTitle">Key</string>
+	<string name="PreferencesActivity.WeaveKeySummary">Enter your Firefox Sync key.</string>
+
+	<string name="WeaveBookmarksListActivity.Title">Firefox bookmarks</string>
+	<string name="WeaveBookmarksListActivity.MenuSync">Synchronize</string>
+	<string name="WeaveBookmarksListActivity.MenuClear">Clear</string>
+	<string name="WeaveBookmarksListActivity.WeaveRootFolder">Places</string>
+	<string name="WeaveBookmarksListActivity.EmptyText">Firefox bookmarks are not synchronized. Setup your
+		account informations and do a synchronization.</string>
+	<string name="WeaveBookmarksListActivity.EmptyFolderText">No bookmarks in this folder.</string>
+	<string name="WeaveBookmarksListActivity.SetupButton">Setup</string>
+	<string name="WeaveBookmarksListActivity.SyncButton">Synchronize</string>
+
+	<string name="WeaveSync.SyncTitle">Synchronization</string>
+	<string name="WeaveSync.Connecting">Connecting to server...</string>
+	<string name="WeaveSync.GettingData">Getting data...</string>
+	<string name="WeaveSync.ReadingData">Reading data: %1$s / %2$s</string>
+	<string name="WeaveSync.WrittingData">Writting data...</string>
+
+	<string name="Errors.WeaveSyncFailedTitle">Synchronization failed.</string>
+	<string name="Errors.WeaveSyncFailedMessage">Synchronization failed: %s</string>
+	<string name="Errors.WeaveAuthFailedMessage">Invalid authentication token. Check your settings.
+	</string>
+
+	<string name="WeaveServerPreferenceActivity.Prompt">Server</string>
+	<string name="WeaveServerPreferenceActivity.Title">Server</string>
+	<string name="WeaveServerPreferenceActivity.DefaultServer">Firefox Sync server</string>
+	<string name="WeaveServerPreferenceActivity.CustomServer">Custom server</string>
+
+	<string-array name="WeaveServerValues">
+		<item>@string/WeaveServerPreferenceActivity.DefaultServer</item>
+		<item>@string/WeaveServerPreferenceActivity.CustomServer</item>
+	</string-array>
+
+	<string name="Main.FileChooserPrompt">Choose file for upload</string>
+
+	<string name="Commons.HistoryBookmarksExportSDCardConfirmation">Export history and bookmarks</string>
+	<string name="Commons.HistoryBookmarksExportSDCardDoneTitle">Export done</string>
+	<string name="Commons.HistoryBookmarksExportSDCardDoneMessage">Your history and bookmarks have been saved to %s.
+	</string>
+	<string name="Commons.HistoryBookmarksExportSDCardFailedTitle">Export failed</string>
+	<string name="Commons.HistoryBookmarksFailedMessage">Error message: %s.</string>
+	<string name="Commons.HistoryBookmarksImportSDCardFailedTitle">Import failed</string>
+
+	<string name="Commons.OperationCanBeLongMessage">This operation can take some times. Do you wish to
+		proceed?</string>
+
+	<string name="PreferencesActivity.ToolsCategoryTitle">Tools</string>
+	<string name="PreferencesActivity.ToolsHistoryBookmarksPreferenceTitle">Manage bookmarks and history</string>
+	<string name="PreferencesActivity.ToolsHistoryBookmarksPreferenceSummary">Import, export, clear history and bookmarks.
+	</string>
+	<string name="PreferencesActivity.ExportHistoryBookmarksPreferenceTitle">Export bookmarks and history</string>
+	<string name="PreferencesActivity.ExportHistoryBookmarksPreferenceSummary">Export bookmarks and history to the SD card.
+	</string>
+	<string name="PreferencesActivity.ImportHistoryBookmarksPreferenceTitle">Import bookmarks and history</string>
+	<string name="PreferencesActivity.ImportHistoryBookmarksPreferenceSummary">Import bookmarks and history from the SD card.
+	</string>
+	<string name="PreferencesActivity.PrivacyClearHistoryBookmarksTitle">Clear history and/or bookmarks</string>
+	<string name="PreferencesActivity.SummaryCannotBeUndone">Use with caution, this operation cannot be undone.
+	</string>
+
+	<string name="Commons.ClearingHistoryBookmarks">Clearing history and/or bookmarks...</string>
+	<string name="Commons.ClearHistoryBookmarks">Clear history and/or bookmarks</string>
+
+	<string name="Commons.Bookmarks">Bookmarks</string>
+	<string name="Commons.History">History</string>
+	<string name="Commons.All">All</string>
+
+	<string name="Commons.ExportingHistoryBookmarks">Exporting history and bookmarks...</string>
+	<string name="Commons.ImportingHistoryBookmarks">Importing history and bookmarks...</string>
+	<string name="Commons.ImportHistoryBookmarksSource">Choose the import source</string>
+
+	<string name="Commons.ClearingBookmarks">正在清空书签中...</string>
+
+	<string name="DownloadListActivity.RemoveCompletedDownloads">Remove completed downloads</string>
+
+	<string name="QuickAction.Find">Find on page</string>
+	<string name="SearchDialog.Hint">Find on page</string>
+
 
 </resources>

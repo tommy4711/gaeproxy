@@ -49,7 +49,7 @@
 	<string name="proxyed_help">选择使用GAE代理的应用:</string>
 
 	<string name="crash_alert">检测到一次非正常退出，状态已重置</string>
-	<string name="copy_rights">关于：\n\nGAE代理是一款开源软件，基于 GPLV3
+	<string name="copy_rights">GAE代理是一款开源软件，基于 GPLV3
 		发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
 		\n\n(gaeproxy.googlecode.com)
 	</string>

@@ -61,7 +61,7 @@
 	<string name="crash_alert">An unexpected exit detected, context has been
 		recovered
 	</string>
-	<string name="copy_rights">About:\n\nGAEProxy is an open source project
+	<string name="copy_rights">GAEProxy is an open source project
 		published under
 		the GPLV3. \n\nIf you have any question, please visit
 		our project page on

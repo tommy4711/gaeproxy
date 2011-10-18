@@ -1161,7 +1161,15 @@ public class GAEProxy extends PreferenceActivity implements
 			recovery();
 			break;
 		case Menu.FIRST + 2:
-			showAToast(getString(R.string.copy_rights));
+			String versionName = "";
+			try {
+				versionName = getPackageManager().getPackageInfo(
+						getPackageName(), 0).versionName;
+			} catch (NameNotFoundException e) {
+				versionName = "";
+			}
+			showAToast(getString(R.string.about) + " (" + versionName + ")\n\n"
+					+ getString(R.string.copy_rights));
 			break;
 		}
 

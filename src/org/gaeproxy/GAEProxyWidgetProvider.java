@@ -106,37 +106,22 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 		}
 	}
 
-	public boolean isWorked(Context context, String service) {
-		ActivityManager myManager = (ActivityManager) context
-				.getSystemService(Context.ACTIVITY_SERVICE);
-		ArrayList<RunningServiceInfo> runningService = (ArrayList<RunningServiceInfo>) myManager
-				.getRunningServices(30);
-		for (int i = 0; i < runningService.size(); i++) {
-			if (runningService.get(i).service.getClassName().toString()
-					.equals(service)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	@Override
 	public synchronized void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
 		
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(context);
 		
-		// Get instance of Vibrator from current Context
-		Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
-		 
-		// Vibrate for 300 milliseconds
-		v.vibrate(100);
-
-		
 		if (GAEProxyService.statusLock) {
 			// only one request a time
 			return;
 		}
+		
+		// Get instance of Vibrator from current Context
+		Vibrator v = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+		 
+		// Vibrate for 10 milliseconds
+		v.vibrate(10);
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
 			RemoteViews views = new RemoteViews(context.getPackageName(),

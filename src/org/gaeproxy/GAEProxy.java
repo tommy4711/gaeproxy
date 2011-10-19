@@ -124,9 +124,9 @@ public class GAEProxy extends PreferenceActivity implements
 		private int progress_count = 0;
 
 		protected void publishProgress(String progress) {
-			Log.d("ANDRO_ASYNC", progress);
 			int now = Integer.parseInt(progress);
 			if (now - progress_count > 5) {
+				Log.d("ANDRO_ASYNC", progress);
 				notification.contentView.setProgressBar(R.id.pb, 100,
 						Integer.parseInt(progress), false);
 				nm.notify(notification_id, notification);
@@ -143,7 +143,7 @@ public class GAEProxy extends PreferenceActivity implements
 				while ((ze = zin.getNextEntry()) != null) {
 					if (ze.getName().contains("__MACOSX"))
 						continue;
-					Log.v("Decompress", "Unzipping " + ze.getName());
+//					Log.v("Decompress", "Unzipping " + ze.getName());
 					if (ze.isDirectory()) {
 						dirChecker(path + ze.getName());
 					} else {

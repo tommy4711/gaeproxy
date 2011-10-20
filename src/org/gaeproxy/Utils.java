@@ -15,7 +15,7 @@ public class Utils {
 
 	public final static String TAG = "GAEProxy";
 	private final static String DEFAULT_SHELL = "/system/bin/sh";
-	private final static String ROOT_SHELL = "su";
+	private final static String ROOT_SHELL = "/system/bin/su";
 	private final static String BASE = "/data/data/org.gaeproxy";
 
 	private static ArrayList<String> parse(String cmd) {
@@ -122,6 +122,10 @@ public class Utils {
 
 			try {
 				int[] processIds = new int[1];
+				String root_shell = ROOT_SHELL;
+				if (!new File(root_shell).exists()) {
+					root_shell = "/system/xbin/su";
+				}
 				process = createSubprocess(ROOT_SHELL + " -c ls", processIds);
 				processId = processIds[0];
 				es = new DataInputStream(new FileInputStream(process));

@@ -500,13 +500,15 @@ public class GAEProxyService extends Service {
 					+ " " + port);
 		}
 
-		StringBuffer cmd = new StringBuffer();
+		StringBuffer http_sb = new StringBuffer();
+
+		StringBuffer https_sb = new StringBuffer();
 
 		if (hasRedirectSupport) {
-			cmd.append(BASE
+			http_sb.append(BASE
 					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 		} else {
-			cmd.append(BASE
+			http_sb.append(BASE
 					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 		}
 
@@ -519,17 +521,17 @@ public class GAEProxyService extends Service {
 			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
 
 			for (String item : gfw_list) {
-				cmd.append(cmd_http
-						.replace("! -d 203.208.0.0/16", "-d " + item));
+				http_sb.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
+						+ item));
 				if (isHTTPSProxy)
-					cmd.append(cmd_https.replace("! -d 203.208.0.0/16", "-d "
-							+ item));
+					https_sb.append(cmd_https.replace("! -d 203.208.0.0/16",
+							"-d " + item));
 			}
 		} else if (isGlobalProxy) {
-			cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+			https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 					: CMD_IPTABLES_DNAT_ADD_HTTP);
 			if (isHTTPSProxy)
-				cmd.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+				https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
 						: CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
@@ -538,11 +540,11 @@ public class GAEProxyService extends Service {
 
 			for (int i = 0; i < apps.length; i++) {
 				if (apps[i].isProxyed()) {
-					cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+					http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
 							: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 							"-t nat -m owner --uid-owner " + apps[i].getUid()));
 					if (isHTTPSProxy)
-						cmd.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+						https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
 								: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
 								"-t nat", "-t nat -m owner --uid-owner "
 										+ apps[i].getUid()));
@@ -550,9 +552,15 @@ public class GAEProxyService extends Service {
 			}
 		}
 
-		String iptables_rules = cmd.toString().replace("203.208.0.0", appMask);
+		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
+				appMask);
+		runRootCommand(iptables_http_rules);
 
-		runRootCommand(iptables_rules);
+		if (isHTTPSProxy) {
+			String iptables_https_rules = https_sb.toString().replace(
+					"203.208.0.0", appMask);
+			runRootCommand(iptables_https_rules);
+		}
 
 		return true;
 

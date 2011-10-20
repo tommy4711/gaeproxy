@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.util.Log;
@@ -16,7 +17,7 @@ public class Utils {
 	private final static String DEFAULT_SHELL = "/system/bin/sh";
 	private final static String ROOT_SHELL = "su";
 	private final static String BASE = "/data/data/org.gaeproxy";
-	
+
 	private static ArrayList<String> parse(String cmd) {
 		final int PLAIN = 0;
 		final int WHITESPACE = 1;
@@ -84,123 +85,168 @@ public class Utils {
 
 		return Exec.createSubprocess(arg0, arg1, arg2, processId);
 	}
-	
-	public static int isRoot = -1;
-	
-	public static boolean isRoot() {
-		
-		if (isRoot != -1)
-			return isRoot == 1 ? true : false;
-		
 
-		int processId = -1;
-		FileDescriptor process = null;
-		DataInputStream es = null;
-		String line = null;
-		
-		try {
-			int[] processIds = new int[1];
-			process = createSubprocess(ROOT_SHELL + " -c ls", processIds);
-			processId = processIds[0];
-			es = new DataInputStream(new FileInputStream(process));
-			
-			Exec.waitFor(processId);
-			
-			while (null != (line = es.readLine())) {
-				if (line.contains("system")) {
-					isRoot = 1;
-					break;
+	public static int isRoot = -1;
+
+	private final static class DetectorRunnable extends Thread {
+
+		private DataInputStream es = null;
+		private int processId = -1;
+		private FileDescriptor process = null;
+
+		/**
+		 * Destroy this script runner
+		 */
+		public synchronized void destroy() {
+			if (es != null) {
+				try {
+					es.close();
+				} catch (IOException e) {
+					Log.e(TAG, "Eroor in close termIn", e);
 				}
 			}
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			isRoot = 0;
-			return false;
-		} finally {
-			try {
-				if (es != null) {
-					es.close();
-				}
-				
-				Exec.hangupProcessGroup(processId);
 
-				if (process != null) {
-					Exec.close(process);
-					process = null;
-				}
-			} catch (Exception e) {
-				// nothing
+			es = null;
+
+			Exec.hangupProcessGroup(processId);
+
+			if (process != null) {
+				Exec.close(process);
+				process = null;
 			}
 		}
-		
+
+		public void run() {
+
+			String line = null;
+
+			try {
+				int[] processIds = new int[1];
+				process = createSubprocess(ROOT_SHELL + " -c ls", processIds);
+				processId = processIds[0];
+				es = new DataInputStream(new FileInputStream(process));
+				Log.d(TAG, "Process ID: " + processId);
+
+				Exec.waitFor(processId);
+
+				while (null != (line = es.readLine())) {
+					if (line.contains("system")) {
+						isRoot = 1;
+						break;
+					}
+				}
+
+			} catch (Exception e) {
+				Log.e(TAG, "Unexpected Error");
+				isRoot = 0;
+			} finally {
+				try {
+					if (es != null) {
+						es.close();
+					}
+
+					Exec.hangupProcessGroup(processId);
+
+					if (process != null) {
+						Exec.close(process);
+						process = null;
+					}
+				} catch (Exception e) {
+					// nothing
+				}
+			}
+		}
+	}
+
+	public static boolean isRoot() {
+
+		if (isRoot != -1)
+			return isRoot == 1 ? true : false;
+
+		final DetectorRunnable detector = new DetectorRunnable();
+
+		detector.start();
+
+		try {
+			detector.join(1000);
+			if (detector.isAlive()) {
+				// Timed-out
+				detector.destroy();
+				detector.join(150);
+			}
+		} catch (InterruptedException ex) {
+			// Nothing
+		}
+
 		if (isRoot == -1) {
 			isRoot = 0;
 		}
-		
+
 		return isRoot == 1 ? true : false;
 	}
 
 	public static boolean runRootCommand(String command) {
-		
-		return runCommand(ROOT_SHELL, command);
-		
+
+		if (isRoot())
+			return runCommand(ROOT_SHELL, command);
+		else
+			return false;
+
 	}
-	
+
 	public static boolean runCommand(String command) {
-		
+
 		// if got root permission, always execute as root
 		if (isRoot()) {
 			return runRootCommand(command);
 		}
-		
+
 		return runCommand(DEFAULT_SHELL, command);
-		
+
 	}
 
 	public static boolean runCommand(String shell, String command) {
-		
+
 		int processId = -1;
-		
+
 		FileDescriptor process = null;
 		DataOutputStream os = null;
 		File f = null;
-		
+
 		Log.d(TAG, command);
-		
+
 		try {
-			
+
 			f = File.createTempFile("tmp", ".sh", new File(BASE));
-			
+
 			os = new DataOutputStream(new FileOutputStream(f));
-			
+
 			os.writeBytes(command + "\n");
 			os.writeBytes("exit\n");
 			os.flush();
 			os.close();
-			
-			String cmd = shell + " " + f.getAbsolutePath(); 
-			
+
+			String cmd = shell + " " + f.getAbsolutePath();
+
 			if (shell.equals(ROOT_SHELL)) {
 				cmd = shell + " -c " + f.getAbsolutePath();
 			}
-			
+
 			int[] processIds = new int[1];
 			process = createSubprocess(cmd, processIds);
 			processId = processIds[0];
-			
+
 			Exec.waitFor(processId);
 
-			
 		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
+			Log.e(TAG, "Unexcepted Error");
 			return false;
 		} finally {
 			try {
-				
+
 				if (f != null)
 					f.delete();
-				
+
 				Exec.hangupProcessGroup(processId);
 
 				if (process != null) {

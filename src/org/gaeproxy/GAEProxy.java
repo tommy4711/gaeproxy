@@ -595,7 +595,6 @@ public class GAEProxy extends PreferenceActivity implements
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
 		Log.d(TAG, "ROOT Permission: " + Utils.isRoot());
-		Utils.runCommand("ls");
 
 		new Thread() {
 			public void run() {

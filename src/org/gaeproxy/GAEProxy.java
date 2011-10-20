@@ -339,113 +339,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private ProgressDialog pd = null;
 
-	public static boolean isRoot = false;
-	
-	public static boolean isRoot() {
-		
-		if (isRoot)
-			return isRoot;
-		
-		Process process = null;
-		DataInputStream es = null;
-		DataOutputStream os = null;
-		String line = null;
-		
-		try {
-			process = Runtime.getRuntime().exec("su");
-			es = new DataInputStream(process.getInputStream());
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes("ls /\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-			
-			while (null != (line = es.readLine())) {
-				if (line.contains("system")) {
-					isRoot = true;
-					break;
-				}
-			}
-			
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (es != null) {
-					es.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		
-		return isRoot;
-	}
-
-	public static boolean runRootCommand(String command) {
-		Process process = null;
-		DataOutputStream os = null;
-		try {
-			process = Runtime.getRuntime().exec("su");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
-	}
-
-	public static boolean runCommand(String command) {
-		
-		// if got root permission, always execute as root
-		if (GAEProxy.isRoot()) {
-			return runRootCommand(command);
-		}
-		
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec("/system/bin/sh");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (process != null)
-					process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
-	}
 
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isGlobalProxyCheck;
@@ -701,9 +594,8 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyTypeList = (ListPreference) findPreference("proxyType");
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
-		final CheckBoxPreference isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
-		
-		Log.d(TAG, "ROOT Permission: " + isRoot());
+		Log.d(TAG, "ROOT Permission: " + Utils.isRoot());
+		Utils.runCommand("ls");
 
 		new Thread() {
 			public void run() {
@@ -711,11 +603,11 @@ public class GAEProxy extends PreferenceActivity implements
 				if (!GAEProxyService.isServiceStarted()) {
 					CopyAssets("");
 
-					runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-					runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-					runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-					runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-					runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 				}
 
 				try {
@@ -930,7 +822,7 @@ public class GAEProxy extends PreferenceActivity implements
 								+ "setown com.android.vending /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
 								+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
 								+ "rm -rf /data/data/com.android.vending/cache/*\n";
-						runRootCommand(command);
+						Utils.runRootCommand(command);
 					}
 				} catch (Exception e) {
 					// Nothing
@@ -1038,7 +930,7 @@ public class GAEProxy extends PreferenceActivity implements
 			return false;
 		}
 
-		runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
@@ -1183,9 +1075,9 @@ public class GAEProxy extends PreferenceActivity implements
 			// Nothing
 		}
 
-		runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
+		Utils.runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
 
-		runCommand(GAEProxyService.BASE + "proxy.sh stop");
+		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
 		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
 		if (cache.exists())
@@ -1195,11 +1087,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 
-		runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-		runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-		runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-		runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-		runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 
 	}
 

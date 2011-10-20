@@ -42,6 +42,7 @@ import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -112,8 +113,8 @@ public class GAEProxyService extends Service {
 
 	public static volatile boolean statusLock = false;
 
-	private Process httpProcess = null;
-	private DataOutputStream httpOS = null;
+	private FileDescriptor httpProcess = null;
+	private int httpProcessId = -1;
 
 	private String proxy;
 	private String appHost = "203.208.46.1";
@@ -229,7 +230,7 @@ public class GAEProxyService extends Service {
 		}
 
 		// flush the check command
-		runRootCommand(command.replace("-A", "-D"));
+		Utils.runRootCommand(command.replace("-A", "-D"));
 	}
 
 	/**
@@ -274,67 +275,6 @@ public class GAEProxyService extends Service {
 		// foreground state, since we could be killed at that point.
 		notificationManager.cancel(id);
 		setForeground(false);
-	}
-
-	public static boolean runRootCommand(String command) {
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec("su");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
-	}
-
-	public static boolean runCommand(String command) {
-
-		// if got root permission, always execute as root
-		if (GAEProxy.isRoot()) {
-			return runRootCommand(command);
-		}
-
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec("/system/bin/sh");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (process != null)
-					process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
 	}
 
 	public boolean connect() {
@@ -390,41 +330,41 @@ public class GAEProxyService extends Service {
 
 			Thread t = new Thread() {
 				public void run() {
+					
+					DataOutputStream os = null;
+					File f = null;
+					
 					try {
+						f = File.createTempFile("tmp", ".sh", new File(BASE));
+						
+						os = new DataOutputStream(new FileOutputStream(f));
+						os.writeBytes(cmd + "\n");
+						os.writeBytes("exit\n");
+						os.flush();
+						os.close();
+						
 						for (int tries = 0; tries < 3; tries++) {
 							if (!isStopped) {
-								if (httpOS != null) {
-									httpOS.close();
-									httpOS = null;
+								int[] processIds = new int[1];
+								String cmd = "/system/bin/sh " + f.getAbsolutePath();
+								if (Utils.isRoot()) {
+									cmd = "su -c " + f.getAbsolutePath();
 								}
-								if (httpProcess != null) {
-									httpProcess.destroy();
-									httpProcess = null;
-								}
-								if (GAEProxy.isRoot()) {
-									httpProcess = Runtime.getRuntime().exec(
-											"su");
-								} else {
-									httpProcess = Runtime.getRuntime().exec(
-											"/system/bin/sh");
-								}
-								httpOS = new DataOutputStream(
-										httpProcess.getOutputStream());
-								httpOS.write((cmd + "\n").getBytes());
-								httpOS.write("exit\n".getBytes());
-								httpOS.flush();
+								httpProcess = Utils.createSubprocess(
+										cmd, processIds);
+								httpProcessId = processIds[0];
+
 							} else {
 								// no handler here, just normally exit
 								return;
 							}
-							httpProcess.waitFor();
+							
+							Exec.waitFor(httpProcessId);
 						}
 					} catch (NullPointerException e) {
 						// Cannot get runtime
 					} catch (IOException e) {
 						// Cannot allocate stdin
-					} catch (InterruptedException e) {
-						// Interrupted
 					}
 					handler.sendEmptyMessage(MSG_STOP_SELF);
 				}
@@ -491,14 +431,14 @@ public class GAEProxyService extends Service {
 				return false;
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
-					+ socksPort);
+			Utils.runCommand(BASE + "proxy.sh start " + port + " " + socksIp
+					+ " " + socksPort);
 
 		} else {
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + "127.0.0.1"
-					+ " " + port);
+			Utils.runCommand(BASE + "proxy.sh start " + port + " "
+					+ "127.0.0.1" + " " + port);
 		}
 
 		StringBuffer http_sb = new StringBuffer();
@@ -558,12 +498,12 @@ public class GAEProxyService extends Service {
 
 		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
 				appMask);
-		runRootCommand(iptables_http_rules);
+		Utils.runRootCommand(iptables_http_rules);
 
 		if (isHTTPSProxy) {
 			String iptables_https_rules = https_sb.toString().replace(
 					"203.208.0.0", appMask);
-			runRootCommand(iptables_https_rules);
+			Utils.runRootCommand(iptables_https_rules);
 		}
 
 		return true;
@@ -656,7 +596,7 @@ public class GAEProxyService extends Service {
 		// return false;
 
 		// Add hosts here
-		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
+		// Utils.runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
 		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost,
 				isDNSBlocked);
@@ -776,7 +716,7 @@ public class GAEProxyService extends Service {
 
 		isStopped = true;
 
-		// runRootCommand(BASE + "host.sh remove");
+		// Utils.runRootCommand(BASE + "host.sh remove");
 
 		FlurryAgent.onEndSession(this);
 
@@ -788,10 +728,12 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null)
-				httpOS.close();
-			if (httpProcess != null)
-				httpProcess.destroy();
+			Exec.hangupProcessGroup(httpProcessId);
+
+			if (httpProcess != null) {
+				Exec.close(httpProcess);
+				httpProcess = null;
+			}
 		} catch (Exception e) {
 			Log.e(TAG, "HTTP Server close unexpected");
 		}
@@ -843,9 +785,9 @@ public class GAEProxyService extends Service {
 
 	private void onDisconnect() {
 
-		runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		runCommand(BASE + "proxy.sh stop");
+		Utils.runCommand(BASE + "proxy.sh stop");
 
 	}
 

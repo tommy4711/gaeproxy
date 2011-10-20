@@ -52,6 +52,7 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Random;
 
 import com.flurry.android.FlurryAgent;
@@ -538,17 +539,20 @@ public class GAEProxyService extends Service {
 			if (apps == null || apps.length <= 0)
 				apps = AppManager.getProxyedApps(this);
 
+			HashSet<Integer> uidSet = new HashSet<Integer>();
 			for (int i = 0; i < apps.length; i++) {
 				if (apps[i].isProxyed()) {
-					http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-							: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
-							"-t nat -m owner --uid-owner " + apps[i].getUid()));
-					if (isHTTPSProxy)
-						https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-								: CMD_IPTABLES_DNAT_ADD_HTTPS).replace(
-								"-t nat", "-t nat -m owner --uid-owner "
-										+ apps[i].getUid()));
+					uidSet.add(apps[i].getUid());
 				}
+			}
+			for (int uid : uidSet) {
+				http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+						: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
+						"-t nat -m owner --uid-owner " + uid));
+				if (isHTTPSProxy)
+					https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
+							"-t nat -m owner --uid-owner " + uid));
 			}
 		}
 

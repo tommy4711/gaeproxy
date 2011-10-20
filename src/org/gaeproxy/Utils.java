@@ -15,7 +15,7 @@ public class Utils {
 
 	public final static String TAG = "GAEProxy";
 	private final static String DEFAULT_SHELL = "/system/bin/sh";
-	private final static String ROOT_SHELL = "/system/bin/su";
+	private static String root_shell = "/system/bin/su";
 	private final static String BASE = "/data/data/org.gaeproxy";
 
 	private static ArrayList<String> parse(String cmd) {
@@ -91,8 +91,10 @@ public class Utils {
 	private final static class DetectorRunnable extends Thread {
 
 		private DataInputStream es = null;
+		private DataOutputStream os = null;
 		private int processId = -1;
 		private FileDescriptor process = null;
+		private File f;
 
 		/**
 		 * Destroy this script runner
@@ -103,6 +105,14 @@ public class Utils {
 					es.close();
 				} catch (IOException e) {
 					Log.e(TAG, "Eroor in close termIn", e);
+				}
+			}
+
+			if (os != null) {
+				try {
+					os.close();
+				} catch (IOException e) {
+					Log.e(TAG, "Eroor in close termOut", e);
 				}
 			}
 
@@ -122,11 +132,24 @@ public class Utils {
 
 			try {
 				int[] processIds = new int[1];
-				String root_shell = ROOT_SHELL;
 				if (!new File(root_shell).exists()) {
 					root_shell = "/system/xbin/su";
 				}
-				process = createSubprocess(ROOT_SHELL + " -c ls", processIds);
+
+				f = new File(BASE + "/tmp.sh");
+				if (f.exists())
+					f.delete();
+				f.createNewFile();
+
+				os = new DataOutputStream(new FileOutputStream(f));
+
+				os.writeBytes("ls\n");
+				os.writeBytes("exit\n");
+				os.flush();
+				os.close();
+
+				process = createSubprocess(
+						root_shell + " -c " + f.getAbsolutePath(), processIds);
 				processId = processIds[0];
 				es = new DataInputStream(new FileInputStream(process));
 				Log.d(TAG, "Process ID: " + processId);
@@ -147,6 +170,14 @@ public class Utils {
 				try {
 					if (es != null) {
 						es.close();
+					}
+
+					if (os != null) {
+						os.close();
+					}
+
+					if (f != null) {
+						f.delete();
 					}
 
 					Exec.hangupProcessGroup(processId);
@@ -192,7 +223,7 @@ public class Utils {
 	public static boolean runRootCommand(String command) {
 
 		if (isRoot())
-			return runCommand(ROOT_SHELL, command);
+			return runCommand(root_shell, command);
 		else
 			return false;
 
@@ -235,7 +266,7 @@ public class Utils {
 
 			String cmd = shell + " " + f.getAbsolutePath();
 
-			if (shell.equals(ROOT_SHELL)) {
+			if (shell.equals(root_shell)) {
 				cmd = shell + " -c " + f.getAbsolutePath();
 			}
 

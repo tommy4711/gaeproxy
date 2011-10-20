@@ -221,7 +221,10 @@ public class Utils {
 
 		try {
 
-			f = File.createTempFile("tmp", ".sh", new File(BASE));
+			f = new File(BASE + "/tmp.sh");
+			if (f.exists())
+				f.delete();
+			f.createNewFile();
 
 			os = new DataOutputStream(new FileOutputStream(f));
 

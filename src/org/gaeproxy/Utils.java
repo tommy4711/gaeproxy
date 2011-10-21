@@ -129,15 +129,8 @@ public class Utils {
 		public void run() {
 
 			String line = null;
-			File tmp = new File(BASE + "/list.tmp");
-
+			
 			try {
-				
-				if (tmp.exists()) {
-					tmp.delete();
-				}
-				
-				tmp.createNewFile();
 				
 				int[] processIds = new int[1];
 				if (!new File(root_shell).exists()) {
@@ -155,7 +148,7 @@ public class Utils {
 
 				os = new DataOutputStream(new FileOutputStream(f));
 
-				os.writeBytes("ls / > "+ BASE +"/list.tmp\n");
+				os.writeBytes("/system/bin/ls /\n");
 				os.writeBytes("exit\n");
 				os.flush();
 				os.close();
@@ -163,12 +156,13 @@ public class Utils {
 				process = createSubprocess(
 						root_shell + " -c " + f.getAbsolutePath(), processIds);
 				processId = processIds[0];
-				es = new DataInputStream(new FileInputStream(BASE + "/list.tmp"));
+				es = new DataInputStream(new FileInputStream(process));
 				Log.d(TAG, "Process ID: " + processId);
 
 				Exec.waitFor(processId);
 
 				while (null != (line = es.readLine())) {
+					Log.d(TAG, line);
 					if (line.contains("system")) {
 						isRoot = 1;
 						break;
@@ -179,9 +173,8 @@ public class Utils {
 				Log.e(TAG, "Unexpected Error", e);
 			} finally {
 				try {
+					
 					if (es != null) {
-						if (tmp.exists())
-							tmp.delete();
 						es.close();
 					}
 

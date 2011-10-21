@@ -332,27 +332,26 @@ public class GAEProxyService extends Service {
 				public void run() {
 					
 					DataOutputStream os = null;
-					File f = null;
 					
 					try {
-						f = File.createTempFile("tmp", ".sh", new File(BASE));
-						
-						os = new DataOutputStream(new FileOutputStream(f));
-						os.writeBytes(cmd + "\n");
-						os.writeBytes("exit\n");
-						os.flush();
-						os.close();
 						
 						for (int tries = 0; tries < 3; tries++) {
 							if (!isStopped) {
 								int[] processIds = new int[1];
-								String cmd = "/system/bin/sh " + f.getAbsolutePath();
+								String cmd = "/system/bin/sh";
+								
 								if (Utils.isRoot()) {
-									cmd = "su -c " + f.getAbsolutePath();
+									cmd = Utils.root_shell;
 								}
+								
 								httpProcess = Utils.createSubprocess(
 										cmd, processIds);
 								httpProcessId = processIds[0];
+								
+								os = new DataOutputStream(new FileOutputStream(httpProcess));
+								os.writeBytes(cmd + "\n");
+								os.writeBytes("exit\n");
+								os.flush();
 
 							} else {
 								// no handler here, just normally exit
@@ -365,7 +364,17 @@ public class GAEProxyService extends Service {
 						// Cannot get runtime
 					} catch (IOException e) {
 						// Cannot allocate stdin
+					} 
+					
+					if (os != null) {
+						try {
+							os.close();
+						} catch (IOException e) {
+							// Ignore
+						}
+						os = null;
 					}
+					
 					handler.sendEmptyMessage(MSG_STOP_SELF);
 				}
 			};

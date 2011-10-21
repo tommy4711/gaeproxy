@@ -15,8 +15,7 @@ public class Utils {
 
 	public final static String TAG = "GAEProxy";
 	private final static String DEFAULT_SHELL = "/system/bin/sh";
-	private static String root_shell = "/system/bin/su";
-	private final static String BASE = "/data/data/org.gaeproxy";
+	public static String root_shell = "/system/bin/su";
 
 	private static ArrayList<String> parse(String cmd) {
 		final int PLAIN = 0;
@@ -94,7 +93,6 @@ public class Utils {
 		private DataOutputStream os = null;
 		private int processId = -1;
 		private FileDescriptor process = null;
-		private File f;
 
 		/**
 		 * Destroy this script runner
@@ -106,6 +104,9 @@ public class Utils {
 				} catch (IOException e) {
 					Log.e(TAG, "Eroor in close termIn", e);
 				}
+				
+
+				es = null;
 			}
 
 			if (os != null) {
@@ -114,9 +115,10 @@ public class Utils {
 				} catch (IOException e) {
 					Log.e(TAG, "Eroor in close termOut", e);
 				}
+				
+				os = null;
 			}
 
-			es = null;
 
 			Exec.hangupProcessGroup(processId);
 
@@ -141,23 +143,16 @@ public class Utils {
 					}
 				} 
 
-				f = new File(BASE + "/tmp.sh");
-				if (f.exists())
-					f.delete();
-				f.createNewFile();
-
-				os = new DataOutputStream(new FileOutputStream(f));
-
-				os.writeBytes("/system/bin/ls /\n");
+				process = createSubprocess(
+						root_shell, processIds);
+				processId = processIds[0];
+				Log.d(TAG, "Process ID: " + processId);
+				
+				es = new DataInputStream(new FileInputStream(process));
+				os = new DataOutputStream(new FileOutputStream(process));
+				os.writeBytes("ls /\n");
 				os.writeBytes("exit\n");
 				os.flush();
-				os.close();
-
-				process = createSubprocess(
-						root_shell + " -c " + f.getAbsolutePath(), processIds);
-				processId = processIds[0];
-				es = new DataInputStream(new FileInputStream(process));
-				Log.d(TAG, "Process ID: " + processId);
 
 				Exec.waitFor(processId);
 
@@ -176,14 +171,12 @@ public class Utils {
 					
 					if (es != null) {
 						es.close();
+						es = null;
 					}
 
 					if (os != null) {
 						os.close();
-					}
-
-					if (f != null) {
-						f.delete();
+						os = null;
 					}
 
 					Exec.hangupProcessGroup(processId);
@@ -237,11 +230,6 @@ public class Utils {
 
 	public static boolean runCommand(String command) {
 
-		// if got root permission, always execute as root
-		if (isRoot()) {
-			return runRootCommand(command);
-		}
-
 		return runCommand(DEFAULT_SHELL, command);
 
 	}
@@ -252,51 +240,41 @@ public class Utils {
 
 		FileDescriptor process = null;
 		DataOutputStream os = null;
-		File f = null;
 
 		Log.d(TAG, command);
 
 		try {
 
-			f = new File(BASE + "/tmp.sh");
-			if (f.exists())
-				f.delete();
-			f.createNewFile();
-
-			os = new DataOutputStream(new FileOutputStream(f));
+			int[] processIds = new int[1];
+			process = createSubprocess(shell, processIds);
+			processId = processIds[0];
+			
+			os = new DataOutputStream(new FileOutputStream(process));
 
 			os.writeBytes(command + "\n");
 			os.writeBytes("exit\n");
 			os.flush();
-			os.close();
-
-			String cmd = shell + " " + f.getAbsolutePath();
-
-			if (shell.equals(root_shell)) {
-				cmd = shell + " -c " + f.getAbsolutePath();
-			}
-
-			int[] processIds = new int[1];
-			process = createSubprocess(cmd, processIds);
-			processId = processIds[0];
 
 			Exec.waitFor(processId);
 
 		} catch (Exception e) {
-			Log.e(TAG, "Unexcepted Error");
+			Log.e(TAG, "Unexcepted Error", e);
 			return false;
 		} finally {
 			try {
 
-				if (f != null)
-					f.delete();
-
+				if (os != null) {
+					os.close();
+					os = null;
+				}
+				
 				Exec.hangupProcessGroup(processId);
 
 				if (process != null) {
 					Exec.close(process);
 					process = null;
 				}
+				
 			} catch (Exception e) {
 				// nothing
 			}

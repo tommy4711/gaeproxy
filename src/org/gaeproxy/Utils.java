@@ -66,7 +66,7 @@ public class Utils {
 		return result;
 	}
 
-	public static FileDescriptor createSubprocess(String shell, int[] processId) {
+	public static synchronized FileDescriptor createSubprocess(String shell, int[] processId) {
 
 		if (shell == null || shell.equals("")) {
 			shell = DEFAULT_SHELL;
@@ -86,7 +86,7 @@ public class Utils {
 		return Exec.createSubprocess(arg0, arg1, arg2, processId);
 	}
 
-	public static int isRoot = -1;
+	private static int isRoot = -1;
 
 	private final static class DetectorRunnable extends Thread {
 
@@ -129,12 +129,24 @@ public class Utils {
 		public void run() {
 
 			String line = null;
+			File tmp = new File(BASE + "/list.tmp");
 
 			try {
+				
+				if (tmp.exists()) {
+					tmp.delete();
+				}
+				
+				tmp.createNewFile();
+				
 				int[] processIds = new int[1];
 				if (!new File(root_shell).exists()) {
 					root_shell = "/system/xbin/su";
-				}
+					if (! new File(root_shell).exists()) {
+						isRoot = 0;
+						return;
+					}
+				} 
 
 				f = new File(BASE + "/tmp.sh");
 				if (f.exists())
@@ -143,7 +155,7 @@ public class Utils {
 
 				os = new DataOutputStream(new FileOutputStream(f));
 
-				os.writeBytes("ls\n");
+				os.writeBytes("ls / > "+ BASE +"/list.tmp\n");
 				os.writeBytes("exit\n");
 				os.flush();
 				os.close();
@@ -151,10 +163,8 @@ public class Utils {
 				process = createSubprocess(
 						root_shell + " -c " + f.getAbsolutePath(), processIds);
 				processId = processIds[0];
-				es = new DataInputStream(new FileInputStream(process));
+				es = new DataInputStream(new FileInputStream(BASE + "/list.tmp"));
 				Log.d(TAG, "Process ID: " + processId);
-
-				Exec.waitFor(processId);
 
 				while (null != (line = es.readLine())) {
 					if (line.contains("system")) {
@@ -163,12 +173,15 @@ public class Utils {
 					}
 				}
 
+				Exec.waitFor(processId);
+
 			} catch (Exception e) {
-				Log.e(TAG, "Unexpected Error");
-				isRoot = 0;
+				Log.e(TAG, "Unexpected Error", e);
 			} finally {
 				try {
 					if (es != null) {
+						if (tmp.exists())
+							tmp.delete();
 						es.close();
 					}
 
@@ -203,7 +216,7 @@ public class Utils {
 		detector.start();
 
 		try {
-			detector.join(1000);
+			detector.join(12 * 1000);
 			if (detector.isAlive()) {
 				// Timed-out
 				detector.destroy();

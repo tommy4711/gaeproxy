@@ -594,12 +594,13 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyTypeList = (ListPreference) findPreference("proxyType");
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
-		Log.d(TAG, "ROOT Permission: " + Utils.isRoot());
-
 		new Thread() {
 			public void run() {
 
+				Log.d(TAG, "ROOT Permission: " + Utils.isRoot());
+				
 				if (!GAEProxyService.isServiceStarted()) {
+					
 					CopyAssets("");
 
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");

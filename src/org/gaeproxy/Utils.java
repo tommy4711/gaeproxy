@@ -166,14 +166,14 @@ public class Utils {
 				es = new DataInputStream(new FileInputStream(BASE + "/list.tmp"));
 				Log.d(TAG, "Process ID: " + processId);
 
+				Exec.waitFor(processId);
+
 				while (null != (line = es.readLine())) {
 					if (line.contains("system")) {
 						isRoot = 1;
 						break;
 					}
 				}
-
-				Exec.waitFor(processId);
 
 			} catch (Exception e) {
 				Log.e(TAG, "Unexpected Error", e);

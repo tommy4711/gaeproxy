@@ -43,6 +43,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -189,9 +190,10 @@ public class GAEProxyService extends Service {
 	}
 
 	private void initHasRedirectSupported() {
-		Process process = null;
+		FileDescriptor process = null;
 		DataOutputStream os = null;
 		DataInputStream es = null;
+		int processId = -1;
 
 		String command;
 		String line = null;
@@ -199,13 +201,17 @@ public class GAEProxyService extends Service {
 		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
-			process = Runtime.getRuntime().exec("su");
-			es = new DataInputStream(process.getErrorStream());
-			os = new DataOutputStream(process.getOutputStream());
+			int processIds[] = new int[1];
+			process = Utils.createSubprocess(Utils.root_shell, processIds);
+			processId = processIds[0];
+			
+			es = new DataInputStream(new FileInputStream(process));
+			os = new DataOutputStream(new FileOutputStream(process));
 			os.writeBytes(command + "\n");
 			os.writeBytes("exit\n");
 			os.flush();
-			process.waitFor();
+			
+			Exec.waitFor(processId);
 
 			while (null != (line = es.readLine())) {
 				Log.d(TAG, line);
@@ -223,7 +229,13 @@ public class GAEProxyService extends Service {
 				}
 				if (es != null)
 					es.close();
-				process.destroy();
+				
+				Exec.hangupProcessGroup(processId);
+
+				if (process != null) {
+					Exec.close(process);
+					process = null;
+				}
 			} catch (Exception e) {
 				// nothing
 			}

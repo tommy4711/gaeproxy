@@ -157,7 +157,7 @@ public class Utils {
 				Exec.waitFor(processId);
 
 				while (null != (line = es.readLine())) {
-					Log.d(TAG, line);
+//					Log.d(TAG, line);
 					if (line.contains("system")) {
 						isRoot = 1;
 						break;

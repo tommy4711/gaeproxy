@@ -99,7 +99,7 @@ public class GAEProxyReceiver extends BroadcastReceiver {
 							+ "setown com.android.vending /data/data/com.android.vending/shared_prefs/vending_preferences.xml\n"
 							+ "kill $(ps | grep vending | tr -s  ' ' | cut -d ' ' -f2)\n"
 							+ "rm -rf /data/data/com.android.vending/cache/*\n";
-					GAEProxy.runRootCommand(command);
+					Utils.runRootCommand(command);
 				}
 			} catch (Exception e) {
 				// Nothing

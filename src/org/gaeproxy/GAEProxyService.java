@@ -188,6 +188,10 @@ public class GAEProxyService extends Service {
 	}
 
 	private void initHasRedirectSupported() {
+		
+		if (!Utils.isRoot())
+			return;
+		
 		Process process = null;
 		DataOutputStream os = null;
 		DataInputStream es = null;
@@ -198,7 +202,7 @@ public class GAEProxyService extends Service {
 		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
-			process = Runtime.getRuntime().exec("su");
+			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
 			es = new DataInputStream(process.getErrorStream());
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes(command + "\n");
@@ -229,7 +233,7 @@ public class GAEProxyService extends Service {
 		}
 
 		// flush the check command
-		runRootCommand(command.replace("-A", "-D"));
+		Utils.runRootCommand(command.replace("-A", "-D"));
 	}
 
 	/**
@@ -274,67 +278,6 @@ public class GAEProxyService extends Service {
 		// foreground state, since we could be killed at that point.
 		notificationManager.cancel(id);
 		setForeground(false);
-	}
-
-	public static boolean runRootCommand(String command) {
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec("su");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
-	}
-
-	public static boolean runCommand(String command) {
-
-		// if got root permission, always execute as root
-		if (GAEProxy.isRoot()) {
-			return runRootCommand(command);
-		}
-
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec("/system/bin/sh");
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (process != null)
-					process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
 	}
 
 	public boolean connect() {
@@ -401,12 +344,12 @@ public class GAEProxyService extends Service {
 									httpProcess.destroy();
 									httpProcess = null;
 								}
-								if (GAEProxy.isRoot()) {
+								if (Utils.isRoot()) {
 									httpProcess = Runtime.getRuntime().exec(
-											"su");
+											Utils.ROOT_SHELL);
 								} else {
 									httpProcess = Runtime.getRuntime().exec(
-											"/system/bin/sh");
+											Utils.DEFAULT_SHELL);
 								}
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());
@@ -491,13 +434,13 @@ public class GAEProxyService extends Service {
 				return false;
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
+			Utils.runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
 					+ socksPort);
 
 		} else {
 
 			Log.d(TAG, "Forward Successful");
-			runCommand(BASE + "proxy.sh start " + port + " " + "127.0.0.1"
+			Utils.runCommand(BASE + "proxy.sh start " + port + " " + "127.0.0.1"
 					+ " " + port);
 		}
 
@@ -558,12 +501,12 @@ public class GAEProxyService extends Service {
 
 		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
 				appMask);
-		runRootCommand(iptables_http_rules);
+		Utils.runRootCommand(iptables_http_rules);
 
 		if (isHTTPSProxy) {
 			String iptables_https_rules = https_sb.toString().replace(
 					"203.208.0.0", appMask);
-			runRootCommand(iptables_https_rules);
+			Utils.runRootCommand(iptables_https_rules);
 		}
 
 		return true;
@@ -843,9 +786,9 @@ public class GAEProxyService extends Service {
 
 	private void onDisconnect() {
 
-		runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		runCommand(BASE + "proxy.sh stop");
+		Utils.runCommand(BASE + "proxy.sh stop");
 
 	}
 

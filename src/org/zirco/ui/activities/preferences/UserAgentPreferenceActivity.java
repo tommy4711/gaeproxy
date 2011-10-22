@@ -24,10 +24,11 @@ import android.preference.PreferenceManager;
 /**
  * User agent preference chooser activity.
  */
-public class UserAgentPreferenceActivity extends BaseSpinnerCustomPreferenceActivity {
+public class UserAgentPreferenceActivity extends
+		BaseSpinnerCustomPreferenceActivity {
 
 	@Override
-	protected int getSpinnerPromptId() {		
+	protected int getSpinnerPromptId() {
 		return R.string.UserAgentPreferenceActivity_Prompt;
 	}
 
@@ -38,33 +39,49 @@ public class UserAgentPreferenceActivity extends BaseSpinnerCustomPreferenceActi
 
 	@Override
 	protected void onOk() {
-		Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-    	editor.putString(Constants.PREFERENCES_BROWSER_USER_AGENT, mCustomEditText.getText().toString());
-    	editor.commit();
+		Editor editor = PreferenceManager.getDefaultSharedPreferences(this)
+				.edit();
+		editor.putString(Constants.PREFERENCES_BROWSER_USER_AGENT,
+				mCustomEditText.getText().toString());
+		editor.commit();
 	}
 
 	@Override
 	protected void onSpinnerItemSelected(int position) {
 		switch (position) {
-		case 0: mCustomEditText.setEnabled(false); mCustomEditText.setText(Constants.USER_AGENT_DEFAULT); break;
-		case 1: mCustomEditText.setEnabled(false); mCustomEditText.setText(Constants.USER_AGENT_DESKTOP); break;
+		case 0:
+			mCustomEditText.setEnabled(false);
+			mCustomEditText.setText(Constants.USER_AGENT_DEFAULT);
+			break;
+		case 1:
+			mCustomEditText.setEnabled(false);
+			mCustomEditText.setText(Constants.USER_AGENT_DESKTOP);
+			break;
 		case 2: {
 			mCustomEditText.setEnabled(true);
-			
-			if ((mCustomEditText.getText().toString().equals(Constants.USER_AGENT_DEFAULT)) ||
-					(mCustomEditText.getText().toString().equals(Constants.USER_AGENT_DESKTOP))) {					
+
+			if ((mCustomEditText.getText().toString()
+					.equals(Constants.USER_AGENT_DEFAULT))
+					|| (mCustomEditText.getText().toString()
+							.equals(Constants.USER_AGENT_DESKTOP))) {
 				mCustomEditText.setText(null);
 			}
 			break;
 		}
-		default: mCustomEditText.setEnabled(false); mCustomEditText.setText(Constants.USER_AGENT_DEFAULT); break;
+		default:
+			mCustomEditText.setEnabled(false);
+			mCustomEditText.setText(Constants.USER_AGENT_DEFAULT);
+			break;
 		}
 	}
 
 	@Override
 	protected void setSpinnerValueFromPreferences() {
-		String currentUserAgent = PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREFERENCES_BROWSER_USER_AGENT, Constants.USER_AGENT_DEFAULT);
-		
+		String currentUserAgent = PreferenceManager
+				.getDefaultSharedPreferences(this).getString(
+						Constants.PREFERENCES_BROWSER_USER_AGENT,
+						Constants.USER_AGENT_DEFAULT);
+
 		if (currentUserAgent.equals(Constants.USER_AGENT_DEFAULT)) {
 			mSpinner.setSelection(0);
 			mCustomEditText.setEnabled(false);
@@ -76,7 +93,7 @@ public class UserAgentPreferenceActivity extends BaseSpinnerCustomPreferenceActi
 		} else {
 			mSpinner.setSelection(2);
 			mCustomEditText.setEnabled(true);
-			mCustomEditText.setText(currentUserAgent);					
+			mCustomEditText.setText(currentUserAgent);
 		}
 	}
 

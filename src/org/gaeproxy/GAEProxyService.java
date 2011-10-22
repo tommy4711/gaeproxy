@@ -55,8 +55,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Random;
 
-import com.flurry.android.FlurryAgent;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -77,6 +75,8 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+
+import com.flurry.android.FlurryAgent;
 
 public class GAEProxyService extends Service {
 
@@ -144,18 +144,6 @@ public class GAEProxyService extends Service {
 	private Object[] mStartForegroundArgs = new Object[2];
 	private Object[] mStopForegroundArgs = new Object[1];
 
-	void invokeMethod(Method method, Object[] args) {
-		try {
-			method.invoke(this, mStartForegroundArgs);
-		} catch (InvocationTargetException e) {
-			// Should not happen.
-			Log.w("ApiDemos", "Unable to invoke method", e);
-		} catch (IllegalAccessException e) {
-			// Should not happen.
-			Log.w("ApiDemos", "Unable to invoke method", e);
-		}
-	}
-
 	/*
 	 * This is a hack see
 	 * http://www.mail-archive.com/android-developers@googlegroups
@@ -179,106 +167,47 @@ public class GAEProxyService extends Service {
 		return isServiceStarted;
 	}
 
-	private void markServiceStarted() {
-		sRunningInstance = new WeakReference<GAEProxyService>(this);
-	}
+	final Handler handler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			Editor ed = settings.edit();
+			switch (msg.what) {
+			case MSG_CONNECT_START:
+				ed.putBoolean("isConnecting", true);
+				statusLock = true;
 
-	private void markServiceStopped() {
-		sRunningInstance = null;
-	}
+				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
+						| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
 
-	private void initHasRedirectSupported() {
-		
-		if (!Utils.isRoot())
-			return;
-		
-		Process process = null;
-		DataOutputStream os = null;
-		DataInputStream es = null;
+				mWakeLock.acquire();
 
-		String command;
-		String line = null;
+				break;
+			case MSG_CONNECT_FINISH:
+				ed.putBoolean("isConnecting", false);
+				statusLock = false;
 
-		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
+				if (mWakeLock != null && mWakeLock.isHeld())
+					mWakeLock.release();
 
-		try {
-			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
-			es = new DataInputStream(process.getErrorStream());
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-
-			while (null != (line = es.readLine())) {
-				Log.d(TAG, line);
-				if (line.contains("No chain/target/match")) {
-					this.hasRedirectSupport = false;
-					break;
-				}
+				break;
+			case MSG_CONNECT_SUCCESS:
+				ed.putBoolean("isRunning", true);
+				break;
+			case MSG_CONNECT_FAIL:
+				ed.putBoolean("isRunning", false);
+				break;
+			case MSG_HOST_CHANGE:
+				ed.putString("appHost", appHost);
+				break;
+			case MSG_STOP_SELF:
+				stopSelf();
+				break;
 			}
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (es != null)
-					es.close();
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
+			ed.commit();
+			super.handleMessage(msg);
 		}
-
-		// flush the check command
-		Utils.runRootCommand(command.replace("-A", "-D"));
-	}
-
-	/**
-	 * This is a wrapper around the new startForeground method, using the older
-	 * APIs if it is not available.
-	 */
-	void startForegroundCompat(int id, Notification notification) {
-		// If we have the new startForeground API, then use it.
-		if (mStartForeground != null) {
-			mStartForegroundArgs[0] = Integer.valueOf(id);
-			mStartForegroundArgs[1] = notification;
-			invokeMethod(mStartForeground, mStartForegroundArgs);
-			return;
-		}
-
-		// Fall back on the old API.
-		setForeground(true);
-		notificationManager.notify(id, notification);
-	}
-
-	/**
-	 * This is a wrapper around the new stopForeground method, using the older
-	 * APIs if it is not available.
-	 */
-	void stopForegroundCompat(int id) {
-		// If we have the new stopForeground API, then use it.
-		if (mStopForeground != null) {
-			mStopForegroundArgs[0] = Boolean.TRUE;
-			try {
-				mStopForeground.invoke(this, mStopForegroundArgs);
-			} catch (InvocationTargetException e) {
-				// Should not happen.
-				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-			} catch (IllegalAccessException e) {
-				// Should not happen.
-				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
-			}
-			return;
-		}
-
-		// Fall back on the old API. Note to cancel BEFORE changing the
-		// foreground state, since we could be killed at that point.
-		notificationManager.cancel(id);
-		setForeground(false);
-	}
+	};
 
 	public boolean connect() {
 
@@ -332,6 +261,7 @@ public class GAEProxyService extends Service {
 			Log.e(TAG, cmd);
 
 			Thread t = new Thread() {
+				@Override
 				public void run() {
 					try {
 						for (int tries = 0; tries < 3; tries++) {
@@ -381,136 +311,6 @@ public class GAEProxyService extends Service {
 		}
 
 		return true;
-	}
-
-	/**
-	 * Internal method to request actual PTY terminal once we've finished
-	 * authentication. If called before authenticated, it will just fail.
-	 */
-	private boolean preConnection() {
-
-		if (isHTTPSProxy) {
-			InputStream is = null;
-
-			String socksIp = settings.getString("socksIp", null);
-			String socksPort = settings.getString("socksPort", null);
-
-			for (int tries = 0; tries < 3; tries++) {
-				try {
-					URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
-					HttpURLConnection conn = (HttpURLConnection) aURL
-							.openConnection();
-					conn.connect();
-					is = conn.getInputStream();
-
-					BufferedReader reader = new BufferedReader(
-							new InputStreamReader(is));
-
-					String line = reader.readLine();
-					if (!line.startsWith("#ip"))
-						throw new Exception("Format error");
-					line = reader.readLine();
-					socksIp = line.trim().toLowerCase();
-
-					line = reader.readLine();
-					if (!line.startsWith("#port"))
-						throw new Exception("Format error");
-					line = reader.readLine();
-					socksPort = line.trim().toLowerCase();
-
-					Editor ed = settings.edit();
-					ed.putString("socksIp", socksIp);
-					ed.putString("socksPort", socksPort);
-					ed.commit();
-
-				} catch (Exception e) {
-					Log.e(TAG, "cannot get remote port info", e);
-					continue;
-				}
-				break;
-			}
-
-			if (socksIp == null || socksPort == null)
-				return false;
-
-			Log.d(TAG, "Forward Successful");
-			Utils.runCommand(BASE + "proxy.sh start " + port + " " + socksIp + " "
-					+ socksPort);
-
-		} else {
-
-			Log.d(TAG, "Forward Successful");
-			Utils.runCommand(BASE + "proxy.sh start " + port + " " + "127.0.0.1"
-					+ " " + port);
-		}
-
-		StringBuffer http_sb = new StringBuffer();
-
-		StringBuffer https_sb = new StringBuffer();
-
-		if (hasRedirectSupport) {
-			http_sb.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
-		} else {
-			http_sb.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
-		}
-
-		if (isGFWList) {
-			String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-					: CMD_IPTABLES_DNAT_ADD_HTTP;
-			String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-					: CMD_IPTABLES_DNAT_ADD_HTTPS;
-
-			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
-
-			for (String item : gfw_list) {
-				http_sb.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
-						+ item));
-				if (isHTTPSProxy)
-					https_sb.append(cmd_https.replace("! -d 203.208.0.0/16",
-							"-d " + item));
-			}
-		} else if (isGlobalProxy) {
-			https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-					: CMD_IPTABLES_DNAT_ADD_HTTP);
-			if (isHTTPSProxy)
-				https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-						: CMD_IPTABLES_DNAT_ADD_HTTPS);
-		} else {
-			// for proxy specified apps
-			if (apps == null || apps.length <= 0)
-				apps = AppManager.getProxyedApps(this);
-
-			HashSet<Integer> uidSet = new HashSet<Integer>();
-			for (int i = 0; i < apps.length; i++) {
-				if (apps[i].isProxyed()) {
-					uidSet.add(apps[i].getUid());
-				}
-			}
-			for (int uid : uidSet) {
-				http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-						: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
-						"-t nat -m owner --uid-owner " + uid));
-				if (isHTTPSProxy)
-					https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
-							"-t nat -m owner --uid-owner " + uid));
-			}
-		}
-
-		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
-				appMask);
-		Utils.runRootCommand(iptables_http_rules);
-
-		if (isHTTPSProxy) {
-			String iptables_https_rules = https_sb.toString().replace(
-					"203.208.0.0", appMask);
-			Utils.runRootCommand(iptables_https_rules);
-		}
-
-		return true;
-
 	}
 
 	/** Called when the activity is first created. */
@@ -640,6 +440,55 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
+	private void initHasRedirectSupported() {
+
+		if (!Utils.isRoot())
+			return;
+
+		Process process = null;
+		DataOutputStream os = null;
+		DataInputStream es = null;
+
+		String command;
+		String line = null;
+
+		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
+
+		try {
+			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
+			es = new DataInputStream(process.getErrorStream());
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+
+			while (null != (line = es.readLine())) {
+				Log.d(TAG, line);
+				if (line.contains("No chain/target/match")) {
+					this.hasRedirectSupport = false;
+					break;
+				}
+			}
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (es != null)
+					es.close();
+				process.destroy();
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+
+		// flush the check command
+		Utils.runRootCommand(command.replace("-A", "-D"));
+	}
+
 	private void initSoundVibrateLights(Notification notification) {
 		final String ringtone = settings.getString(
 				"settings_key_notif_ringtone", null);
@@ -658,6 +507,26 @@ public class GAEProxyService extends Service {
 		}
 
 		notification.defaults |= Notification.DEFAULT_LIGHTS;
+	}
+
+	void invokeMethod(Method method, Object[] args) {
+		try {
+			method.invoke(this, mStartForegroundArgs);
+		} catch (InvocationTargetException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		} catch (IllegalAccessException e) {
+			// Should not happen.
+			Log.w("ApiDemos", "Unable to invoke method", e);
+		}
+	}
+
+	private void markServiceStarted() {
+		sRunningInstance = new WeakReference<GAEProxyService>(this);
+	}
+
+	private void markServiceStopped() {
+		sRunningInstance = null;
 	}
 
 	private void notifyAlert(String title, String info) {
@@ -792,48 +661,6 @@ public class GAEProxyService extends Service {
 
 	}
 
-	final Handler handler = new Handler() {
-		@Override
-		public void handleMessage(Message msg) {
-			Editor ed = settings.edit();
-			switch (msg.what) {
-			case MSG_CONNECT_START:
-				ed.putBoolean("isConnecting", true);
-				statusLock = true;
-
-				PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK
-						| PowerManager.ON_AFTER_RELEASE, "GAEProxy");
-
-				mWakeLock.acquire();
-
-				break;
-			case MSG_CONNECT_FINISH:
-				ed.putBoolean("isConnecting", false);
-				statusLock = false;
-
-				if (mWakeLock != null && mWakeLock.isHeld())
-					mWakeLock.release();
-
-				break;
-			case MSG_CONNECT_SUCCESS:
-				ed.putBoolean("isRunning", true);
-				break;
-			case MSG_CONNECT_FAIL:
-				ed.putBoolean("isRunning", false);
-				break;
-			case MSG_HOST_CHANGE:
-				ed.putString("appHost", appHost);
-				break;
-			case MSG_STOP_SELF:
-				stopSelf();
-				break;
-			}
-			ed.commit();
-			super.handleMessage(msg);
-		}
-	};
-
 	// This is the old onStart method that will be called on the pre-2.0
 	// platform. On 2.0 or later we override onStartCommand() so this
 	// method will not be called.
@@ -872,6 +699,7 @@ public class GAEProxyService extends Service {
 		// APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
 
 		new Thread(new Runnable() {
+			@Override
 			public void run() {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
@@ -938,6 +766,180 @@ public class GAEProxyService extends Service {
 			}
 		}).start();
 		markServiceStarted();
+	}
+
+	/**
+	 * Internal method to request actual PTY terminal once we've finished
+	 * authentication. If called before authenticated, it will just fail.
+	 */
+	private boolean preConnection() {
+
+		if (isHTTPSProxy) {
+			InputStream is = null;
+
+			String socksIp = settings.getString("socksIp", null);
+			String socksPort = settings.getString("socksPort", null);
+
+			for (int tries = 0; tries < 3; tries++) {
+				try {
+					URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
+					HttpURLConnection conn = (HttpURLConnection) aURL
+							.openConnection();
+					conn.connect();
+					is = conn.getInputStream();
+
+					BufferedReader reader = new BufferedReader(
+							new InputStreamReader(is));
+
+					String line = reader.readLine();
+					if (!line.startsWith("#ip"))
+						throw new Exception("Format error");
+					line = reader.readLine();
+					socksIp = line.trim().toLowerCase();
+
+					line = reader.readLine();
+					if (!line.startsWith("#port"))
+						throw new Exception("Format error");
+					line = reader.readLine();
+					socksPort = line.trim().toLowerCase();
+
+					Editor ed = settings.edit();
+					ed.putString("socksIp", socksIp);
+					ed.putString("socksPort", socksPort);
+					ed.commit();
+
+				} catch (Exception e) {
+					Log.e(TAG, "cannot get remote port info", e);
+					continue;
+				}
+				break;
+			}
+
+			if (socksIp == null || socksPort == null)
+				return false;
+
+			Log.d(TAG, "Forward Successful");
+			Utils.runCommand(BASE + "proxy.sh start " + port + " " + socksIp
+					+ " " + socksPort);
+
+		} else {
+
+			Log.d(TAG, "Forward Successful");
+			Utils.runCommand(BASE + "proxy.sh start " + port + " "
+					+ "127.0.0.1" + " " + port);
+		}
+
+		StringBuffer http_sb = new StringBuffer();
+
+		StringBuffer https_sb = new StringBuffer();
+
+		if (hasRedirectSupport) {
+			http_sb.append(BASE
+					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+		} else {
+			http_sb.append(BASE
+					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+		}
+
+		if (isGFWList) {
+			String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+					: CMD_IPTABLES_DNAT_ADD_HTTP;
+			String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+					: CMD_IPTABLES_DNAT_ADD_HTTPS;
+
+			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
+
+			for (String item : gfw_list) {
+				http_sb.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
+						+ item));
+				if (isHTTPSProxy)
+					https_sb.append(cmd_https.replace("! -d 203.208.0.0/16",
+							"-d " + item));
+			}
+		} else if (isGlobalProxy) {
+			https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+					: CMD_IPTABLES_DNAT_ADD_HTTP);
+			if (isHTTPSProxy)
+				https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+						: CMD_IPTABLES_DNAT_ADD_HTTPS);
+		} else {
+			// for proxy specified apps
+			if (apps == null || apps.length <= 0)
+				apps = AppManager.getProxyedApps(this);
+
+			HashSet<Integer> uidSet = new HashSet<Integer>();
+			for (int i = 0; i < apps.length; i++) {
+				if (apps[i].isProxyed()) {
+					uidSet.add(apps[i].getUid());
+				}
+			}
+			for (int uid : uidSet) {
+				http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
+						: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
+						"-t nat -m owner --uid-owner " + uid));
+				if (isHTTPSProxy)
+					https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
+							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
+							"-t nat -m owner --uid-owner " + uid));
+			}
+		}
+
+		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
+				appMask);
+		Utils.runRootCommand(iptables_http_rules);
+
+		if (isHTTPSProxy) {
+			String iptables_https_rules = https_sb.toString().replace(
+					"203.208.0.0", appMask);
+			Utils.runRootCommand(iptables_https_rules);
+		}
+
+		return true;
+
+	}
+
+	/**
+	 * This is a wrapper around the new startForeground method, using the older
+	 * APIs if it is not available.
+	 */
+	void startForegroundCompat(int id, Notification notification) {
+		// If we have the new startForeground API, then use it.
+		if (mStartForeground != null) {
+			mStartForegroundArgs[0] = Integer.valueOf(id);
+			mStartForegroundArgs[1] = notification;
+			invokeMethod(mStartForeground, mStartForegroundArgs);
+			return;
+		}
+
+		// Fall back on the old API.
+		setForeground(true);
+		notificationManager.notify(id, notification);
+	}
+
+	/**
+	 * This is a wrapper around the new stopForeground method, using the older
+	 * APIs if it is not available.
+	 */
+	void stopForegroundCompat(int id) {
+		// If we have the new stopForeground API, then use it.
+		if (mStopForeground != null) {
+			mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				mStopForeground.invoke(this, mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+			}
+			return;
+		}
+
+		// Fall back on the old API. Note to cancel BEFORE changing the
+		// foreground state, since we could be killed at that point.
+		notificationManager.cancel(id);
+		setForeground(false);
 	}
 
 }

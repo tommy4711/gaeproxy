@@ -22,7 +22,8 @@ import org.zirco.model.items.UrlSuggestionItem;
 /**
  * Comparator for UrlSuggestionItem.
  */
-public class UrlSuggestionItemComparator implements Comparator<UrlSuggestionItem> {
+public class UrlSuggestionItemComparator implements
+		Comparator<UrlSuggestionItem> {
 
 	@Override
 	public int compare(UrlSuggestionItem object1, UrlSuggestionItem object2) {

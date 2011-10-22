@@ -22,15 +22,11 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 
-public class WeaveServerPreferenceActivity extends BaseSpinnerCustomPreferenceActivity {
-	
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {		
-		super.onCreate(savedInstanceState);
-	}
+public class WeaveServerPreferenceActivity extends
+		BaseSpinnerCustomPreferenceActivity {
 
 	@Override
-	protected int getSpinnerPromptId() {		
+	protected int getSpinnerPromptId() {
 		return R.string.WeaveServerPreferenceActivity_Prompt;
 	}
 
@@ -40,9 +36,48 @@ public class WeaveServerPreferenceActivity extends BaseSpinnerCustomPreferenceAc
 	}
 
 	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+	}
+
+	@Override
+	protected void onOk() {
+		Editor editor = PreferenceManager.getDefaultSharedPreferences(this)
+				.edit();
+		editor.putString(Constants.PREFERENCE_WEAVE_SERVER, mCustomEditText
+				.getText().toString());
+		editor.commit();
+	}
+
+	@Override
+	protected void onSpinnerItemSelected(int position) {
+		switch (position) {
+		case 0:
+			mCustomEditText.setEnabled(false);
+			mCustomEditText.setText(Constants.WEAVE_DEFAULT_SERVER);
+			break;
+		case 1: {
+			mCustomEditText.setEnabled(true);
+
+			if (mCustomEditText.getText().toString()
+					.equals(Constants.WEAVE_DEFAULT_SERVER)) {
+				mCustomEditText.setText(null);
+			}
+			break;
+		}
+		default:
+			mCustomEditText.setEnabled(false);
+			mCustomEditText.setText(Constants.WEAVE_DEFAULT_SERVER);
+			break;
+		}
+	}
+
+	@Override
 	protected void setSpinnerValueFromPreferences() {
-		String currentServer = PreferenceManager.getDefaultSharedPreferences(this).getString(Constants.PREFERENCE_WEAVE_SERVER, Constants.WEAVE_DEFAULT_SERVER);
-		
+		String currentServer = PreferenceManager.getDefaultSharedPreferences(
+				this).getString(Constants.PREFERENCE_WEAVE_SERVER,
+				Constants.WEAVE_DEFAULT_SERVER);
+
 		if (currentServer.equals(Constants.WEAVE_DEFAULT_SERVER)) {
 			mSpinner.setSelection(0);
 			mCustomEditText.setEnabled(false);
@@ -50,31 +85,8 @@ public class WeaveServerPreferenceActivity extends BaseSpinnerCustomPreferenceAc
 		} else {
 			mSpinner.setSelection(1);
 			mCustomEditText.setEnabled(true);
-			mCustomEditText.setText(currentServer);					
+			mCustomEditText.setText(currentServer);
 		}
-	}
-
-	@Override
-	protected void onSpinnerItemSelected(int position) {
-		switch (position) {
-		case 0: mCustomEditText.setEnabled(false); mCustomEditText.setText(Constants.WEAVE_DEFAULT_SERVER); break;		
-		case 1: {
-			mCustomEditText.setEnabled(true);
-			
-			if (mCustomEditText.getText().toString().equals(Constants.WEAVE_DEFAULT_SERVER)) {					
-				mCustomEditText.setText(null);
-			}
-			break;
-		}
-		default: mCustomEditText.setEnabled(false); mCustomEditText.setText(Constants.WEAVE_DEFAULT_SERVER); break;
-		}
-	}
-
-	@Override
-	protected void onOk() {
-		Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-    	editor.putString(Constants.PREFERENCE_WEAVE_SERVER, mCustomEditText.getText().toString());
-    	editor.commit();
 	}
 
 }

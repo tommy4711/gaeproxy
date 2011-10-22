@@ -34,15 +34,27 @@ import android.widget.TextView;
 
 /**
  * A {@link QuickActionGrid} is an implementation of a {@link QuickActionWidget}
- * that displays {@link QuickAction}s in a grid manner. This is usually used to create
- * a shortcut to jump between different type of information on screen.
- *
+ * that displays {@link QuickAction}s in a grid manner. This is usually used to
+ * create a shortcut to jump between different type of information on screen.
+ * 
  * @author Benjamin Fellous
  * @author Cyril Mottier
  */
 public class QuickActionGrid extends QuickActionWidget {
 
 	private GridView mGridView;
+
+	private OnItemClickListener mInternalItemClickListener = new OnItemClickListener() {
+		@Override
+		public void onItemClick(AdapterView<?> adapterView, View view,
+				int position, long id) {
+			getOnQuickActionClickListener().onQuickActionClicked(
+					QuickActionGrid.this, position);
+			if (getDismissOnClick()) {
+				dismiss();
+			}
+		}
+	};
 
 	public QuickActionGrid(Context context) {
 		super(context);
@@ -54,49 +66,12 @@ public class QuickActionGrid extends QuickActionWidget {
 	}
 
 	@Override
-	protected void populateQuickActions(final List<QuickAction> quickActions) {
-
-		mGridView.setAdapter(new BaseAdapter() {
-
-			public View getView(int position, View view, ViewGroup parent) {
-
-				TextView textView = (TextView) view;
-
-				if (view == null) {
-					final LayoutInflater inflater = LayoutInflater.from(getContext());
-					textView = (TextView) inflater.inflate(R.layout.gd_quick_action_grid_item, mGridView, false);
-				}
-
-				QuickAction quickAction = quickActions.get(position);
-				textView.setText(quickAction.mTitle);
-				textView.setCompoundDrawablesWithIntrinsicBounds(null, quickAction.mDrawable, null, null);
-
-				return textView;
-
-			}
-
-			public long getItemId(int position) {
-				return position;
-			}
-
-			public Object getItem(int position) {
-				return null;
-			}
-
-			public int getCount() {
-				return quickActions.size();
-			}
-		});
-
-		mGridView.setOnItemClickListener(mInternalItemClickListener);
-	}
-
-	@Override
 	protected void onMeasureAndLayout(Rect anchorRect, View contentView) {
 
-		contentView.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-		contentView.measure(MeasureSpec.makeMeasureSpec(getScreenWidth(), MeasureSpec.EXACTLY),
-				LayoutParams.WRAP_CONTENT);
+		contentView.setLayoutParams(new LayoutParams(LayoutParams.WRAP_CONTENT,
+				LayoutParams.WRAP_CONTENT));
+		contentView.measure(MeasureSpec.makeMeasureSpec(getScreenWidth(),
+				MeasureSpec.EXACTLY), LayoutParams.WRAP_CONTENT);
 
 		int rootHeight = contentView.getMeasuredHeight();
 
@@ -105,19 +80,56 @@ public class QuickActionGrid extends QuickActionWidget {
 		int dyBottom = getScreenHeight() - anchorRect.bottom;
 
 		boolean onTop = (dyTop > dyBottom);
-		int popupY = (onTop) ? anchorRect.top - rootHeight + offsetY : anchorRect.bottom - offsetY;
+		int popupY = (onTop) ? anchorRect.top - rootHeight + offsetY
+				: anchorRect.bottom - offsetY;
 
 		setWidgetSpecs(popupY, onTop);
 	}
 
-	private OnItemClickListener mInternalItemClickListener = new OnItemClickListener() {
-		public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-			getOnQuickActionClickListener().onQuickActionClicked(QuickActionGrid.this, position);
-			if (getDismissOnClick()) {
-				dismiss();
+	@Override
+	protected void populateQuickActions(final List<QuickAction> quickActions) {
+
+		mGridView.setAdapter(new BaseAdapter() {
+
+			@Override
+			public int getCount() {
+				return quickActions.size();
 			}
-		}
-	};
+
+			@Override
+			public Object getItem(int position) {
+				return null;
+			}
+
+			@Override
+			public long getItemId(int position) {
+				return position;
+			}
+
+			@Override
+			public View getView(int position, View view, ViewGroup parent) {
+
+				TextView textView = (TextView) view;
+
+				if (view == null) {
+					final LayoutInflater inflater = LayoutInflater
+							.from(getContext());
+					textView = (TextView) inflater.inflate(
+							R.layout.gd_quick_action_grid_item, mGridView,
+							false);
+				}
+
+				QuickAction quickAction = quickActions.get(position);
+				textView.setText(quickAction.mTitle);
+				textView.setCompoundDrawablesWithIntrinsicBounds(null,
+						quickAction.mDrawable, null, null);
+
+				return textView;
+
+			}
+		});
+
+		mGridView.setOnItemClickListener(mInternalItemClickListener);
+	}
 
 }
-

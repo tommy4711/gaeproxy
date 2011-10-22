@@ -1,5 +1,16 @@
 package org.emergent.android.weave.client;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashSet;
+
+import javax.net.ssl.SSLException;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpException;
@@ -44,310 +55,330 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.ExecutionContext;
 import org.apache.http.protocol.HttpContext;
 
-import javax.net.ssl.SSLException;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashSet;
-
 /**
  * @author Patrick Woodworth
  */
 class WeaveTransport {
 
-  private static final int HTTP_PORT_DEFAULT = 80;
-  private static final int HTTPS_PORT_DEFAULT = 443;
+	private static class MyInterceptor implements HttpRequestInterceptor {
 
-  private static final HttpRequestInterceptor sm_preemptiveAuth = new MyInterceptor();
-  private static final MyResponseHandler sm_responseHandler = new MyResponseHandler();
+		@Override
+		public void process(final HttpRequest request, final HttpContext context)
+				throws HttpException, IOException {
+			AuthState authState = (AuthState) context
+					.getAttribute(ClientContext.TARGET_AUTH_STATE);
+			CredentialsProvider credsProvider = (CredentialsProvider) context
+					.getAttribute(ClientContext.CREDS_PROVIDER);
+			HttpHost targetHost = (HttpHost) context
+					.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+			if (authState.getAuthScheme() == null) {
+				AuthScope authScope = new AuthScope(targetHost.getHostName(),
+						targetHost.getPort());
+				Credentials creds = credsProvider.getCredentials(authScope);
+				if (creds != null) {
+					authState.setAuthScheme(new BasicScheme());
+					authState.setCredentials(creds);
+				}
+			}
+		}
+	}
+	/**
+	 * Based on BasicResponseHandler
+	 */
+	private static class MyResponseHandler implements
+			ResponseHandler<WeaveResponse> {
 
-  private static final HttpParams sm_httpParams;
+		/**
+		 * Returns the response body as a String if the response was successful
+		 * (a 2xx status code). If no response body exists, this returns null.
+		 * If the response was unsuccessful (>= 300 status code), throws an
+		 * {@link org.apache.http.client.HttpResponseException}.
+		 */
+		@Override
+		public WeaveResponse handleResponse(final HttpResponse response)
+				throws HttpResponseException, IOException {
+			StatusLine statusLine = response.getStatusLine();
+			if (statusLine.getStatusCode() >= 300) {
+				throw new WeaveResponseException(statusLine.getStatusCode(),
+						statusLine.getReasonPhrase(), response);
+			}
+			return new WeaveResponse(response);
+		}
+	}
 
-  static {
-    HttpParams params = new BasicHttpParams();
-    HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
-    HttpProtocolParams.setContentCharset(params, "UTF-8");
-    HttpProtocolParams.setUserAgent(params, WeaveConstants.USER_AGENT);
-    HttpProtocolParams.setUseExpectContinue(params, false);
-//    params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
-    params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
-    params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE, new ConnPerRouteBean(30));
-    sm_httpParams = params;
-  }
+	/**
+	 * @author Patrick Woodworth
+	 */
+	static class WeaveHostnameVerifier extends AbstractVerifier {
 
-  private final SocketFactory m_sslSocketFactory;
+		private static boolean isIPAddress(final String hostname) {
+			return hostname != null
+					&& (InetAddressUtils.isIPv4Address(hostname) || InetAddressUtils
+							.isIPv6Address(hostname));
+		}
 
-  private final ClientConnectionManager m_clientConMgr;
+		private static void resolveHostAddresses(String cn,
+				Collection<String> retval) {
+			try {
+				InetAddress[] addresses = InetAddress.getAllByName(cn);
+				for (InetAddress address : addresses) {
+					retval.add(address.getHostAddress());
+				}
+			} catch (UnknownHostException e) {
+				Dbg.d(e);
+			}
+		}
 
-  public WeaveTransport() {
-    this(WeaveConstants.CONNECTION_POOL_ENABLED_DEFAULT);
-  }
+		@Override
+		public void verify(String host, String[] cns, String[] subjectAlts)
+				throws SSLException {
+			if (isIPAddress(host) && cns != null && cns.length > 0
+					&& cns[0] != null) {
+				HashSet<String> expandedAlts = new HashSet<String>();
+				resolveHostAddresses(cns[0], expandedAlts);
+				if (subjectAlts != null)
+					expandedAlts.addAll(Arrays.asList(subjectAlts));
+				subjectAlts = expandedAlts.toArray(new String[expandedAlts
+						.size()]);
+			}
+			verify(host, cns, subjectAlts, false);
+		}
+	}
+	@SuppressWarnings("serial")
+	public static class WeaveResponseException extends HttpResponseException {
 
-  public WeaveTransport(boolean useConnectionPool) {
-    this(useConnectionPool, WeaveConstants.ALLOW_INVALID_CERTS_DEFAULT);
-  }
+		private final WeaveResponseHeaders m_responseHeaders;
 
-  public WeaveTransport(boolean useConnectionPool, boolean allowInvalidCerts) {
-    m_sslSocketFactory = createSocketFactory(allowInvalidCerts);
-    m_clientConMgr = useConnectionPool ? createClientConnectionManager(true) : null;
-  }
+		public WeaveResponseException(int statusCode, String reasonPhrase,
+				HttpResponse response) {
+			// super(statusCode, String.format("statusCode = %s ; reason = %s",
+			// statusCode, reasonPhrase));
+			super(statusCode, reasonPhrase);
+			m_responseHeaders = new WeaveResponseHeaders(response);
+		}
 
-  public void shutdown() {
-//    if (m_clientConMgr != null)
-//      m_clientConMgr.shutdown();
-  }
+		public WeaveResponseHeaders getResponseHeaders() {
+			return m_responseHeaders;
+		}
 
-  public WeaveResponse execDeleteMethod(String username, String password, URI uri) throws IOException, WeaveException {
-    HttpDelete method = new HttpDelete(uri);
-    return execGenericMethod(username, password, uri, method);
-  }
+		@Override
+		public String toString() {
+			String s = getClass().getName();
+			s += ": (statusCode=" + getStatusCode() + ")";
+			String message = getLocalizedMessage();
+			return (message != null) ? (s + " : " + message) : s;
+		}
+	}
 
-  public WeaveResponse execGetMethod(String username, String password, URI uri) throws IOException, WeaveException {
-    HttpGet method = new HttpGet(uri);
-    return execGenericMethod(username, password, uri, method);
-  }
+	public static class WeaveResponseHeaders {
+		private final Header[] m_headers;
 
-  public WeaveResponse execPostMethod(String username, String password, URI uri, HttpEntity entity)
-      throws IOException, WeaveException {
-    HttpPost method = new HttpPost(uri);
-    method.setEntity(entity);
-    return execGenericMethod(username, password, uri, method);
-  }
+		public WeaveResponseHeaders(HttpResponse response) {
+			m_headers = response.getAllHeaders();
+		}
 
-  public WeaveResponse execPutMethod(String username, String password, URI uri, HttpEntity entity)
-      throws IOException, WeaveException {
-    HttpPut method = new HttpPut(uri);
-    method.setEntity(entity);
-    return execGenericMethod(username, password, uri, method);
-  }
+		public long getBackoffSeconds() {
+			long retval = 0;
+			try {
+				String valStr = getHeaderValue(WeaveHeader.X_WEAVE_BACKOFF);
+				if (valStr != null)
+					retval = Long.parseLong(valStr);
+			} catch (Exception ignored) {
+			}
+			return retval;
+		}
 
-  private void setMethodHeaders(HttpMessage method) {
-    method.addHeader("Pragma","no-cache");
-    method.addHeader("Cache-Control","no-cache");
-  }
+		public Header[] getHeaders() {
+			return m_headers;
+		}
 
-  private WeaveResponse execGenericMethod(String username, String password, URI uri, HttpRequestBase method)
-      throws IOException, WeaveException {
-    HttpClient client = null;
-    try {
-      client = createHttpClient(username, password);
-      return execGenericMethod(client, uri, method);
-//    } catch (IOException e) {
-//      throw new WeaveException("Unable to communicate with Weave server.", e);
-    } finally {
-      if (m_clientConMgr == null && client != null) {
-        client.getConnectionManager().shutdown();
-      }
-    }
-  }
+		private String getHeaderValue(String headerName) {
+			for (Header header : m_headers) {
+				if (headerName.equals(header.getName()))
+					return header.getValue();
+			}
+			return null;
+		}
 
-  private WeaveResponse execGenericMethod(HttpClient client, URI uri, HttpRequestBase method) throws IOException, WeaveException {
-    setMethodHeaders(method);
-    MyResponseHandler responseHandler = sm_responseHandler;
-    String scheme = uri.getScheme();
-    String hostname = uri.getHost();
-    int port = uri.getPort();
-    HttpHost httpHost = new HttpHost(hostname, port, scheme);
-    WeaveResponseHeaders responseHeaders = null;
-    try
-    {
-      WeaveResponse response = client.execute(httpHost, method, responseHandler);
-      response.setUri(uri);
-      responseHeaders = response.getResponseHeaders();
-      return response;
-    } catch (WeaveResponseException e) {
-      responseHeaders = e.getResponseHeaders();
-      throw e;
-    } finally {
-      if (responseHeaders != null) {
-//        long backoff = responseHeaders.getBackoffSeconds();
-//        if (backoff > 0) {
-//          long newbackoff = System.currentTimeMillis() + backoff;
-//          m_backoff.set(newbackoff);
-//        }
-      }
-    }
-  }
+		private String getHeaderValue(WeaveHeader header) {
+			return getHeaderValue(header.getName());
+		}
 
-  private DefaultHttpClient createDefaultHttpClient() {
-    ClientConnectionManager connectionManager;
-    if (m_clientConMgr != null) {
-      connectionManager = m_clientConMgr;
-    } else {
-      connectionManager = createClientConnectionManager(false);
-    }
-    return new DefaultHttpClient(connectionManager, sm_httpParams);
-  }
+		public Date getServerTimestamp() {
+			Date retval = null;
+			String ststamp = getHeaderValue(WeaveHeader.X_WEAVE_TIMESTAMP);
+			if (ststamp != null)
+				retval = WeaveUtil.toModifiedTimeDate(ststamp);
+			return retval;
+		}
+	}
 
-  private HttpClient createHttpClient(String userId, String password) {
-    DefaultHttpClient retval = createDefaultHttpClient();
-    Credentials defaultcreds = new UsernamePasswordCredentials(userId, password);
-    retval.getCredentialsProvider().setCredentials(AuthScope.ANY, defaultcreds);
-    retval.addRequestInterceptor(sm_preemptiveAuth, 0);
-    return retval;
-  }
+	private static final int HTTP_PORT_DEFAULT = 80;
 
+	private static final int HTTPS_PORT_DEFAULT = 443;
 
-  private ClientConnectionManager createClientConnectionManager(boolean threadSafe) {
-    SchemeRegistry schemeRegistry = new SchemeRegistry();
-    schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), HTTP_PORT_DEFAULT));
-    schemeRegistry.register(new Scheme("https", m_sslSocketFactory, HTTPS_PORT_DEFAULT));
-    if (threadSafe) {
-      return new ThreadSafeClientConnManager(sm_httpParams, schemeRegistry);
-    } else {
-      return new SingleClientConnManager(sm_httpParams, schemeRegistry);
-    }
-  }
+	private static final HttpRequestInterceptor sm_preemptiveAuth = new MyInterceptor();
 
-  private static SocketFactory createSocketFactory(boolean allowInvalidCerts) {
-    SocketFactory sslSocketFactory;
-    if (allowInvalidCerts) {
-      sslSocketFactory = new WeaveSSLSocketFactory();
-    } else {
-      sslSocketFactory = SSLSocketFactory.getSocketFactory();
-      ((SSLSocketFactory)sslSocketFactory).setHostnameVerifier(new WeaveHostnameVerifier());
-    }
-    return sslSocketFactory;
-  }
+	private static final MyResponseHandler sm_responseHandler = new MyResponseHandler();
 
-  public static class WeaveResponseHeaders {
-    private final Header[] m_headers;
+	private static final HttpParams sm_httpParams;
 
-    public WeaveResponseHeaders(HttpResponse response) {
-      m_headers = response.getAllHeaders();
-    }
+	static {
+		HttpParams params = new BasicHttpParams();
+		HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
+		HttpProtocolParams.setContentCharset(params, "UTF-8");
+		HttpProtocolParams.setUserAgent(params, WeaveConstants.USER_AGENT);
+		HttpProtocolParams.setUseExpectContinue(params, false);
+		// params.setParameter(HttpProtocolParams.USE_EXPECT_CONTINUE, false);
+		params.setParameter(ConnManagerPNames.MAX_TOTAL_CONNECTIONS, 30);
+		params.setParameter(ConnManagerPNames.MAX_CONNECTIONS_PER_ROUTE,
+				new ConnPerRouteBean(30));
+		sm_httpParams = params;
+	}
 
-    public Header[] getHeaders() {
-      return m_headers;
-    }
+	private static SocketFactory createSocketFactory(boolean allowInvalidCerts) {
+		SocketFactory sslSocketFactory;
+		if (allowInvalidCerts) {
+			sslSocketFactory = new WeaveSSLSocketFactory();
+		} else {
+			sslSocketFactory = SSLSocketFactory.getSocketFactory();
+			((SSLSocketFactory) sslSocketFactory)
+					.setHostnameVerifier(new WeaveHostnameVerifier());
+		}
+		return sslSocketFactory;
+	}
 
-    public Date getServerTimestamp() {
-      Date retval = null;
-      String ststamp = getHeaderValue(WeaveHeader.X_WEAVE_TIMESTAMP);
-      if (ststamp != null)
-        retval = WeaveUtil.toModifiedTimeDate(ststamp);
-      return retval;
-    }
+	private final SocketFactory m_sslSocketFactory;
 
-    public long getBackoffSeconds() {
-      long retval = 0;
-      try
-      {
-        String valStr = getHeaderValue(WeaveHeader.X_WEAVE_BACKOFF);
-        if (valStr != null)
-          retval = Long.parseLong(valStr);
-      } catch (Exception ignored) { }
-      return retval;
-    }
+	private final ClientConnectionManager m_clientConMgr;
 
-    private String getHeaderValue(WeaveHeader header) {
-      return getHeaderValue(header.getName());
-    }
+	public WeaveTransport() {
+		this(WeaveConstants.CONNECTION_POOL_ENABLED_DEFAULT);
+	}
 
-    private String getHeaderValue(String headerName) {
-      for (Header header : m_headers) {
-        if (headerName.equals(header.getName()))
-          return header.getValue();
-      }
-      return null;
-    }
-  }
+	public WeaveTransport(boolean useConnectionPool) {
+		this(useConnectionPool, WeaveConstants.ALLOW_INVALID_CERTS_DEFAULT);
+	}
 
-  @SuppressWarnings("serial")
-  public static class WeaveResponseException extends HttpResponseException {
+	public WeaveTransport(boolean useConnectionPool, boolean allowInvalidCerts) {
+		m_sslSocketFactory = createSocketFactory(allowInvalidCerts);
+		m_clientConMgr = useConnectionPool ? createClientConnectionManager(true)
+				: null;
+	}
 
-    private final WeaveResponseHeaders m_responseHeaders;
+	private ClientConnectionManager createClientConnectionManager(
+			boolean threadSafe) {
+		SchemeRegistry schemeRegistry = new SchemeRegistry();
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory
+				.getSocketFactory(), HTTP_PORT_DEFAULT));
+		schemeRegistry.register(new Scheme("https", m_sslSocketFactory,
+				HTTPS_PORT_DEFAULT));
+		if (threadSafe) {
+			return new ThreadSafeClientConnManager(sm_httpParams,
+					schemeRegistry);
+		} else {
+			return new SingleClientConnManager(sm_httpParams, schemeRegistry);
+		}
+	}
 
-    public WeaveResponseException(int statusCode, String reasonPhrase, HttpResponse response) {
-//      super(statusCode, String.format("statusCode = %s ; reason = %s", statusCode, reasonPhrase));
-      super(statusCode, reasonPhrase);
-      m_responseHeaders = new WeaveResponseHeaders(response);
-    }
+	private DefaultHttpClient createDefaultHttpClient() {
+		ClientConnectionManager connectionManager;
+		if (m_clientConMgr != null) {
+			connectionManager = m_clientConMgr;
+		} else {
+			connectionManager = createClientConnectionManager(false);
+		}
+		return new DefaultHttpClient(connectionManager, sm_httpParams);
+	}
 
-    public WeaveResponseHeaders getResponseHeaders() {
-      return m_responseHeaders;
-    }
+	private HttpClient createHttpClient(String userId, String password) {
+		DefaultHttpClient retval = createDefaultHttpClient();
+		Credentials defaultcreds = new UsernamePasswordCredentials(userId,
+				password);
+		retval.getCredentialsProvider().setCredentials(AuthScope.ANY,
+				defaultcreds);
+		retval.addRequestInterceptor(sm_preemptiveAuth, 0);
+		return retval;
+	}
 
-    @Override
-    public String toString() {
-      String s = getClass().getName();
-      s += ": (statusCode=" + getStatusCode() + ")";
-      String message = getLocalizedMessage();
-      return (message != null) ? (s + " : " + message) : s;
-    }
-  }
+	public WeaveResponse execDeleteMethod(String username, String password,
+			URI uri) throws IOException, WeaveException {
+		HttpDelete method = new HttpDelete(uri);
+		return execGenericMethod(username, password, uri, method);
+	}
 
-  /**
-   * Based on BasicResponseHandler
-   */
-  private static class MyResponseHandler implements ResponseHandler<WeaveResponse> {
+	private WeaveResponse execGenericMethod(HttpClient client, URI uri,
+			HttpRequestBase method) throws IOException, WeaveException {
+		setMethodHeaders(method);
+		MyResponseHandler responseHandler = sm_responseHandler;
+		String scheme = uri.getScheme();
+		String hostname = uri.getHost();
+		int port = uri.getPort();
+		HttpHost httpHost = new HttpHost(hostname, port, scheme);
+		WeaveResponseHeaders responseHeaders = null;
+		try {
+			WeaveResponse response = client.execute(httpHost, method,
+					responseHandler);
+			response.setUri(uri);
+			responseHeaders = response.getResponseHeaders();
+			return response;
+		} catch (WeaveResponseException e) {
+			responseHeaders = e.getResponseHeaders();
+			throw e;
+		} finally {
+			if (responseHeaders != null) {
+				// long backoff = responseHeaders.getBackoffSeconds();
+				// if (backoff > 0) {
+				// long newbackoff = System.currentTimeMillis() + backoff;
+				// m_backoff.set(newbackoff);
+				// }
+			}
+		}
+	}
 
-    /**
-     * Returns the response body as a String if the response was successful (a 2xx status code). If no response body
-     * exists, this returns null. If the response was unsuccessful (>= 300 status code), throws an
-     * {@link org.apache.http.client.HttpResponseException}.
-     */
-    public WeaveResponse handleResponse(final HttpResponse response) throws HttpResponseException, IOException {
-      StatusLine statusLine = response.getStatusLine();
-      if (statusLine.getStatusCode() >= 300) {
-        throw new WeaveResponseException(statusLine.getStatusCode(), statusLine.getReasonPhrase(), response);
-      }
-      return new WeaveResponse(response);
-    }
-  }
+	private WeaveResponse execGenericMethod(String username, String password,
+			URI uri, HttpRequestBase method) throws IOException, WeaveException {
+		HttpClient client = null;
+		try {
+			client = createHttpClient(username, password);
+			return execGenericMethod(client, uri, method);
+			// } catch (IOException e) {
+			// throw new
+			// WeaveException("Unable to communicate with Weave server.", e);
+		} finally {
+			if (m_clientConMgr == null && client != null) {
+				client.getConnectionManager().shutdown();
+			}
+		}
+	}
 
-  private static class MyInterceptor implements HttpRequestInterceptor {
+	public WeaveResponse execGetMethod(String username, String password, URI uri)
+			throws IOException, WeaveException {
+		HttpGet method = new HttpGet(uri);
+		return execGenericMethod(username, password, uri, method);
+	}
 
-    public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException {
-      AuthState authState = (AuthState)context.getAttribute(ClientContext.TARGET_AUTH_STATE);
-      CredentialsProvider credsProvider = (CredentialsProvider)context.getAttribute(ClientContext.CREDS_PROVIDER);
-      HttpHost targetHost = (HttpHost)context.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
-      if (authState.getAuthScheme() == null) {
-        AuthScope authScope = new AuthScope(targetHost.getHostName(), targetHost.getPort());
-        Credentials creds = credsProvider.getCredentials(authScope);
-        if (creds != null) {
-          authState.setAuthScheme(new BasicScheme());
-          authState.setCredentials(creds);
-        }
-      }
-    }
-  }
+	public WeaveResponse execPostMethod(String username, String password,
+			URI uri, HttpEntity entity) throws IOException, WeaveException {
+		HttpPost method = new HttpPost(uri);
+		method.setEntity(entity);
+		return execGenericMethod(username, password, uri, method);
+	}
 
-  /**
-   * @author Patrick Woodworth
-   */
-  static class WeaveHostnameVerifier extends AbstractVerifier {
+	public WeaveResponse execPutMethod(String username, String password,
+			URI uri, HttpEntity entity) throws IOException, WeaveException {
+		HttpPut method = new HttpPut(uri);
+		method.setEntity(entity);
+		return execGenericMethod(username, password, uri, method);
+	}
 
-    public void verify(String host, String[] cns, String[] subjectAlts) throws SSLException {
-      if (isIPAddress(host) && cns != null && cns.length > 0 && cns[0] != null) {
-        HashSet<String> expandedAlts = new HashSet<String>();
-        resolveHostAddresses(cns[0], expandedAlts);
-        if (subjectAlts != null)
-          expandedAlts.addAll(Arrays.asList(subjectAlts));
-        subjectAlts = expandedAlts.toArray(new String[expandedAlts.size()]);
-      }
-      verify(host, cns, subjectAlts, false);
-    }
+	private void setMethodHeaders(HttpMessage method) {
+		method.addHeader("Pragma", "no-cache");
+		method.addHeader("Cache-Control", "no-cache");
+	}
 
-    private static void resolveHostAddresses(String cn, Collection<String> retval) {
-      try {
-        InetAddress[] addresses = InetAddress.getAllByName(cn);
-        for (InetAddress address : addresses) {
-          retval.add(address.getHostAddress());
-        }
-      } catch (UnknownHostException e) {
-        Dbg.d(e);
-      }
-    }
-
-    private static boolean isIPAddress(final String hostname) {
-      return hostname != null &&
-          (InetAddressUtils.isIPv4Address(hostname) ||
-              InetAddressUtils.isIPv6Address(hostname));
-    }
-  }
+	public void shutdown() {
+		// if (m_clientConMgr != null)
+		// m_clientConMgr.shutdown();
+	}
 }

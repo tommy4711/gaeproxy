@@ -33,25 +33,28 @@ public class ChangelogActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+
 		Window w = getWindow();
 		w.requestFeature(Window.FEATURE_LEFT_ICON);
-		
+
 		setContentView(R.layout.changelog_activity);
-		
-		w.setFeatureDrawableResource(Window.FEATURE_LEFT_ICON, android.R.drawable.ic_dialog_info);
-		
-		TextView changelogText = (TextView) findViewById(R.id.ChangelogContent);		
+
+		w.setFeatureDrawableResource(Window.FEATURE_LEFT_ICON,
+				android.R.drawable.ic_dialog_info);
+
+		TextView changelogText = (TextView) findViewById(R.id.ChangelogContent);
 		changelogText.setText(ApplicationUtils.getChangelogString(this));
-		
-		Button closeBtn = (Button) this.findViewById(R.id.ChangelogActivity_CloseBtn);
-		 closeBtn.setOnClickListener(new View.OnClickListener() {
 
-			 public void onClick(View view) {            	
-				 finish();
-			 }
+		Button closeBtn = (Button) this
+				.findViewById(R.id.ChangelogActivity_CloseBtn);
+		closeBtn.setOnClickListener(new View.OnClickListener() {
 
-		 });
+			@Override
+			public void onClick(View view) {
+				finish();
+			}
+
+		});
 	}
 
 }

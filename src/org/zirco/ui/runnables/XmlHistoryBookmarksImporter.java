@@ -8,12 +8,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.gaeproxy.R;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import org.gaeproxy.R;
 import org.zirco.providers.BookmarksProviderWrapper;
 import org.zirco.utils.ApplicationUtils;
 import org.zirco.utils.DateUtils;
@@ -28,137 +28,182 @@ import android.util.Log;
 /**
  * Runnable to import history and bookmarks from an XML file.
  */
-public class XmlHistoryBookmarksImporter implements Runnable {	
-	
+public class XmlHistoryBookmarksImporter implements Runnable {
+
 	private Context mContext;
 	private String mFileName;
-	
+
 	private ProgressDialog mProgressDialog;
-	
+
 	private String mErrorMessage = null;
-	
+
+	private Handler mHandler = new Handler() {
+		@Override
+		public void handleMessage(Message msg) {
+			if (mProgressDialog != null) {
+				mProgressDialog.dismiss();
+			}
+
+			if (mErrorMessage != null) {
+				ApplicationUtils
+						.showOkDialog(
+								mContext,
+								android.R.drawable.ic_dialog_alert,
+								mContext.getResources()
+										.getString(
+												R.string.Commons_HistoryBookmarksImportSDCardFailedTitle),
+								String.format(
+										mContext.getResources()
+												.getString(
+														R.string.Commons_HistoryBookmarksFailedMessage),
+										mErrorMessage));
+
+			}
+		}
+	};
+
 	/**
 	 * Constructor.
-	 * @param context The current context.
-	 * @param fileName The file to import.
-	 * @param progressDialog The progress dialog shown during import.
+	 * 
+	 * @param context
+	 *            The current context.
+	 * @param fileName
+	 *            The file to import.
+	 * @param progressDialog
+	 *            The progress dialog shown during import.
 	 */
-	public XmlHistoryBookmarksImporter(Context context, String fileName, ProgressDialog progressDialog) {
+	public XmlHistoryBookmarksImporter(Context context, String fileName,
+			ProgressDialog progressDialog) {
 		mContext = context;
 		mFileName = fileName;
 		mProgressDialog = progressDialog;
 	}
-	
+
 	/**
-	 * Get the content of a node, why Android does not include Node.getTextContent() ?
-	 * @param node The node.
+	 * Get the content of a node, why Android does not include
+	 * Node.getTextContent() ?
+	 * 
+	 * @param node
+	 *            The node.
 	 * @return The node content.
 	 */
 	private String getNodeContent(Node node) {
 		StringBuffer buffer = new StringBuffer();
 		NodeList childList = node.getChildNodes();
 		for (int i = 0; i < childList.getLength(); i++) {
-		    Node child = childList.item(i);
-		    if (child.getNodeType() != Node.TEXT_NODE) {
-		        continue; // skip non-text nodes
-		    }
-		    buffer.append(child.getNodeValue());
+			Node child = childList.item(i);
+			if (child.getNodeType() != Node.TEXT_NODE) {
+				continue; // skip non-text nodes
+			}
+			buffer.append(child.getNodeValue());
 		}
 
-		return buffer.toString(); 
+		return buffer.toString();
 	}
-	
+
 	@Override
 	public void run() {
-		
+
 		File file = new File(IOUtils.getBookmarksExportFolder(), mFileName);
-		
-		if ((file != null) &&
-				(file.exists()) &&
-				(file.canRead())) {
-			
+
+		if ((file != null) && (file.exists()) && (file.canRead())) {
+
 			try {
-			
-				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();				
+
+				DocumentBuilderFactory factory = DocumentBuilderFactory
+						.newInstance();
 				DocumentBuilder builder;
 
 				builder = factory.newDocumentBuilder();
 
 				Document document = builder.parse(file);
-				
+
 				Element root = document.getDocumentElement();
-				
-				if ((root != null) &&
-						(root.getNodeName().equals("itemlist"))) {
-					
+
+				if ((root != null) && (root.getNodeName().equals("itemlist"))) {
+
 					NodeList itemsList = root.getElementsByTagName("item");
-					
+
 					Node item;
 					NodeList record;
 					Node dataItem;
-					
+
 					for (int i = 0; i < itemsList.getLength(); i++) {
-						
+
 						item = itemsList.item(i);
-						
+
 						if (item != null) {
 							record = item.getChildNodes();
-							
+
 							String title = null;
 							String url = null;
 							int visits = 0;
 							long date = -1;
 							long created = -1;
 							int bookmark = 0;
-							
+
 							for (int j = 0; j < record.getLength(); j++) {
-								dataItem = record.item(j);																
-								
-								if ((dataItem != null) &&
-										(dataItem.getNodeName() != null)) {
-									
+								dataItem = record.item(j);
+
+								if ((dataItem != null)
+										&& (dataItem.getNodeName() != null)) {
+
 									if (dataItem.getNodeName().equals("title")) {
-										title = URLDecoder.decode(getNodeContent(dataItem));										
-									} else if (dataItem.getNodeName().equals("url")) {
-										url = URLDecoder.decode(getNodeContent(dataItem));
-									} else if (dataItem.getNodeName().equals("visits")) {
+										title = URLDecoder
+												.decode(getNodeContent(dataItem));
+									} else if (dataItem.getNodeName().equals(
+											"url")) {
+										url = URLDecoder
+												.decode(getNodeContent(dataItem));
+									} else if (dataItem.getNodeName().equals(
+											"visits")) {
 										try {
-											visits = Integer.parseInt(getNodeContent(dataItem));
+											visits = Integer
+													.parseInt(getNodeContent(dataItem));
 										} catch (Exception e) {
 											visits = 0;
 										}
-									} else if (dataItem.getNodeName().equals("date")) {
+									} else if (dataItem.getNodeName().equals(
+											"date")) {
 										try {
-											date = Long.parseLong(getNodeContent(dataItem));
+											date = Long
+													.parseLong(getNodeContent(dataItem));
 										} catch (Exception e) {
 											date = -1;
 										}
-									} else if (dataItem.getNodeName().equals("created")) {
+									} else if (dataItem.getNodeName().equals(
+											"created")) {
 										try {
-											created = Long.parseLong(getNodeContent(dataItem));
+											created = Long
+													.parseLong(getNodeContent(dataItem));
 										} catch (Exception e) {
 											created = -1;
 										}
-									} else if (dataItem.getNodeName().equals("bookmark")) {
+									} else if (dataItem.getNodeName().equals(
+											"bookmark")) {
 										try {
-											bookmark = Integer.parseInt(getNodeContent(dataItem));
+											bookmark = Integer
+													.parseInt(getNodeContent(dataItem));
 										} catch (Exception e) {
 											bookmark = 0;
 										}
 									}
 								}
 							}
-							
-							BookmarksProviderWrapper.insertRawRecord(mContext.getContentResolver(), title, url, visits, date, created, bookmark);
+
+							BookmarksProviderWrapper.insertRawRecord(
+									mContext.getContentResolver(), title, url,
+									visits, date, created, bookmark);
 						}
 					}
-					
-				} else if ((root != null) &&
-						(root.getNodeName().equals("bookmarkslist"))) {
+
+				} else if ((root != null)
+						&& (root.getNodeName().equals("bookmarkslist"))) {
 					// Old export format (before 0.4.0).
-					
-					NodeList bookmarksList = root.getElementsByTagName("bookmark");
-					
+
+					NodeList bookmarksList = root
+							.getElementsByTagName("bookmark");
+
 					Node bookmark;
 					NodeList bookmarkItems;
 					String title;
@@ -168,52 +213,60 @@ public class XmlHistoryBookmarksImporter implements Runnable {
 					long date = -1;
 					long created = -1;
 					Node item;
-					
+
 					for (int i = 0; i < bookmarksList.getLength(); i++) {
-						
+
 						bookmark = bookmarksList.item(i);
-						
+
 						if (bookmark != null) {
-							
+
 							title = null;
 							url = null;
 							creationDate = null;
 							count = 0;
-							
+
 							bookmarkItems = bookmark.getChildNodes();
-							
+
 							for (int j = 0; j < bookmarkItems.getLength(); j++) {
-								
+
 								item = bookmarkItems.item(j);
-								
-								if ((item != null) &&
-										(item.getNodeName() != null)) {
+
+								if ((item != null)
+										&& (item.getNodeName() != null)) {
 									if (item.getNodeName().equals("title")) {
-										title = getNodeContent(item);										
+										title = getNodeContent(item);
 									} else if (item.getNodeName().equals("url")) {
-										url = URLDecoder.decode(getNodeContent(item));
-									} else if (item.getNodeName().equals("creationdate")) {
+										url = URLDecoder
+												.decode(getNodeContent(item));
+									} else if (item.getNodeName().equals(
+											"creationdate")) {
 										creationDate = getNodeContent(item);
-										
-										date = DateUtils.convertFromDatabase(mContext, creationDate).getTime();
+
+										date = DateUtils.convertFromDatabase(
+												mContext, creationDate)
+												.getTime();
 										created = date;
-										
-									} else if (item.getNodeName().equals("count")) {
+
+									} else if (item.getNodeName().equals(
+											"count")) {
 										try {
-											count = Integer.parseInt(getNodeContent(item));
+											count = Integer
+													.parseInt(getNodeContent(item));
 										} catch (Exception e) {
 											count = 0;
 										}
 									}
 								}
-								
+
 							}
-							
-							BookmarksProviderWrapper.insertRawRecord(mContext.getContentResolver(), title, url, count, date, created, 1);								
+
+							BookmarksProviderWrapper.insertRawRecord(
+									mContext.getContentResolver(), title, url,
+									count, date, created, 1);
 						}
 					}
 				}
-			
+
 			} catch (ParserConfigurationException e) {
 				Log.w("Bookmark import failed", e.getMessage());
 				mErrorMessage = e.toString();
@@ -223,26 +276,10 @@ public class XmlHistoryBookmarksImporter implements Runnable {
 			} catch (IOException e) {
 				Log.w("Bookmark import failed", e.getMessage());
 				mErrorMessage = e.toString();
-			}			
+			}
 		}
-		
+
 		mHandler.sendEmptyMessage(0);
 	}
-	
-	private Handler mHandler = new Handler() {
-		public void handleMessage(Message msg) {
-			if (mProgressDialog != null) {
-				mProgressDialog.dismiss();
-			}
-			
-			if (mErrorMessage != null) {
-				ApplicationUtils.showOkDialog(mContext,
-						android.R.drawable.ic_dialog_alert,
-						mContext.getResources().getString(R.string.Commons_HistoryBookmarksImportSDCardFailedTitle),
-						String.format(mContext.getResources().getString(R.string.Commons_HistoryBookmarksFailedMessage), mErrorMessage));
-				
-			}
-		}
-	};
 
 }

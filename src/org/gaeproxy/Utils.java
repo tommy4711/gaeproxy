@@ -12,6 +12,7 @@ public class Utils {
 	public static int isRoot = -1;
 	public static String ROOT_SHELL = "/system/bin/su";
 	public final static String DEFAULT_SHELL = "/system/bin/sh";
+	public final static String IPTABLES = "/data/data/org.gaeproxy/iptables";
 
 	public static boolean isRoot() {
 
@@ -71,6 +72,36 @@ public class Utils {
 		return isRoot == 1 ? true : false;
 	}
 
+	public static boolean runCommand(String command) {
+
+		Process process = null;
+		DataOutputStream os = null;
+		Log.d(TAG, command);
+		try {
+			process = Runtime.getRuntime().exec(DEFAULT_SHELL);
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(command + "\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+			return false;
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (process != null) {
+					process.destroy();
+				}
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+		return true;
+	}
+
 	public static boolean runRootCommand(String command) {
 
 		if (!isRoot())
@@ -95,36 +126,6 @@ public class Utils {
 				}
 				if (process != null)
 					process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-		return true;
-	}
-	
-	public static boolean runCommand(String command) {
-
-		Process process = null;
-		DataOutputStream os = null;
-		Log.d(TAG, command);
-		try {
-			process = Runtime.getRuntime().exec(DEFAULT_SHELL);
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-			return false;
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (process != null) {
-					process.destroy();
-				}
 			} catch (Exception e) {
 				// nothing
 			}

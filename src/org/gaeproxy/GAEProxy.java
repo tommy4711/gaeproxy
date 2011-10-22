@@ -39,31 +39,17 @@
 package org.gaeproxy;
 
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.flurry.android.FlurryAgent;
-import com.google.ads.AdRequest;
-import com.google.ads.AdSize;
-import com.google.ads.AdView;
-
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningServiceInfo;
 import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -78,7 +64,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
 import android.os.Bundle;
@@ -106,6 +91,11 @@ import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.flurry.android.FlurryAgent;
+import com.google.ads.AdRequest;
+import com.google.ads.AdSize;
+import com.google.ads.AdView;
+
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
 
@@ -114,14 +104,14 @@ public class GAEProxy extends PreferenceActivity implements
 		private String[] path;
 		private boolean fromReceiver;
 
+		private int progress_count = 0;
+
 		public DownloadFileRunnable(boolean fromReceiver, String... path) {
 			this.path = path;
 			this.fromReceiver = fromReceiver;
 			notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
 			nm.notify(notification_id, notification);
 		}
-
-		private int progress_count = 0;
 
 		protected void publishProgress(String progress) {
 			int now = Integer.parseInt(progress);
@@ -132,38 +122,6 @@ public class GAEProxy extends PreferenceActivity implements
 				nm.notify(notification_id, notification);
 				progress_count = now;
 			}
-		}
-
-		public void unzip(String file, String path) {
-			dirChecker(path);
-			try {
-				FileInputStream fin = new FileInputStream(file);
-				ZipInputStream zin = new ZipInputStream(fin);
-				ZipEntry ze = null;
-				while ((ze = zin.getNextEntry()) != null) {
-					if (ze.getName().contains("__MACOSX"))
-						continue;
-//					Log.v("Decompress", "Unzipping " + ze.getName());
-					if (ze.isDirectory()) {
-						dirChecker(path + ze.getName());
-					} else {
-						FileOutputStream fout = new FileOutputStream(path
-								+ ze.getName());
-						byte data[] = new byte[2048];
-						int count;
-						while ((count = zin.read(data)) != -1) {
-							fout.write(data, 0, count);
-						}
-						zin.closeEntry();
-						fout.close();
-					}
-
-				}
-				zin.close();
-			} catch (Exception e) {
-				Log.e("Decompress", "unzip", e);
-			}
-
 		}
 
 		@Override
@@ -274,6 +232,38 @@ public class GAEProxy extends PreferenceActivity implements
 			nm.cancel(notification_id);
 		}
 
+		public void unzip(String file, String path) {
+			dirChecker(path);
+			try {
+				FileInputStream fin = new FileInputStream(file);
+				ZipInputStream zin = new ZipInputStream(fin);
+				ZipEntry ze = null;
+				while ((ze = zin.getNextEntry()) != null) {
+					if (ze.getName().contains("__MACOSX"))
+						continue;
+					// Log.v("Decompress", "Unzipping " + ze.getName());
+					if (ze.isDirectory()) {
+						dirChecker(path + ze.getName());
+					} else {
+						FileOutputStream fout = new FileOutputStream(path
+								+ ze.getName());
+						byte data[] = new byte[2048];
+						int count;
+						while ((count = zin.read(data)) != -1) {
+							fout.write(data, 0, count);
+						}
+						zin.closeEntry();
+						fout.close();
+					}
+
+				}
+				zin.close();
+			} catch (Exception e) {
+				Log.e("Decompress", "unzip", e);
+			}
+
+		}
+
 	}
 
 	private static final String TAG = "GAEProxy";
@@ -287,7 +277,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
 	private boolean isGFWList = false;
-	
+
 	public static String data_path = "/sdcard";
 
 	// Notification Progress Bar
@@ -299,6 +289,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private static final int MSG_INSTALL_SUCCESS = 1;
 	private static final int MSG_INSTALL_FAIL = 2;
 	private static final int MSG_CRASH_RECOVER = 3;
+	private static final int MSG_INITIAL_FINISH = 4;
 
 	final BroadcastReceiver receiver = new BroadcastReceiver() {
 		@Override
@@ -331,6 +322,10 @@ public class GAEProxy extends PreferenceActivity implements
 				ed.putBoolean("isInstalling", false);
 				ed.putBoolean("isRunning", false);
 				break;
+			case MSG_INITIAL_FINISH:
+				if (pd != null)
+					pd.dismiss();
+				break;
 			}
 			ed.commit();
 			super.handleMessage(msg);
@@ -353,6 +348,21 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private Preference proxyedApps;
 	private Preference browser;
+
+	private boolean checkApkExist(String packageName) {
+		if (packageName == null || "".equals(packageName))
+			return false;
+		try {
+			ApplicationInfo info = getPackageManager().getApplicationInfo(
+					packageName, 0);
+			if (info != null)
+				return true;
+			else
+				return false;
+		} catch (NameNotFoundException e) {
+			return false;
+		}
+	}
 
 	private void CopyAssets(String path) {
 
@@ -397,6 +407,14 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 	}
 
+	private void dirChecker(String dir) {
+		File f = new File(dir);
+
+		if (!f.isDirectory()) {
+			f.mkdirs();
+		}
+	}
+
 	private void disableAll() {
 		proxyText.setEnabled(false);
 		portText.setEnabled(false);
@@ -430,42 +448,6 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyTypeList.setEnabled(true);
 	}
 
-	private void dirChecker(String dir) {
-		File f = new File(dir);
-
-		if (!f.isDirectory()) {
-			f.mkdirs();
-		}
-	}
-
-	@Override
-	public boolean onKeyDown(int keyCode, KeyEvent event) {
-		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) { // 按下的如果是BACK，同时没有重复
-			try {
-				finish();
-			} catch (Exception ignore) {
-				// Nothing
-			}
-			return true;
-		}
-		return super.onKeyDown(keyCode, event);
-	}
-
-	private boolean checkApkExist(String packageName) {
-		if (packageName == null || "".equals(packageName))
-			return false;
-		try {
-			ApplicationInfo info = getPackageManager().getApplicationInfo(
-					packageName, 0);
-			if (info != null)
-				return true;
-			else
-				return false;
-		} catch (NameNotFoundException e) {
-			return false;
-		}
-	}
-
 	private boolean install(boolean fromReceiver) {
 
 		SharedPreferences settings = PreferenceManager
@@ -473,7 +455,8 @@ public class GAEProxy extends PreferenceActivity implements
 		if (settings.getBoolean("isInstalling", false))
 			return false;
 
-		if (data_path.contains("sdcard") && checkApkExist("org.gaeproxy.runtime.module")) {
+		if (data_path.contains("sdcard")
+				&& checkApkExist("org.gaeproxy.runtime.module")) {
 			if (fromReceiver) {
 				unregisterReceiver(receiver);
 				isInstalledCheck.setEnabled(true);
@@ -485,8 +468,11 @@ public class GAEProxy extends PreferenceActivity implements
 						"org.gaeproxy.runtime.module.INSTALL");
 				sendBroadcast(intent);
 				isInstalledCheck.setEnabled(false);
+				showAToast(getString(R.string.downloading));
 				return false;
 			}
+		} else {
+			showAToast(getString(R.string.downloading));
 		}
 
 		Editor ed = settings.edit();
@@ -499,8 +485,8 @@ public class GAEProxy extends PreferenceActivity implements
 		if (countryCode.toLowerCase().equals("cn")) {
 
 			progress = new DownloadFileRunnable(fromReceiver,
-					"http://myhosts.sinaapp.com/python_r2.zip",
-					data_path + "/python.zip", "/data/data/org.gaeproxy/",
+					"http://myhosts.sinaapp.com/python_r2.zip", data_path
+							+ "/python.zip", "/data/data/org.gaeproxy/",
 					"http://myhosts.sinaapp.com/python-extras_r2.zip",
 					data_path + "/python-extras.zip", data_path + "/");
 		} else {
@@ -513,7 +499,6 @@ public class GAEProxy extends PreferenceActivity implements
 					data_path + "/python-extras.zip", data_path + "/");
 		}
 		new Thread(progress).start();
-		showAToast(getString(R.string.downloading));
 		return true;
 	}
 
@@ -525,18 +510,6 @@ public class GAEProxy extends PreferenceActivity implements
 		return false;
 	}
 
-	@Override
-	public void onStart() {
-		super.onStart();
-		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
-	}
-
-	@Override
-	public void onStop() {
-		super.onStop();
-		FlurryAgent.onEndSession(this);
-	}
-
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -544,8 +517,9 @@ public class GAEProxy extends PreferenceActivity implements
 
 		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.gae_proxy_preference);
+
 		// Create the adView
-		adView = new AdView(this, AdSize.BANNER, "a14d8be8a284afc");
+		adView = new AdView(GAEProxy.this, AdSize.BANNER, "a14d8be8a284afc");
 		// Lookup your LinearLayout assuming it’s been given
 		// the attribute android:id="@+id/mainLayout"
 		LinearLayout layout = (LinearLayout) findViewById(R.id.ad);
@@ -555,35 +529,12 @@ public class GAEProxy extends PreferenceActivity implements
 		AdRequest aq = new AdRequest();
 		// aq.setTesting(true);
 		adView.loadAd(aq);
-		
-		if (Environment.MEDIA_MOUNTED.equals(Environment
-				.getExternalStorageState())) {
-			data_path = Environment.getExternalStorageDirectory().getAbsolutePath();
-		} else {
-			data_path = getFilesDir().getAbsolutePath();
-		}
-		
-		Log.d(TAG, "Python Data Path: " + data_path);
-
-		nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-		notification = new Notification(R.drawable.icon,
-				getString(R.string.download), System.currentTimeMillis());
-		notification.contentView = new RemoteViews(getPackageName(),
-				R.layout.layout_progress_bar);
-		// 使用notification.xml文件作VIEW
-		notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
-		// 设置进度条，最大值 为100,当前值为0，最后一个参数为true时显示条纹
-		// （就是在Android Market下载软件，点击下载但还没获取到目标大小时的状态）
-		Intent notificationIntent = new Intent(this, GAEProxy.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				notificationIntent, 0);
-		notification.contentIntent = contentIntent;
 
 		proxyText = (EditTextPreference) findPreference("proxy");
 		portText = (EditTextPreference) findPreference("port");
 		sitekeyText = (EditTextPreference) findPreference("sitekey");
-		proxyedApps = (Preference) findPreference("proxyedApps");
-		browser = (Preference) findPreference("browser");
+		proxyedApps = findPreference("proxyedApps");
+		browser = findPreference("browser");
 
 		isRunningCheck = (CheckBoxPreference) findPreference("isRunning");
 		isAutoConnectCheck = (CheckBoxPreference) findPreference("isAutoConnect");
@@ -593,10 +544,41 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyTypeList = (ListPreference) findPreference("proxyType");
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
+		pd = ProgressDialog.show(this, "", getString(R.string.initializing),
+				true, false);
+
 		new Thread() {
+			@Override
 			public void run() {
 
+				nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+				notification = new Notification(R.drawable.icon,
+						getString(R.string.download),
+						System.currentTimeMillis());
+				notification.contentView = new RemoteViews(getPackageName(),
+						R.layout.layout_progress_bar);
+				// 使用notification.xml文件作VIEW
+				notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
+				// 设置进度条，最大值 为100,当前值为0，最后一个参数为true时显示条纹
+				// （就是在Android Market下载软件，点击下载但还没获取到目标大小时的状态）
+				Intent notificationIntent = new Intent(GAEProxy.this,
+						GAEProxy.class);
+				PendingIntent contentIntent = PendingIntent.getActivity(
+						GAEProxy.this, 0, notificationIntent, 0);
+				notification.contentIntent = contentIntent;
+
 				if (!GAEProxyService.isServiceStarted()) {
+
+					if (Environment.MEDIA_MOUNTED.equals(Environment
+							.getExternalStorageState())) {
+						data_path = Environment.getExternalStorageDirectory()
+								.getAbsolutePath();
+					} else {
+						data_path = getFilesDir().getAbsolutePath();
+					}
+
+					Log.d(TAG, "Python Data Path: " + data_path);
+
 					CopyAssets("");
 
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
@@ -627,8 +609,27 @@ public class GAEProxy extends PreferenceActivity implements
 				} catch (Exception e) {
 					// Nothing
 				}
+
+				handler.sendEmptyMessage(MSG_INITIAL_FINISH);
 			}
 		}.start();
+	}
+
+	// 点击Menu时，系统调用当前Activity的onCreateOptionsMenu方法，并传一个实现了一个Menu接口的menu对象供你使用
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		/*
+		 * add()方法的四个参数，依次是： 1、组别，如果不分组的话就写Menu.NONE,
+		 * 2、Id，这个很重要，Android根据这个Id来确定不同的菜单 3、顺序，那个菜单现在在前面由这个参数的大小决定
+		 * 4、文本，菜单的显示文本
+		 */
+		menu.add(Menu.NONE, Menu.FIRST + 1, 1, getString(R.string.recovery))
+				.setIcon(android.R.drawable.ic_menu_delete);
+		menu.add(Menu.NONE, Menu.FIRST + 2, 2, getString(R.string.about))
+				.setIcon(android.R.drawable.ic_menu_info_details);
+		// return true才会起作用
+		return true;
+
 	}
 
 	/** Called when the activity is closed. */
@@ -646,6 +647,42 @@ public class GAEProxy extends PreferenceActivity implements
 	}
 
 	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		if (keyCode == KeyEvent.KEYCODE_BACK && event.getRepeatCount() == 0) { // 按下的如果是BACK，同时没有重复
+			try {
+				finish();
+			} catch (Exception ignore) {
+				// Nothing
+			}
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
+	}
+
+	// 菜单项被选择事件
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case Menu.FIRST + 1:
+			recovery();
+			break;
+		case Menu.FIRST + 2:
+			String versionName = "";
+			try {
+				versionName = getPackageManager().getPackageInfo(
+						getPackageName(), 0).versionName;
+			} catch (NameNotFoundException e) {
+				versionName = "";
+			}
+			showAToast(getString(R.string.about) + " (" + versionName + ")\n\n"
+					+ getString(R.string.copy_rights));
+			break;
+		}
+
+		return true;
+	}
+
+	@Override
 	protected void onPause() {
 		super.onPause();
 
@@ -653,7 +690,6 @@ public class GAEProxy extends PreferenceActivity implements
 		getPreferenceScreen().getSharedPreferences()
 				.unregisterOnSharedPreferenceChangeListener(this);
 	}
-	
 
 	@Override
 	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
@@ -731,6 +767,7 @@ public class GAEProxy extends PreferenceActivity implements
 		} else {
 			if (settings.getBoolean("isRunning", false)) {
 				new Thread() {
+					@Override
 					public void run() {
 						recovery();
 						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
@@ -910,6 +947,45 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 	}
 
+	@Override
+	public void onStart() {
+		super.onStart();
+		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
+	}
+
+	@Override
+	public void onStop() {
+		super.onStop();
+		FlurryAgent.onEndSession(this);
+	}
+
+	private void recovery() {
+		try {
+			stopService(new Intent(this, GAEProxyService.class));
+		} catch (Exception e) {
+			// Nothing
+		}
+
+		Utils.runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
+
+		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
+
+		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
+		if (cache.exists())
+			cache.delete();
+
+		CopyAssets("");
+
+		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
+
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+
+	}
+
 	/**
 	 * Called when connect button is clicked.
 	 * 
@@ -1022,73 +1098,6 @@ public class GAEProxy extends PreferenceActivity implements
 						});
 		AlertDialog alert = builder.create();
 		alert.show();
-	}
-
-	// 点击Menu时，系统调用当前Activity的onCreateOptionsMenu方法，并传一个实现了一个Menu接口的menu对象供你使用
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		/*
-		 * add()方法的四个参数，依次是： 1、组别，如果不分组的话就写Menu.NONE,
-		 * 2、Id，这个很重要，Android根据这个Id来确定不同的菜单 3、顺序，那个菜单现在在前面由这个参数的大小决定
-		 * 4、文本，菜单的显示文本
-		 */
-		menu.add(Menu.NONE, Menu.FIRST + 1, 1, getString(R.string.recovery))
-				.setIcon(android.R.drawable.ic_menu_delete);
-		menu.add(Menu.NONE, Menu.FIRST + 2, 2, getString(R.string.about))
-				.setIcon(android.R.drawable.ic_menu_info_details);
-		// return true才会起作用
-		return true;
-
-	}
-
-	// 菜单项被选择事件
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case Menu.FIRST + 1:
-			recovery();
-			break;
-		case Menu.FIRST + 2:
-			String versionName = "";
-			try {
-				versionName = getPackageManager().getPackageInfo(
-						getPackageName(), 0).versionName;
-			} catch (NameNotFoundException e) {
-				versionName = "";
-			}
-			showAToast(getString(R.string.about) + " (" + versionName + ")\n\n"
-					+ getString(R.string.copy_rights));
-			break;
-		}
-
-		return true;
-	}
-
-	private void recovery() {
-		try {
-			stopService(new Intent(this, GAEProxyService.class));
-		} catch (Exception e) {
-			// Nothing
-		}
-
-		Utils.runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
-
-		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
-
-		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
-		if (cache.exists())
-			cache.delete();
-
-		CopyAssets("");
-
-		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
-
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
-
 	}
 
 }

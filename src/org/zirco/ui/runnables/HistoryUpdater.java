@@ -30,29 +30,39 @@ public class HistoryUpdater implements Runnable {
 	private String mTitle;
 	private String mUrl;
 	private String mOriginalUrl;
-	
+
 	/**
 	 * Constructor.
-	 * @param context The current context.
-	 * @param title The title.
-	 * @param url The url.
+	 * 
+	 * @param context
+	 *            The current context.
+	 * @param title
+	 *            The title.
+	 * @param url
+	 *            The url.
 	 */
-	public HistoryUpdater(Context context, String title, String url, String originalUrl) {
+	public HistoryUpdater(Context context, String title, String url,
+			String originalUrl) {
 		mContext = context;
 		mTitle = title;
 		mUrl = url;
 		mOriginalUrl = originalUrl;
-		
+
 		if (mUrl.startsWith(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT)) {
-			mUrl = mUrl.substring(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT.length());
+			mUrl = mUrl.substring(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT
+					.length());
 		}
 	}
-	
+
 	@Override
 	public void run() {
-		BookmarksProviderWrapper.updateHistory(mContext.getContentResolver(), mTitle, mUrl, mOriginalUrl);
-		BookmarksProviderWrapper.truncateHistory(mContext.getContentResolver(),
-				PreferenceManager.getDefaultSharedPreferences(mContext).getString(Constants.PREFERENCES_BROWSER_HISTORY_SIZE, "90"));
+		BookmarksProviderWrapper.updateHistory(mContext.getContentResolver(),
+				mTitle, mUrl, mOriginalUrl);
+		BookmarksProviderWrapper.truncateHistory(
+				mContext.getContentResolver(),
+				PreferenceManager.getDefaultSharedPreferences(mContext)
+						.getString(Constants.PREFERENCES_BROWSER_HISTORY_SIZE,
+								"90"));
 	}
 
 }

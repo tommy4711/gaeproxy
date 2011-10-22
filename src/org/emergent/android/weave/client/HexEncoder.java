@@ -5,153 +5,136 @@ import java.io.OutputStream;
 
 class HexEncoder {
 
-  protected final byte[] encodingTable =
-      {
-          (byte)'0', (byte)'1', (byte)'2', (byte)'3', (byte)'4', (byte)'5', (byte)'6', (byte)'7',
-          (byte)'8', (byte)'9', (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e', (byte)'f'
-      };
+	protected final byte[] encodingTable = { (byte) '0', (byte) '1',
+			(byte) '2', (byte) '3', (byte) '4', (byte) '5', (byte) '6',
+			(byte) '7', (byte) '8', (byte) '9', (byte) 'a', (byte) 'b',
+			(byte) 'c', (byte) 'd', (byte) 'e', (byte) 'f' };
 
-  /*
-  * set up the decoding table.
-  */
-  protected final byte[] decodingTable = new byte[128];
+	/*
+	 * set up the decoding table.
+	 */
+	protected final byte[] decodingTable = new byte[128];
 
-  protected void initialiseDecodingTable() {
-    for (int i = 0; i < encodingTable.length; i++) {
-      decodingTable[encodingTable[i]] = (byte)i;
-    }
+	public HexEncoder() {
+		initialiseDecodingTable();
+	}
 
-    decodingTable['A'] = decodingTable['a'];
-    decodingTable['B'] = decodingTable['b'];
-    decodingTable['C'] = decodingTable['c'];
-    decodingTable['D'] = decodingTable['d'];
-    decodingTable['E'] = decodingTable['e'];
-    decodingTable['F'] = decodingTable['f'];
-  }
+	/**
+	 * decode the Hex encoded byte data writing it to the given output stream,
+	 * whitespace characters will be ignored.
+	 * 
+	 * @return the number of bytes produced.
+	 */
+	public int decode(byte[] data, int off, int length, OutputStream out)
+			throws IOException {
+		byte b1, b2;
+		int outLen = 0;
 
-  public HexEncoder() {
-    initialiseDecodingTable();
-  }
+		int end = off + length;
 
-  /**
-   * encode the input data producing a Hex output stream.
-   *
-   * @return the number of bytes produced.
-   */
-  public int encode(
-      byte[] data,
-      int off,
-      int length,
-      OutputStream out)
-      throws IOException
-  {
-    for (int i = off; i < (off + length); i++) {
-      int v = data[i] & 0xff;
+		while (end > off) {
+			if (!ignore((char) data[end - 1])) {
+				break;
+			}
 
-      out.write(encodingTable[(v >>> 4)]);
-      out.write(encodingTable[v & 0xf]);
-    }
+			end--;
+		}
 
-    return length * 2;
-  }
+		int i = off;
+		while (i < end) {
+			while (i < end && ignore((char) data[i])) {
+				i++;
+			}
 
-  private boolean ignore(
-      char c)
-  {
-    return (c == '\n' || c == '\r' || c == '\t' || c == ' ');
-  }
+			b1 = decodingTable[data[i++]];
 
-  /**
-   * decode the Hex encoded byte data writing it to the given output stream,
-   * whitespace characters will be ignored.
-   *
-   * @return the number of bytes produced.
-   */
-  public int decode(
-      byte[] data,
-      int off,
-      int length,
-      OutputStream out)
-      throws IOException
-  {
-    byte b1, b2;
-    int outLen = 0;
+			while (i < end && ignore((char) data[i])) {
+				i++;
+			}
 
-    int end = off + length;
+			b2 = decodingTable[data[i++]];
 
-    while (end > off) {
-      if (!ignore((char)data[end - 1])) {
-        break;
-      }
+			out.write((b1 << 4) | b2);
 
-      end--;
-    }
+			outLen++;
+		}
 
-    int i = off;
-    while (i < end) {
-      while (i < end && ignore((char)data[i])) {
-        i++;
-      }
+		return outLen;
+	}
 
-      b1 = decodingTable[data[i++]];
+	/**
+	 * decode the Hex encoded String data writing it to the given output stream,
+	 * whitespace characters will be ignored.
+	 * 
+	 * @return the number of bytes produced.
+	 */
+	public int decode(String data, OutputStream out) throws IOException {
+		byte b1, b2;
+		int length = 0;
 
-      while (i < end && ignore((char)data[i])) {
-        i++;
-      }
+		int end = data.length();
 
-      b2 = decodingTable[data[i++]];
+		while (end > 0) {
+			if (!ignore(data.charAt(end - 1))) {
+				break;
+			}
 
-      out.write((b1 << 4) | b2);
+			end--;
+		}
 
-      outLen++;
-    }
+		int i = 0;
+		while (i < end) {
+			while (i < end && ignore(data.charAt(i))) {
+				i++;
+			}
 
-    return outLen;
-  }
+			b1 = decodingTable[data.charAt(i++)];
 
-  /**
-   * decode the Hex encoded String data writing it to the given output stream,
-   * whitespace characters will be ignored.
-   *
-   * @return the number of bytes produced.
-   */
-  public int decode(
-      String data,
-      OutputStream out)
-      throws IOException
-  {
-    byte b1, b2;
-    int length = 0;
+			while (i < end && ignore(data.charAt(i))) {
+				i++;
+			}
 
-    int end = data.length();
+			b2 = decodingTable[data.charAt(i++)];
 
-    while (end > 0) {
-      if (!ignore(data.charAt(end - 1))) {
-        break;
-      }
+			out.write((b1 << 4) | b2);
 
-      end--;
-    }
+			length++;
+		}
 
-    int i = 0;
-    while (i < end) {
-      while (i < end && ignore(data.charAt(i))) {
-        i++;
-      }
+		return length;
+	}
 
-      b1 = decodingTable[data.charAt(i++)];
+	/**
+	 * encode the input data producing a Hex output stream.
+	 * 
+	 * @return the number of bytes produced.
+	 */
+	public int encode(byte[] data, int off, int length, OutputStream out)
+			throws IOException {
+		for (int i = off; i < (off + length); i++) {
+			int v = data[i] & 0xff;
 
-      while (i < end && ignore(data.charAt(i))) {
-        i++;
-      }
+			out.write(encodingTable[(v >>> 4)]);
+			out.write(encodingTable[v & 0xf]);
+		}
 
-      b2 = decodingTable[data.charAt(i++)];
+		return length * 2;
+	}
 
-      out.write((b1 << 4) | b2);
+	private boolean ignore(char c) {
+		return (c == '\n' || c == '\r' || c == '\t' || c == ' ');
+	}
 
-      length++;
-    }
+	protected void initialiseDecodingTable() {
+		for (int i = 0; i < encodingTable.length; i++) {
+			decodingTable[encodingTable[i]] = (byte) i;
+		}
 
-    return length;
-  }
+		decodingTable['A'] = decodingTable['a'];
+		decodingTable['B'] = decodingTable['b'];
+		decodingTable['C'] = decodingTable['c'];
+		decodingTable['D'] = decodingTable['d'];
+		decodingTable['E'] = decodingTable['e'];
+		decodingTable['F'] = decodingTable['f'];
+	}
 }

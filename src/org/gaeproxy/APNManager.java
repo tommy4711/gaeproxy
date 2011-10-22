@@ -52,16 +52,6 @@ import android.util.Log;
 
 public class APNManager {
 
-	private static final String ID = "_id";
-	private static final String APN = "apn";
-	private static final String TYPE = "type";
-	private static final String PROXY = "proxy";
-	private static final String PORT = "port";
-	private static final String TAG = "GAEProxyAPNManager";
-
-	private static final Uri CONTENT_URI = Uri
-			.parse("content://telephony/carriers");
-
 	/**
 	 * Selection of few interesting columns from APN table
 	 */
@@ -80,6 +70,51 @@ public class APNManager {
 			this.type = type;
 			this.proxy = proxy;
 			this.port = port;
+		}
+	}
+	private static final String ID = "_id";
+	private static final String APN = "apn";
+	private static final String TYPE = "type";
+	private static final String PROXY = "proxy";
+	private static final String PORT = "port";
+
+	private static final String TAG = "GAEProxyAPNManager";
+
+	private static final Uri CONTENT_URI = Uri
+			.parse("content://telephony/carriers");
+
+	public static void clearAPNProxy(String proxy, String port, Context context) {
+		Cursor cursor = null;
+		ContentResolver resolver = context.getContentResolver();
+		List<ApnInfo> apns = null;
+		try {
+			cursor = resolver.query(CONTENT_URI, new String[] { ID, APN, TYPE,
+					PROXY, PORT }, "proxy is not null", null, null);
+
+			if (cursor == null)
+				return;
+
+			apns = createApnList(cursor);
+
+		} catch (Exception ignore) {
+			// Nothing
+		}
+
+		if (cursor != null) {
+			cursor.close();
+		}
+
+		for (ApnInfo apnInfo : apns) {
+			if (apnInfo.proxy.equals(proxy) && apnInfo.port.equals(port)) {
+				ContentValues values = new ContentValues();
+
+				values.put(PROXY, "");
+				values.put(PORT, "");
+
+				resolver.update(CONTENT_URI, values, ID + "=?",
+						new String[] { String.valueOf(apnInfo.id) });
+			}
+
 		}
 	}
 
@@ -113,8 +148,8 @@ public class APNManager {
 			return false;
 		if (!networkInfo.getTypeName().equals("WIFI")) {
 			Log.d(TAG, networkInfo.getExtraInfo());
-			if (networkInfo.getExtraInfo() != null &&
-					networkInfo.getExtraInfo().toLowerCase().equals("cmwap"))
+			if (networkInfo.getExtraInfo() != null
+					&& networkInfo.getExtraInfo().toLowerCase().equals("cmwap"))
 				return true;
 		}
 		return false;
@@ -155,40 +190,5 @@ public class APNManager {
 
 		}
 
-	}
-
-	public static void clearAPNProxy(String proxy, String port, Context context) {
-		Cursor cursor = null;
-		ContentResolver resolver = context.getContentResolver();
-		List<ApnInfo> apns = null;
-		try {
-			cursor = resolver.query(CONTENT_URI, new String[] { ID, APN, TYPE,
-					PROXY, PORT }, "proxy is not null", null, null);
-
-			if (cursor == null)
-				return;
-
-			apns = createApnList(cursor);
-
-		} catch (Exception ignore) {
-			// Nothing
-		}
-
-		if (cursor != null) {
-			cursor.close();
-		}
-
-		for (ApnInfo apnInfo : apns) {
-			if (apnInfo.proxy.equals(proxy) && apnInfo.port.equals(port)) {
-				ContentValues values = new ContentValues();
-
-				values.put(PROXY, "");
-				values.put(PORT, "");
-
-				resolver.update(CONTENT_URI, values, ID + "=?",
-						new String[] { String.valueOf(apnInfo.id) });
-			}
-
-		}
 	}
 }

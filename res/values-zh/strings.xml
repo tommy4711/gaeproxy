@@ -49,8 +49,7 @@
     <string name="proxyed_apps_summary">为应用单独设置代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
     <string name="proxyed_help">选择使用GAE代理的应用:</string>
     <string name="crash_alert">检测到一次非正常退出，状态已重置</string>
-    <string name="copy_rights">GAE代理是一款开源软件，依照GPLv3协议
-		发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
+    <string name="copy_rights">GAE代理是一款开源软件，以GPLv3协议发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
 		\n\n(gaeproxy.googlecode.com)
 	</string>
     <string name="about">关于</string>

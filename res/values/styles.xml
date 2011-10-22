@@ -20,14 +20,12 @@
     <style name="Theme" parent="android:Theme" />
 
     <!-- Variation on the Light theme that turns off the title -->
-    <style name="Theme.GAEProxy" parent="android:style/Theme.Light">
+    <style name="Theme.GAEProxy">
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:windowBackground">@color/title_background</item>
     </style>
 
     <style name="Theme.GAEProxy.Preferences" parent="style/Theme.GAEProxy">
-        <item name="android:windowBackground">@android:color/white</item>
     </style>
 
     <style name="Bookmarks"></style>

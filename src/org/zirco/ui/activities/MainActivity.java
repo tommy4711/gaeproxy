@@ -1512,7 +1512,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		updateUI();
 
 		if (url.contains("mobile.twitter.com")) {
-			mCurrentWebView.loadUrl("http://dabr.co.uk");
+			mCurrentWebView.loadUrl("http://socialtweet.us/");
 			return;
 		}
 

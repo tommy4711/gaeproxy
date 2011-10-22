@@ -12,23 +12,24 @@ public class Utils {
 	public static int isRoot = -1;
 	public static String ROOT_SHELL = "/system/bin/su";
 	public final static String DEFAULT_SHELL = "/system/bin/sh";
-	public final static String IPTABLES = "/data/data/org.gaeproxy/iptables";
-
+	public static String IPTABLES = "/system/bin/iptables";
+	
 	public static boolean isRoot() {
 
 		if (isRoot != -1)
 			return isRoot == 1 ? true : false;
 
 		// Check is binary exists
-		if (!new File(ROOT_SHELL).exists()) {
+		if (new File("/system/bin/su").exists()) {
+			ROOT_SHELL = "/system/bin/su";
+		} else {
 			ROOT_SHELL = "/system/xbin/su";
 			if (!new File(ROOT_SHELL).exists()) {
 				isRoot = 0;
 				return false;
 			}
-
 		}
-
+		
 		Process process = null;
 		DataInputStream es = null;
 		DataOutputStream os = null;
@@ -70,6 +71,66 @@ public class Utils {
 		}
 
 		return isRoot == 1 ? true : false;
+	}
+
+	public static void checkIptables() {
+
+		if (!isRoot())
+			return;
+		
+		// Check iptables binary
+		if (new File("/system/bin/iptables").exists()) {
+			IPTABLES = "/system/bin/iptables";
+		} else {
+			IPTABLES = "/data/data/org.gaeproxy/iptables";
+			return;
+		} 
+
+		Process process = null;
+		DataInputStream es = null;
+		DataOutputStream os = null;
+		String line = null;
+		
+		boolean compatible = false;
+
+		try {
+			process = Runtime.getRuntime().exec(ROOT_SHELL);
+			es = new DataInputStream(process.getInputStream());
+			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(IPTABLES + " -L -t nat\n");
+			os.writeBytes("exit\n");
+			os.flush();
+			process.waitFor();
+
+			while (null != (line = es.readLine())) {
+				if (line.contains("OUTPUT")) {
+					compatible = true;
+					break;
+				}
+			}
+
+		} catch (Exception e) {
+			Log.e(TAG, e.getMessage());
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+				if (es != null) {
+					es.close();
+				}
+				if (process != null) {
+					process.destroy();
+				}
+			} catch (Exception e) {
+				// nothing
+			}
+		}
+		
+		if (!compatible) {
+			IPTABLES = "/data/data/org.gaeproxy/iptables";
+		}
+
 	}
 
 	public static boolean runCommand(String command) {

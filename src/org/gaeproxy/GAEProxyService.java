@@ -94,18 +94,16 @@ public class GAEProxyService extends Service {
 	private static final int MSG_HOST_CHANGE = 4;
 	private static final int MSG_STOP_SELF = 5;
 
-	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
-			+ "--dport 80 -j REDIRECT --to 8123\n";
-	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
-			+ "--dport 443 -j REDIRECT --to 8124\n";
+	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = " -t nat -A OUTPUT -p tcp "
+			+ "! -d 203.208.0.0/16 " + "--dport 80 -j REDIRECT --to 8123\n";
+	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = " -t nat -A OUTPUT -p tcp "
+			+ "! -d 203.208.0.0/16 " + "--dport 443 -j REDIRECT --to 8124\n";
 
-	final static String CMD_IPTABLES_DNAT_ADD_HTTP = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_HTTP = " -t nat -A OUTPUT -p tcp "
+			+ "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
-	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = BASE
-			+ "iptables -t nat -A OUTPUT -p tcp " + "! -d 203.208.0.0/16 "
+	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = " -t nat -A OUTPUT -p tcp "
+			+ "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
@@ -137,8 +135,7 @@ public class GAEProxyService extends Service {
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
 			int.class, Notification.class };
 	private static final Class<?>[] mStopForegroundSignature = new Class[] { boolean.class };
-    private static final Class<?>[] mSetForegroundSignature = new Class[] {
-        boolean.class};
+	private static final Class<?>[] mSetForegroundSignature = new Class[] { boolean.class };
 
 	private Method mSetForeground;
 	private Method mStartForeground;
@@ -456,7 +453,7 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		command = "/data/data/org.gaeproxy/iptables -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
+		command = Utils.IPTABLES + " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
 			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
@@ -682,19 +679,19 @@ public class GAEProxyService extends Service {
 		handleCommand(intent);
 
 	}
-	
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        handleCommand(intent);
-        // We want this service to continue running until it is explicitly
-        // stopped, so return sticky.
-        return START_STICKY;
-    }
-	
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+		handleCommand(intent);
+		// We want this service to continue running until it is explicitly
+		// stopped, so return sticky.
+		return START_STICKY;
+	}
+
 	public void handleCommand(Intent intent) {
 
 		Log.d(TAG, "Service Start");
-		
+
 		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
 		if (intent == null) {
@@ -749,6 +746,9 @@ public class GAEProxyService extends Service {
 					Log.d(TAG, "Cannot get country info", e);
 					// Nothing
 				}
+
+				Utils.checkIptables();
+				Log.d(TAG, "IPTABLES" + Utils.IPTABLES);
 
 				// Test for Redirect Support
 				initHasRedirectSupported();
@@ -858,18 +858,19 @@ public class GAEProxyService extends Service {
 		StringBuffer https_sb = new StringBuffer();
 
 		if (hasRedirectSupport) {
-			http_sb.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+			http_sb.append(Utils.IPTABLES
+					+ " -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 		} else {
-			http_sb.append(BASE
-					+ "iptables -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+			http_sb.append(Utils.IPTABLES
+					+ " -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 		}
 
 		if (isGFWList) {
-			String cmd_http = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-					: CMD_IPTABLES_DNAT_ADD_HTTP;
+			String cmd_http = hasRedirectSupport ? Utils.IPTABLES
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+					+ CMD_IPTABLES_DNAT_ADD_HTTP;
 			String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-					: CMD_IPTABLES_DNAT_ADD_HTTPS;
+					: Utils.IPTABLES + CMD_IPTABLES_DNAT_ADD_HTTPS;
 
 			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
 
@@ -881,11 +882,13 @@ public class GAEProxyService extends Service {
 							"-d " + item));
 			}
 		} else if (isGlobalProxy) {
-			https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-					: CMD_IPTABLES_DNAT_ADD_HTTP);
+			https_sb.append(hasRedirectSupport ? Utils.IPTABLES
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+					+ CMD_IPTABLES_DNAT_ADD_HTTP);
 			if (isHTTPSProxy)
-				https_sb.append(hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-						: CMD_IPTABLES_DNAT_ADD_HTTPS);
+				https_sb.append(hasRedirectSupport ? Utils.IPTABLES
+						+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+						+ CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
 			if (apps == null || apps.length <= 0)
@@ -898,12 +901,14 @@ public class GAEProxyService extends Service {
 				}
 			}
 			for (int uid : uidSet) {
-				http_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTP
-						: CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
+				http_sb.append((hasRedirectSupport ? Utils.IPTABLES
+						+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+						+ CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 						"-t nat -m owner --uid-owner " + uid));
 				if (isHTTPSProxy)
-					https_sb.append((hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-							: CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
+					https_sb.append((hasRedirectSupport ? Utils.IPTABLES
+							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+							+ CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
 							"-t nat -m owner --uid-owner " + uid));
 			}
 		}

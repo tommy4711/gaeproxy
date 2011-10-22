@@ -769,7 +769,7 @@ public class GAEProxy extends PreferenceActivity implements
 				new Thread() {
 					@Override
 					public void run() {
-						recovery();
+						crash_recovery();
 						handler.sendEmptyMessage(MSG_CRASH_RECOVER);
 					}
 				}.start();
@@ -959,30 +959,62 @@ public class GAEProxy extends PreferenceActivity implements
 		FlurryAgent.onEndSession(this);
 	}
 
+	private void crash_recovery() {
+
+		Utils.checkIptables();
+
+		Utils.runRootCommand(Utils.IPTABLES + " -t nat -F OUTPUT");
+
+		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
+
+		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
+
+	}
+
 	private void recovery() {
+
+		final ProgressDialog p = ProgressDialog.show(this, "",
+				getString(R.string.recovering), true, false);
+
+		final Handler h = new Handler() {
+			@Override
+			public void handleMessage(Message msg) {
+				if (p != null) {
+					p.dismiss();
+				}
+			}
+		};
+
 		try {
 			stopService(new Intent(this, GAEProxyService.class));
 		} catch (Exception e) {
 			// Nothing
 		}
 
-		Utils.runRootCommand(GAEProxyService.BASE + "iptables -t nat -F OUTPUT");
+		new Thread() {
+			public void run() {
+				Utils.checkIptables();
+				
+				Utils.runRootCommand(Utils.IPTABLES + " -t nat -F OUTPUT");
 
-		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
+				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
-		File cache = new File(GAEProxyService.BASE + "cache/dnscache");
-		if (cache.exists())
-			cache.delete();
+				File cache = new File(GAEProxyService.BASE + "cache/dnscache");
+				if (cache.exists())
+					cache.delete();
 
-		CopyAssets("");
+				CopyAssets("");
 
-		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
+				h.sendEmptyMessage(0);
+			}
+		}.start();
 
 	}
 

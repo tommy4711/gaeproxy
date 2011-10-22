@@ -96,6 +96,7 @@
 
 	<string name="connecting">Connecting...</string>
 	<string name="initializing">Initializing...</string>
+	<string name="recovering">Recovering...</string>
 	<string name="https_alert">Please modify your proxy host to start with
 		"https://"
 	</string>

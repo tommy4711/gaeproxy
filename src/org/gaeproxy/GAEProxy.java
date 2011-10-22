@@ -45,6 +45,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.zip.ZipEntry;
@@ -590,8 +591,12 @@ public class GAEProxy extends PreferenceActivity implements
 
 				try {
 					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+					HttpURLConnection conn = (HttpURLConnection) aURL
+							.openConnection();
+					conn.setReadTimeout(5 * 1000);
+					conn.connect();
 					InputStream input = new BufferedInputStream(
-							aURL.openStream());
+							conn.getInputStream());
 					OutputStream output = new FileOutputStream(
 							"/data/data/org.gaeproxy/hosts");
 

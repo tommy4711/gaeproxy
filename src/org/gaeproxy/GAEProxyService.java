@@ -749,7 +749,7 @@ public class GAEProxyService extends Service {
 				}
 
 				Utils.checkIptables();
-				Log.d(TAG, "IPTABLES" + Utils.IPTABLES);
+				Log.d(TAG, "IPTABLES: " + Utils.IPTABLES);
 
 				// Test for Redirect Support
 				initHasRedirectSupported();

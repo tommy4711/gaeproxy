@@ -4,6 +4,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 public class Utils {
@@ -92,11 +97,13 @@ public class Utils {
 		String line = null;
 		
 		boolean compatible = false;
+		boolean version = false;
 
 		try {
 			process = Runtime.getRuntime().exec(ROOT_SHELL);
 			es = new DataInputStream(process.getInputStream());
 			os = new DataOutputStream(process.getOutputStream());
+			os.writeBytes(IPTABLES + " --version");
 			os.writeBytes(IPTABLES + " -L -t nat\n");
 			os.writeBytes("exit\n");
 			os.flush();
@@ -105,7 +112,9 @@ public class Utils {
 			while (null != (line = es.readLine())) {
 				if (line.contains("OUTPUT")) {
 					compatible = true;
-					break;
+				}
+				if (line.contains("v1.4.")) {
+					version = true;
 				}
 			}
 
@@ -127,7 +136,7 @@ public class Utils {
 			}
 		}
 		
-		if (!compatible) {
+		if (!compatible || !version) {
 			IPTABLES = "/data/data/org.gaeproxy/iptables";
 		}
 
@@ -167,6 +176,8 @@ public class Utils {
 
 		if (!isRoot())
 			return false;
+		
+		Log.d(TAG, command);
 
 		Process process = null;
 		DataOutputStream os = null;
@@ -193,4 +204,25 @@ public class Utils {
 		}
 		return true;
 	}
+	
+    public static Drawable getAppIcon(Context c, int uid) {
+        PackageManager pm = c.getPackageManager();
+        Drawable appIcon = c.getResources().getDrawable(R.drawable.sym_def_app_icon);
+        String[] packages = pm.getPackagesForUid(uid);
+
+        if (packages != null) {
+            if (packages.length == 1) {
+                try {
+                    ApplicationInfo appInfo = pm.getApplicationInfo(packages[0], 0);
+                    appIcon = pm.getApplicationIcon(appInfo);
+                } catch (NameNotFoundException e) {
+                	Log.e(c.getPackageName(), "No package found matching with the uid " + uid);
+                }
+            }
+        } else {
+            Log.e(c.getPackageName(), "Package not found for uid " + uid);
+        }
+
+        return appIcon;
+    }
 }

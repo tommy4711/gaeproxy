@@ -113,6 +113,8 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 
 	private ProgressDialog pd = null;
 	private ListAdapter adapter;
+	
+	private ImageLoader dm;
 
 	private static final int MSG_LOAD_START = 1;
 
@@ -219,7 +221,6 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 			tApp.setUsername(pMgr.getNameForUid(tApp.getUid()));
 			tApp.setProcname(aInfo.processName);
 			tApp.setName(pMgr.getApplicationLabel(aInfo).toString());
-			tApp.setIcon(pMgr.getApplicationIcon(aInfo));
 
 			// check if this application is allowed
 			if (Arrays.binarySearch(tordApps, tApp.getUsername()) >= 0) {
@@ -282,7 +283,10 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 
 				final ProxyedApp app = apps[position];
 
-				entry.icon.setImageDrawable(app.getIcon());
+				entry.icon.setTag(app.getUid());
+				
+				dm.DisplayImage(app.getUid(),
+						(Activity) convertView.getContext(), entry.icon);
 
 				entry.text.setText(app.getName());
 
@@ -291,7 +295,6 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 				box.setChecked(app.isProxyed());
 
 				entry.text.setTag(box);
-				entry.icon.setTag(box);
 
 				return convertView;
 			}
@@ -335,6 +338,8 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 		super.onCreate(savedInstanceState);
 
 		this.setContentView(R.layout.layout_apps);
+		
+		this.dm = ImageLoaderFactory.getImageLoader(this);
 
 		this.overlay = (TextView) View.inflate(this, R.layout.overlay, null);
 		getWindowManager()

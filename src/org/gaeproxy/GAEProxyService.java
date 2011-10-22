@@ -137,10 +137,14 @@ public class GAEProxyService extends Service {
 	private static final Class<?>[] mStartForegroundSignature = new Class[] {
 			int.class, Notification.class };
 	private static final Class<?>[] mStopForegroundSignature = new Class[] { boolean.class };
+    private static final Class<?>[] mSetForegroundSignature = new Class[] {
+        boolean.class};
 
+	private Method mSetForeground;
 	private Method mStartForeground;
 	private Method mStopForeground;
 
+	private Object[] mSetForegroundArgs = new Object[1];
 	private Object[] mStartForegroundArgs = new Object[2];
 	private Object[] mStopForegroundArgs = new Object[1];
 
@@ -314,7 +318,7 @@ public class GAEProxyService extends Service {
 	}
 
 	/** Called when the activity is first created. */
-	public boolean handleCommand() {
+	public boolean handleConnection() {
 
 		// try {
 		// InetAddress addr = InetAddress.getByName("www.google.co.jp");
@@ -576,6 +580,14 @@ public class GAEProxyService extends Service {
 			// Running on an older platform.
 			mStartForeground = mStopForeground = null;
 		}
+
+		try {
+			mSetForeground = getClass().getMethod("setForeground",
+					mSetForegroundSignature);
+		} catch (NoSuchMethodException e) {
+			throw new IllegalStateException(
+					"OS doesn't have Service.startForeground OR Service.setForeground!");
+		}
 	}
 
 	/** Called when the activity is closed. */
@@ -667,10 +679,22 @@ public class GAEProxyService extends Service {
 	@Override
 	public void onStart(Intent intent, int startId) {
 
-		super.onStart(intent, startId);
+		handleCommand(intent);
+
+	}
+	
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        handleCommand(intent);
+        // We want this service to continue running until it is explicitly
+        // stopped, so return sticky.
+        return START_STICKY;
+    }
+	
+	public void handleCommand(Intent intent) {
 
 		Log.d(TAG, "Service Start");
-
+		
 		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
 		if (intent == null) {
@@ -729,12 +753,12 @@ public class GAEProxyService extends Service {
 				// Test for Redirect Support
 				initHasRedirectSupported();
 
-				if (handleCommand()) {
+				if (handleConnection()) {
 					// Connection and forward successful
 					notifyAlert(getString(R.string.forward_success),
 							getString(R.string.service_running));
 
-					handler.sendEmptyMessage(MSG_CONNECT_SUCCESS);
+					handler.sendEmptyMessageDelayed(MSG_CONNECT_SUCCESS, 500);
 
 					// for widget, maybe exception here
 					try {
@@ -758,10 +782,10 @@ public class GAEProxyService extends Service {
 							getString(R.string.service_failed));
 
 					stopSelf();
-					handler.sendEmptyMessage(MSG_CONNECT_FAIL);
+					handler.sendEmptyMessageDelayed(MSG_CONNECT_FAIL, 500);
 				}
 
-				handler.sendEmptyMessage(MSG_CONNECT_FINISH);
+				handler.sendEmptyMessageDelayed(MSG_CONNECT_FINISH, 500);
 
 			}
 		}).start();
@@ -912,7 +936,8 @@ public class GAEProxyService extends Service {
 		}
 
 		// Fall back on the old API.
-		setForeground(true);
+		mSetForegroundArgs[0] = Boolean.TRUE;
+		invokeMethod(mSetForeground, mSetForegroundArgs);
 		notificationManager.notify(id, notification);
 	}
 
@@ -939,7 +964,8 @@ public class GAEProxyService extends Service {
 		// Fall back on the old API. Note to cancel BEFORE changing the
 		// foreground state, since we could be killed at that point.
 		notificationManager.cancel(id);
-		setForeground(false);
+		mSetForegroundArgs[0] = Boolean.FALSE;
+		invokeMethod(mSetForeground, mSetForegroundArgs);
 	}
 
 }

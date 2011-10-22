@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="service_running">GAEProxy service is running now.</string>
+	<string name="service_running">Running in the background.</string>
 	<string name="app_name">GAEProxy</string>
 	<string name="forward_success">Proxy Service Successed.</string>
 	<string name="forward_fail">Proxy Service Failed.</string>
@@ -63,7 +63,7 @@
 	</string>
 	<string name="copy_rights">GAEProxy is an open source project
 		published under
-		the GPLV3. \n\nIf you have any question, please visit
+		the GPLv3. \n\nIf you have any questions, please visit
 		our project page on
 		googlecode. \n\n(gaeproxy.googlecode.com)
 	</string>

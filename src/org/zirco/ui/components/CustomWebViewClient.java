@@ -103,9 +103,6 @@ public class CustomWebViewClient extends WebViewClient {
 		if (url.startsWith("vnd.")) {
 			mMainActivity.onVndUrl(url);
 			return true;
-		} else if (url.contains("mobile.twitter.com")) {
-			view.loadUrl("http://dabr.co.uk");
-			return true;
 		} else if (url.startsWith(Constants.URL_ACTION_SEARCH)) {
 			String searchTerm = url.replace(Constants.URL_ACTION_SEARCH, "");
 

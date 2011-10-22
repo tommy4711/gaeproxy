@@ -148,6 +148,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	private enum SwitchTabsMethod {
 		BUTTONS, FLING, BOTH
 	}
+
 	public static MainActivity INSTANCE = null;
 
 	private static final int FLIP_PIXEL_THRESHOLD = 200;
@@ -1509,6 +1510,11 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 	public void onPageFinished(String url) {
 		updateUI();
+
+		if (url.contains("mobile.twitter.com")) {
+			mCurrentWebView.loadUrl("http://dabr.co.uk");
+			return;
+		}
 
 		if ((Controller.getInstance().getPreferences().getBoolean(
 				Constants.PREFERENCES_ADBLOCKER_ENABLE, true))

@@ -25,7 +25,7 @@
 
 	<application android:icon="@drawable/icon" android:label="@string/app_name">
 		<activity android:name=".GAEProxy" android:label="@string/app_name"
-			android:taskAffinity=".GAEProxy">
+			android:taskAffinity=".GAEProxy" android:theme="@style/Theme.GAEProxy.Preferences">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />

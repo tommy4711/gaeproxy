@@ -453,7 +453,8 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		command = Utils.IPTABLES + " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
+		command = Utils.IPTABLES
+				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
 			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
@@ -869,8 +870,9 @@ public class GAEProxyService extends Service {
 			String cmd_http = hasRedirectSupport ? Utils.IPTABLES
 					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
 					+ CMD_IPTABLES_DNAT_ADD_HTTP;
-			String cmd_https = hasRedirectSupport ? CMD_IPTABLES_REDIRECT_ADD_HTTPS
-					: Utils.IPTABLES + CMD_IPTABLES_DNAT_ADD_HTTPS;
+			String cmd_https = hasRedirectSupport ? Utils.IPTABLES
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+					+ CMD_IPTABLES_DNAT_ADD_HTTPS;
 
 			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
 

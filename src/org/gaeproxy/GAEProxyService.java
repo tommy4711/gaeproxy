@@ -280,7 +280,7 @@ public class GAEProxyService extends Service {
 								}
 								
 								httpProcess = Runtime.getRuntime().exec(
-										Utils.getRoot());
+										Utils.DEFAULT_SHELL);
 								
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());

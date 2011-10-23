@@ -425,7 +425,7 @@ public class GAEProxyService extends Service {
 			if (n > 0 && n < 10)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
 			else if (n >= 10)
-				proxy = "https://" + mirror_list[n - 20]
+				proxy = "https://" + mirror_list[n - 10]
 						+ ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}

@@ -269,7 +269,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private static final String TAG = "GAEProxy";
 	public static final String PREFS_NAME = "GAEProxy";
-	private static final String SERVICE_NAME = "org.gaeproxy.GAEProxyService";
 
 	private String proxy;
 	private int port;
@@ -1034,8 +1033,6 @@ public class GAEProxy extends PreferenceActivity implements
 			}
 			return false;
 		}
-
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
 
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);

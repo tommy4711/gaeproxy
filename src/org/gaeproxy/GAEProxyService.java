@@ -220,6 +220,9 @@ public class GAEProxyService extends Service {
 		} catch (IOException e1) {
 			return false;
 		}
+		
+		// prepare for python
+		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
 
 		try {
 

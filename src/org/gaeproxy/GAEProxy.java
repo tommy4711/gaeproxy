@@ -546,7 +546,7 @@ public class GAEProxy extends PreferenceActivity implements
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
 		pd = ProgressDialog.show(this, "", getString(R.string.initializing),
-				true, false);
+				true, true);
 
 		new Thread() {
 			@Override
@@ -830,7 +830,7 @@ public class GAEProxy extends PreferenceActivity implements
 			if (settings.getBoolean("isConnecting", false)) {
 				Log.d(TAG, "Connecting start");
 				pd = ProgressDialog.show(this, "",
-						getString(R.string.connecting), true, false);
+						getString(R.string.connecting), true, true);
 			} else {
 				Log.d(TAG, "Connecting finish");
 				if (pd != null) {
@@ -979,7 +979,7 @@ public class GAEProxy extends PreferenceActivity implements
 	private void recovery() {
 
 		final ProgressDialog p = ProgressDialog.show(this, "",
-				getString(R.string.recovering), true, false);
+				getString(R.string.recovering), true, true);
 
 		final Handler h = new Handler() {
 			@Override

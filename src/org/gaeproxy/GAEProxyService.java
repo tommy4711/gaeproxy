@@ -280,7 +280,7 @@ public class GAEProxyService extends Service {
 								}
 								
 								httpProcess = Runtime.getRuntime().exec(
-										Utils.DEFAULT_SHELL);
+										Utils.getRoot());
 								
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());
@@ -300,6 +300,7 @@ public class GAEProxyService extends Service {
 					} catch (InterruptedException e) {
 						// Interrupted
 					}
+					Log.e(TAG, "Unexpected Stop");
 					handler.sendEmptyMessage(MSG_STOP_SELF);
 				}
 			};

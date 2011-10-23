@@ -421,10 +421,10 @@ public class GAEProxyService extends Service {
 			if (mirror_list != null)
 				mirror_num = mirror_list.length;
 			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(20 + mirror_num);
-			if (n > 0 && n < 20)
+			int n = random.nextInt(10 + mirror_num);
+			if (n > 0 && n < 10)
 				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
-			else if (n >= 20)
+			else if (n >= 10)
 				proxy = "https://" + mirror_list[n - 20]
 						+ ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);

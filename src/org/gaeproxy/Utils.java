@@ -28,15 +28,11 @@ public class Utils {
 
 	// always return a string
 	public static String getRoot() {
-		// if not initialized
-		if (root_shell == null)
-			isRoot();
-
-		// double check, if still null, back to default shell
-		if (root_shell == null)
-			root_shell = DEFAULT_SHELL;
-
-		return root_shell;
+		// check root
+		if (isRoot())
+			return root_shell;
+		else
+			return DEFAULT_SHELL;
 	}
 
 	public static String getIptables() {
@@ -66,7 +62,7 @@ public class Utils {
 		String line = null;
 
 		try {
-			process = Runtime.getRuntime().exec(getRoot());
+			process = Runtime.getRuntime().exec(root_shell);
 			es = new DataInputStream(process.getInputStream());
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes("ls /\n");
@@ -75,6 +71,7 @@ public class Utils {
 			process.waitFor();
 
 			while (null != (line = es.readLine())) {
+				Log.e(TAG, line);
 				if (line.contains("system")) {
 					isRoot = 1;
 					break;

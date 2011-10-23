@@ -275,13 +275,10 @@ public class GAEProxyService extends Service {
 									httpProcess.destroy();
 									httpProcess = null;
 								}
-								if (Utils.isRoot()) {
-									httpProcess = Runtime.getRuntime().exec(
-											Utils.ROOT_SHELL);
-								} else {
-									httpProcess = Runtime.getRuntime().exec(
-											Utils.DEFAULT_SHELL);
-								}
+								
+								httpProcess = Runtime.getRuntime().exec(
+										Utils.getRoot());
+								
 								httpOS = new DataOutputStream(
 										httpProcess.getOutputStream());
 								httpOS.write((cmd + "\n").getBytes());
@@ -453,11 +450,11 @@ public class GAEProxyService extends Service {
 		String command;
 		String line = null;
 
-		command = Utils.IPTABLES
+		command = Utils.getIptables()
 				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
 		try {
-			process = Runtime.getRuntime().exec(Utils.ROOT_SHELL);
+			process = Runtime.getRuntime().exec(Utils.getRoot());
 			es = new DataInputStream(process.getErrorStream());
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes(command + "\n");
@@ -748,8 +745,7 @@ public class GAEProxyService extends Service {
 					// Nothing
 				}
 
-				Utils.checkIptables();
-				Log.d(TAG, "IPTABLES: " + Utils.IPTABLES);
+				Log.d(TAG, "IPTABLES: " + Utils.getIptables());
 
 				// Test for Redirect Support
 				initHasRedirectSupported();
@@ -859,19 +855,19 @@ public class GAEProxyService extends Service {
 		StringBuffer https_sb = new StringBuffer();
 
 		if (hasRedirectSupport) {
-			http_sb.append(Utils.IPTABLES
+			http_sb.append(Utils.getIptables()
 					+ " -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 		} else {
-			http_sb.append(Utils.IPTABLES
+			http_sb.append(Utils.getIptables()
 					+ " -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 		}
 
 		if (isGFWList) {
-			String cmd_http = hasRedirectSupport ? Utils.IPTABLES
-					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+			String cmd_http = hasRedirectSupport ? Utils.getIptables()
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTP;
-			String cmd_https = hasRedirectSupport ? Utils.IPTABLES
-					+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+			String cmd_https = hasRedirectSupport ? Utils.getIptables()
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTPS;
 
 			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
@@ -884,12 +880,12 @@ public class GAEProxyService extends Service {
 							"-d " + item));
 			}
 		} else if (isGlobalProxy) {
-			https_sb.append(hasRedirectSupport ? Utils.IPTABLES
-					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+			https_sb.append(hasRedirectSupport ? Utils.getIptables()
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTP);
 			if (isHTTPSProxy)
-				https_sb.append(hasRedirectSupport ? Utils.IPTABLES
-						+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+				https_sb.append(hasRedirectSupport ? Utils.getIptables()
+						+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
 						+ CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
@@ -903,13 +899,13 @@ public class GAEProxyService extends Service {
 				}
 			}
 			for (int uid : uidSet) {
-				http_sb.append((hasRedirectSupport ? Utils.IPTABLES
-						+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.IPTABLES
+				http_sb.append((hasRedirectSupport ? Utils.getIptables()
+						+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 						+ CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 						"-t nat -m owner --uid-owner " + uid));
 				if (isHTTPSProxy)
-					https_sb.append((hasRedirectSupport ? Utils.IPTABLES
-							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.IPTABLES
+					https_sb.append((hasRedirectSupport ? Utils.getIptables()
+							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
 							+ CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
 							"-t nat -m owner --uid-owner " + uid));
 			}

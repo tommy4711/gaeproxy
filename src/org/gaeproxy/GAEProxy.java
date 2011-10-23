@@ -966,9 +966,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private void crash_recovery() {
 
-		Utils.checkIptables();
-
-		Utils.runRootCommand(Utils.IPTABLES + " -t nat -F OUTPUT");
+		Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
@@ -998,9 +996,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		new Thread() {
 			public void run() {
-				Utils.checkIptables();
-				
-				Utils.runRootCommand(Utils.IPTABLES + " -t nat -F OUTPUT");
+				Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 

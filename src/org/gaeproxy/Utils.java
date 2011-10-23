@@ -14,34 +14,59 @@ import android.util.Log;
 public class Utils {
 
 	public final static String TAG = "GAEProxy";
-	public static int isRoot = -1;
-	public static String ROOT_SHELL = "/system/bin/su";
 	public final static String DEFAULT_SHELL = "/system/bin/sh";
-	public static String IPTABLES = "/system/bin/iptables";
-	
+
+	public final static String DEFAULT_ROOT = "/system/bin/su";
+	public final static String ALTERNATIVE_ROOT = "/system/xbin/su";
+
+	public final static String DEFAULT_IPTABLES = "/system/bin/iptables";
+	public final static String ALTERNATIVE_IPTABLES = "/data/data/org.gaeproxy/iptables";
+
+	private static int isRoot = -1;
+	private static String root_shell = null;
+	private static String iptables = null;
+
+	// always return a string
+	public static String getRoot() {
+		// if not initialized
+		if (root_shell == null)
+			isRoot();
+
+		// double check, if still null, back to default shell
+		if (root_shell == null)
+			root_shell = DEFAULT_SHELL;
+
+		return root_shell;
+	}
+
+	public static String getIptables() {
+		if (iptables == null)
+			checkIptables();
+		return iptables;
+	}
+
 	public static boolean isRoot() {
 
 		if (isRoot != -1)
 			return isRoot == 1 ? true : false;
 
-		// Check is binary exists
-		if (new File("/system/bin/su").exists()) {
-			ROOT_SHELL = "/system/bin/su";
+		// switch between binaries
+		if (new File(DEFAULT_ROOT).exists()) {
+			root_shell = DEFAULT_ROOT;
+		} else if (new File(ALTERNATIVE_ROOT).exists()) {
+			root_shell = ALTERNATIVE_ROOT;
 		} else {
-			ROOT_SHELL = "/system/xbin/su";
-			if (!new File(ROOT_SHELL).exists()) {
-				isRoot = 0;
-				return false;
-			}
+			isRoot = 0;
+			return false;
 		}
-		
+
 		Process process = null;
 		DataInputStream es = null;
 		DataOutputStream os = null;
 		String line = null;
 
 		try {
-			process = Runtime.getRuntime().exec(ROOT_SHELL);
+			process = Runtime.getRuntime().exec(getRoot());
 			es = new DataInputStream(process.getInputStream());
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes("ls /\n");
@@ -78,33 +103,33 @@ public class Utils {
 		return isRoot == 1 ? true : false;
 	}
 
-	public static void checkIptables() {
+	private static void checkIptables() {
 
 		if (!isRoot())
 			return;
-		
+
 		// Check iptables binary
-		if (new File("/system/bin/iptables").exists()) {
-			IPTABLES = "/system/bin/iptables";
+		if (new File(DEFAULT_IPTABLES).exists()) {
+			iptables = DEFAULT_IPTABLES;
 		} else {
-			IPTABLES = "/data/data/org.gaeproxy/iptables";
+			iptables = ALTERNATIVE_IPTABLES;
 			return;
-		} 
+		}
 
 		Process process = null;
 		DataInputStream es = null;
 		DataOutputStream os = null;
 		String line = null;
-		
+
 		boolean compatible = false;
 		boolean version = false;
 
 		try {
-			process = Runtime.getRuntime().exec(ROOT_SHELL);
+			process = Runtime.getRuntime().exec(getRoot());
 			es = new DataInputStream(process.getInputStream());
 			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(IPTABLES + " --version");
-			os.writeBytes(IPTABLES + " -L -t nat\n");
+			os.writeBytes(iptables + " --version");
+			os.writeBytes(iptables + " -L -t nat\n");
 			os.writeBytes("exit\n");
 			os.flush();
 			process.waitFor();
@@ -135,9 +160,9 @@ public class Utils {
 				// nothing
 			}
 		}
-		
+
 		if (!compatible || !version) {
-			IPTABLES = "/data/data/org.gaeproxy/iptables";
+			iptables = ALTERNATIVE_IPTABLES;
 		}
 
 	}
@@ -176,13 +201,13 @@ public class Utils {
 
 		if (!isRoot())
 			return false;
-		
+
 		Log.d(TAG, command);
 
 		Process process = null;
 		DataOutputStream os = null;
 		try {
-			process = Runtime.getRuntime().exec(ROOT_SHELL);
+			process = Runtime.getRuntime().exec(getRoot());
 			os = new DataOutputStream(process.getOutputStream());
 			os.writeBytes(command + "\n");
 			os.writeBytes("exit\n");
@@ -204,25 +229,28 @@ public class Utils {
 		}
 		return true;
 	}
-	
-    public static Drawable getAppIcon(Context c, int uid) {
-        PackageManager pm = c.getPackageManager();
-        Drawable appIcon = c.getResources().getDrawable(R.drawable.sym_def_app_icon);
-        String[] packages = pm.getPackagesForUid(uid);
 
-        if (packages != null) {
-            if (packages.length == 1) {
-                try {
-                    ApplicationInfo appInfo = pm.getApplicationInfo(packages[0], 0);
-                    appIcon = pm.getApplicationIcon(appInfo);
-                } catch (NameNotFoundException e) {
-                	Log.e(c.getPackageName(), "No package found matching with the uid " + uid);
-                }
-            }
-        } else {
-            Log.e(c.getPackageName(), "Package not found for uid " + uid);
-        }
+	public static Drawable getAppIcon(Context c, int uid) {
+		PackageManager pm = c.getPackageManager();
+		Drawable appIcon = c.getResources().getDrawable(
+				R.drawable.sym_def_app_icon);
+		String[] packages = pm.getPackagesForUid(uid);
 
-        return appIcon;
-    }
+		if (packages != null) {
+			if (packages.length == 1) {
+				try {
+					ApplicationInfo appInfo = pm.getApplicationInfo(
+							packages[0], 0);
+					appIcon = pm.getApplicationIcon(appInfo);
+				} catch (NameNotFoundException e) {
+					Log.e(c.getPackageName(),
+							"No package found matching with the uid " + uid);
+				}
+			}
+		} else {
+			Log.e(c.getPackageName(), "Package not found for uid " + uid);
+		}
+
+		return appIcon;
+	}
 }

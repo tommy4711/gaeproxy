@@ -884,7 +884,7 @@ public class GAEProxyService extends Service {
 							"-d " + item));
 			}
 		} else if (isGlobalProxy) {
-			https_sb.append(hasRedirectSupport ? Utils.getIptables()
+			http_sb.append(hasRedirectSupport ? Utils.getIptables()
 					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTP);
 			if (isHTTPSProxy)

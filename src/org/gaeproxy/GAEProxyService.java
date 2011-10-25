@@ -220,7 +220,7 @@ public class GAEProxyService extends Service {
 		} catch (IOException e1) {
 			return false;
 		}
-		
+
 		// prepare for python
 		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
 
@@ -264,48 +264,33 @@ public class GAEProxyService extends Service {
 
 			Log.e(TAG, cmd);
 
-			Thread t = new Thread() {
-				@Override
-				public void run() {
-					try {
-						for (int tries = 0; tries < 3; tries++) {
-							if (!isStopped) {
-								if (httpOS != null) {
-									httpOS.close();
-									httpOS = null;
-								}
-								if (httpProcess != null) {
-									httpProcess.destroy();
-									httpProcess = null;
-								}
-								
-								httpProcess = Runtime.getRuntime().exec(
-										Utils.getRoot());
-								
-								httpOS = new DataOutputStream(
-										httpProcess.getOutputStream());
-								httpOS.write((cmd + "\n").getBytes());
-								httpOS.write("exit\n".getBytes());
-								httpOS.flush();
-							} else {
-								// no handler here, just normally exit
-								return;
-							}
-							httpProcess.waitFor();
-						}
-					} catch (NullPointerException e) {
-						// Cannot get runtime
-					} catch (IOException e) {
-						// Cannot allocate stdin
-					} catch (InterruptedException e) {
-						// Interrupted
-					}
-					Log.e(TAG, "Unexpected Stop");
-					handler.sendEmptyMessage(MSG_STOP_SELF);
+			try {
+				if (httpOS != null) {
+					httpOS.close();
+					httpOS = null;
 				}
-			};
-			t.setDaemon(true);
-			t.start();
+				if (httpProcess != null) {
+					httpProcess.destroy();
+					httpProcess = null;
+				}
+
+				httpProcess = Runtime.getRuntime().exec(Utils.getRoot());
+
+				httpOS = new DataOutputStream(httpProcess.getOutputStream());
+				httpOS.write((cmd + "\n").getBytes());
+				httpOS.write("exit\n".getBytes());
+				httpOS.flush();
+				httpProcess.waitFor();
+			} catch (NullPointerException e) {
+				// Cannot get runtime
+				return false;
+			} catch (IOException e) {
+				// Cannot allocate stdin
+				return false;
+			} catch (InterruptedException e) {
+				// Interrupted
+				return false;
+			}
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
@@ -909,9 +894,10 @@ public class GAEProxyService extends Service {
 						"-t nat -m owner --uid-owner " + uid));
 				if (isHTTPSProxy)
 					https_sb.append((hasRedirectSupport ? Utils.getIptables()
-							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
-							+ CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
-							"-t nat -m owner --uid-owner " + uid));
+							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils
+							.getIptables() + CMD_IPTABLES_DNAT_ADD_HTTPS)
+							.replace("-t nat", "-t nat -m owner --uid-owner "
+									+ uid));
 			}
 		}
 

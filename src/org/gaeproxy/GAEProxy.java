@@ -586,34 +586,34 @@ public class GAEProxy extends PreferenceActivity implements
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
-				}
+					
+					try {
+						URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
+						HttpURLConnection conn = (HttpURLConnection) aURL
+								.openConnection();
+						conn.setReadTimeout(5 * 1000);
+						conn.connect();
+						InputStream input = new BufferedInputStream(
+								conn.getInputStream());
+						OutputStream output = new FileOutputStream(
+								"/data/data/org.gaeproxy/hosts");
 
-				try {
-					URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
-					HttpURLConnection conn = (HttpURLConnection) aURL
-							.openConnection();
-					conn.setReadTimeout(5 * 1000);
-					conn.connect();
-					InputStream input = new BufferedInputStream(
-							conn.getInputStream());
-					OutputStream output = new FileOutputStream(
-							"/data/data/org.gaeproxy/hosts");
+						byte data[] = new byte[1024];
 
-					byte data[] = new byte[1024];
+						int count = 0;
 
-					int count = 0;
+						while ((count = input.read(data)) != -1) {
+							output.write(data, 0, count);
+						}
 
-					while ((count = input.read(data)) != -1) {
-						output.write(data, 0, count);
+						output.flush();
+						output.close();
+						input.close();
+					} catch (Exception e) {
+						// Nothing
 					}
-
-					output.flush();
-					output.close();
-					input.close();
-				} catch (Exception e) {
-					// Nothing
 				}
-
+				
 				handler.sendEmptyMessage(MSG_INITIAL_FINISH);
 			}
 		}.start();

@@ -644,6 +644,9 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean("isConnected", GAEProxyService.isServiceStarted());
 		editor.commit();
+		
+		if (pd != null)
+			pd.dismiss();
 
 		adView.destroy();
 

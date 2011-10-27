@@ -303,61 +303,55 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is first created. */
 	public boolean handleConnection() {
 
-		// try {
-		// InetAddress addr = InetAddress.getByName("www.google.co.jp");
-		// appHost = addr.getHostAddress();
-		//
-		// if (appHost.length() > 8) {
-		// String[] ips = appHost.split("\\.");
-		// if (ips.length == 4)
-		// appHost = ips[0] + "." + ips[1] + ".0.0";
-		// Log.d(TAG, appHost);
-		// }
-		//
-		// } catch (Exception ignore) {
-		// return false;
-		// }
+		try {
+			InetAddress addr = InetAddress.getByName("g.cn");
+			appHost = addr.getHostAddress();
+		} catch (Exception ignore) {
+			// Nothing
+		}
 
 		if (isDNSBlocked) {
-			appHost = settings.getString("appHost", "203.208.46.1");
 
-			try {
-				URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
-				conn.setReadTimeout(10 * 1000);
-				conn.connect();
-				InputStream is = conn.getInputStream();
-				BufferedReader reader = new BufferedReader(
-						new InputStreamReader(is));
-				String line = reader.readLine();
-				if (line == null)
-					return false;
-				if (!line.startsWith("#GAEPROXY"))
-					return false;
-				while (true) {
-					line = reader.readLine();
+			if (appHost == null || !appHost.startsWith("203.208")) {
+				appHost = settings.getString("appHost", "203.208.46.1");
+
+				try {
+					URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
+					HttpURLConnection conn = (HttpURLConnection) aURL
+							.openConnection();
+					conn.setReadTimeout(10 * 1000);
+					conn.connect();
+					InputStream is = conn.getInputStream();
+					BufferedReader reader = new BufferedReader(
+							new InputStreamReader(is));
+					String line = reader.readLine();
 					if (line == null)
+						return false;
+					if (!line.startsWith("#GAEPROXY"))
+						return false;
+					while (true) {
+						line = reader.readLine();
+						if (line == null)
+							break;
+						if (line.startsWith("#"))
+							continue;
+						line = line.trim().toLowerCase();
+						if (line.equals(""))
+							continue;
+						if (!line.equals(appHost)) {
+							File cache = new File(GAEProxyService.BASE
+									+ "cache/dnscache");
+							if (cache.exists())
+								cache.delete();
+							appHost = line;
+							handler.sendEmptyMessage(MSG_HOST_CHANGE);
+						}
 						break;
-					if (line.startsWith("#"))
-						continue;
-					line = line.trim().toLowerCase();
-					if (line.equals(""))
-						continue;
-					if (!line.equals(appHost)) {
-						File cache = new File(GAEProxyService.BASE
-								+ "cache/dnscache");
-						if (cache.exists())
-							cache.delete();
 					}
-					appHost = line;
-					break;
+
+				} catch (Exception e) {
+					Log.e(TAG, "cannot get remote host files", e);
 				}
-
-				handler.sendEmptyMessage(MSG_HOST_CHANGE);
-
-			} catch (Exception e) {
-				Log.e(TAG, "cannot get remote host files", e);
 			}
 		} else {
 			try {

@@ -644,7 +644,7 @@ public class DNSServer implements WrapServer {
 					byte[] answer = createDNSResponse(udpreq, ips);
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
-					Log.d(TAG, "Custom DNS resolver" + orgCache);
+					Log.d(TAG, "Custom DNS resolver: " + questDomain);
 					// } else if
 					// (questDomain.toLowerCase().contains("dotcloud.com")) { //
 					// 如果为apphost域名解析

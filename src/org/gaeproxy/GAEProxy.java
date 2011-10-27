@@ -323,8 +323,10 @@ public class GAEProxy extends PreferenceActivity implements
 				ed.putBoolean("isRunning", false);
 				break;
 			case MSG_INITIAL_FINISH:
-				if (pd != null)
+				if (pd != null) {
 					pd.dismiss();
+					pd = null;
+				}
 				break;
 			}
 			ed.commit();
@@ -332,7 +334,7 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 	};
 
-	private ProgressDialog pd = null;
+	private static ProgressDialog pd = null;
 
 	private CheckBoxPreference isAutoConnectCheck;
 	private CheckBoxPreference isGlobalProxyCheck;
@@ -544,8 +546,9 @@ public class GAEProxy extends PreferenceActivity implements
 		proxyTypeList = (ListPreference) findPreference("proxyType");
 		isGFWListCheck = (CheckBoxPreference) findPreference("isGFWList");
 
-		pd = ProgressDialog.show(this, "", getString(R.string.initializing),
-				true, true);
+		if (pd == null)
+			pd = ProgressDialog.show(this, "",
+					getString(R.string.initializing), true, true);
 
 		new Thread() {
 			@Override
@@ -567,7 +570,7 @@ public class GAEProxy extends PreferenceActivity implements
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
 
-				if (!GAEProxyService.isServiceStarted()) {
+				if (!Utils.isInitialized()) {
 
 					if (Environment.MEDIA_MOUNTED.equals(Environment
 							.getExternalStorageState())) {
@@ -586,7 +589,7 @@ public class GAEProxy extends PreferenceActivity implements
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
-					
+
 					try {
 						URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 						HttpURLConnection conn = (HttpURLConnection) aURL
@@ -613,7 +616,7 @@ public class GAEProxy extends PreferenceActivity implements
 						// Nothing
 					}
 				}
-				
+
 				handler.sendEmptyMessage(MSG_INITIAL_FINISH);
 			}
 		}.start();
@@ -644,9 +647,11 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences.Editor editor = settings.edit();
 		editor.putBoolean("isConnected", GAEProxyService.isServiceStarted());
 		editor.commit();
-		
-		if (pd != null)
+
+		if (pd != null) {
 			pd.dismiss();
+			pd = null;
+		}
 
 		adView.destroy();
 
@@ -831,8 +836,9 @@ public class GAEProxy extends PreferenceActivity implements
 		if (key.equals("isConnecting")) {
 			if (settings.getBoolean("isConnecting", false)) {
 				Log.d(TAG, "Connecting start");
-				pd = ProgressDialog.show(this, "",
-						getString(R.string.connecting), true, true);
+				if (pd == null)
+					pd = ProgressDialog.show(this, "",
+							getString(R.string.connecting), true, true);
 			} else {
 				Log.d(TAG, "Connecting finish");
 				if (pd != null) {
@@ -978,14 +984,16 @@ public class GAEProxy extends PreferenceActivity implements
 
 	private void recovery() {
 
-		final ProgressDialog p = ProgressDialog.show(this, "",
-				getString(R.string.recovering), true, true);
+		if (pd == null)
+			pd = ProgressDialog.show(this, "", getString(R.string.recovering),
+					true, true);
 
 		final Handler h = new Handler() {
 			@Override
 			public void handleMessage(Message msg) {
-				if (p != null) {
-					p.dismiss();
+				if (pd != null) {
+					pd.dismiss();
+					pd = null;
 				}
 			}
 		};

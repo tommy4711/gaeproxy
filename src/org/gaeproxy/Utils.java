@@ -21,10 +21,21 @@ public class Utils {
 
 	public final static String DEFAULT_IPTABLES = "/system/bin/iptables";
 	public final static String ALTERNATIVE_IPTABLES = "/data/data/org.gaeproxy/iptables";
-
+	
+	private static boolean initialized = false;
 	private static int isRoot = -1;
 	private static String root_shell = null;
 	private static String iptables = null;
+	
+	public static boolean isInitialized() {
+		if (initialized)
+			return true;
+		else {
+			initialized = true;
+			return false;
+		}
+			
+	}
 
 	// always return a string
 	public static String getRoot() {

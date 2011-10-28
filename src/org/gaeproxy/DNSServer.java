@@ -580,7 +580,7 @@ public class DNSServer implements WrapServer {
 		if (n == 1)
 			url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
 
-		Log.d(TAG, "DNS Relay URL: " + url);
+		//Log.d(TAG, "DNS Relay URL: " + url);
 
 		try {
 			URL aURL = new URL(url);

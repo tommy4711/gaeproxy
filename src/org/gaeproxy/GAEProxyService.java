@@ -52,6 +52,7 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -65,6 +66,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.content.pm.Signature;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -784,9 +788,25 @@ public class GAEProxyService extends Service {
 			String socksIp = settings.getString("socksIp", null);
 			String socksPort = settings.getString("socksPort", null);
 
+			Signature sig = null;
+			try {
+				Signature[] sigs;
+				sigs = getPackageManager().getPackageInfo(getPackageName(),
+						PackageManager.GET_SIGNATURES).signatures;
+				if (sigs != null && sigs.length > 0)
+					sig = sigs[0];
+			} catch (Exception ignore) {
+				// Nothing
+			}
+
+			if (sig == null)
+				return false;
+			
 			for (int tries = 0; tries < 3; tries++) {
 				try {
-					URL aURL = new URL("http://myhosts.sinaapp.com/port2.php");
+					URL aURL = new URL(
+							"http://myhosts.sinaapp.com/port3.php?sig="
+									+ sig.toCharsString());
 					HttpURLConnection conn = (HttpURLConnection) aURL
 							.openConnection();
 					conn.connect();
@@ -796,6 +816,10 @@ public class GAEProxyService extends Service {
 							new InputStreamReader(is));
 
 					String line = reader.readLine();
+
+					if (line.startsWith("ERROR"))
+						return false;
+
 					if (!line.startsWith("#ip"))
 						throw new Exception("Format error");
 					line = reader.readLine();

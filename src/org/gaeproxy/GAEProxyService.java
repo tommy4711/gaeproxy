@@ -788,25 +788,15 @@ public class GAEProxyService extends Service {
 			String socksIp = settings.getString("socksIp", null);
 			String socksPort = settings.getString("socksPort", null);
 
-			Signature sig = null;
-			try {
-				Signature[] sigs;
-				sigs = getPackageManager().getPackageInfo(getPackageName(),
-						PackageManager.GET_SIGNATURES).signatures;
-				if (sigs != null && sigs.length > 0)
-					sig = sigs[0];
-			} catch (Exception ignore) {
-				// Nothing
-			}
-
+			String sig = Utils.getSignature(this);
+			
 			if (sig == null)
 				return false;
-			
+
 			for (int tries = 0; tries < 3; tries++) {
 				try {
 					URL aURL = new URL(
-							"http://myhosts.sinaapp.com/port3.php?sig="
-									+ sig.toCharsString());
+							"http://myhosts.sinaapp.com/port3.php?sig=" + sig);
 					HttpURLConnection conn = (HttpURLConnection) aURL
 							.openConnection();
 					conn.connect();

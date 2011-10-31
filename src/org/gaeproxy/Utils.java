@@ -13,6 +13,7 @@ import java.util.zip.GZIPOutputStream;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
@@ -32,6 +33,22 @@ public class Utils {
 	private static int isRoot = -1;
 	private static String root_shell = null;
 	private static String iptables = null;
+	
+	public static String getSignature(Context ctx) {
+		Signature sig = null;
+		try {
+			Signature[] sigs;
+			sigs = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(),
+					PackageManager.GET_SIGNATURES).signatures;
+			if (sigs != null && sigs.length > 0)
+				sig = sigs[0];
+		} catch (Exception ignore) {
+			// Nothing
+		}
+		if (sig == null)
+			return null;
+		return sig.toCharsString();
+	}
 	
 	public static boolean isInitialized() {
 		if (initialized)

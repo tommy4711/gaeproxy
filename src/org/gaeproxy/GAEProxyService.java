@@ -651,7 +651,7 @@ public class GAEProxyService extends Service {
 
 		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		Utils.runCommand(BASE + "proxy.sh stop");
+		Utils.runRootCommand(BASE + "proxy.sh stop");
 
 	}
 

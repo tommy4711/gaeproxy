@@ -50,8 +50,8 @@ hk = $5|74.125.71.103|74.125.71.104|74.125.71.105|74.125.71.106|74.125.71.147|74
 ipv6 = 2404:6800:8005::6a|2404:6800:8005::62|2404:6800:8005::2c
 
 [google]
-sites = .google.com|.googleusercontent.com|.googleapis.com|.google-analytics.com|.googlecode.com|.google.com.hk|.appspot.com|.android.com
-forcehttps = groups.google.com|code.google.com|mail.google.com|docs.google.com|profiles.google.com|developer.android.com
+sites = .googleusercontent.com|.googleapis.com|.google-analytics.com|.googlecode.com|.appspot.com|.android.com
+forcehttps = www.google.com|groups.google.com|code.google.com|mail.google.com|docs.google.com|profiles.google.com|developer.android.com
 withgae = plus.google.com|reader.googleusercontent.com|music.google.com
 hosts = $5|74.125.71.103|74.125.71.104|74.125.71.105|74.125.71.106|74.125.71.147|74.125.71.17|74.125.71.18|74.125.71.19|74.125.71.83|74.125.71.99
 

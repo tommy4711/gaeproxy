@@ -651,7 +651,10 @@ public class GAEProxyService extends Service {
 
 		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		Utils.runRootCommand(BASE + "proxy.sh stop");
+		if (Utils.isRoot())
+			Utils.runRootCommand(BASE + "proxy.sh stop");
+		else
+			Utils.runCommand(BASE + "proxy.sh stop");
 
 	}
 
@@ -789,7 +792,7 @@ public class GAEProxyService extends Service {
 			String socksPort = settings.getString("socksPort", null);
 
 			String sig = Utils.getSignature(this);
-			
+
 			if (sig == null)
 				return false;
 

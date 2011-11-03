@@ -570,7 +570,7 @@ public class GAEProxy extends PreferenceActivity implements
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
 
-				if (!Utils.isInitialized()) {
+				if (!Utils.isInitialized() && !GAEProxyService.isServiceStarted()) {
 
 					if (Environment.MEDIA_MOUNTED.equals(Environment
 							.getExternalStorageState())) {

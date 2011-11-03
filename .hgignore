@@ -5,3 +5,5 @@ syntax: regexp
 .git
 syntax: regexp
 bin
+syntax: regexp
+^proguard$

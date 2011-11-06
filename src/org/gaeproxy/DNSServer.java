@@ -585,6 +585,8 @@ public class DNSServer implements WrapServer {
 		try {
 			URL aURL = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setConnectTimeout(2000);
+			conn.setReadTimeout(5000);
 			conn.connect();
 			is = conn.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));

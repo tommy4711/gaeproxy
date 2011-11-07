@@ -1,14 +1,8 @@
 package org.gaeproxy;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -26,8 +20,8 @@ public class Utils {
 	public final static String DEFAULT_ROOT = "/system/bin/su";
 	public final static String ALTERNATIVE_ROOT = "/system/xbin/su";
 
-	public final static String DEFAULT_IPTABLES = "/system/bin/iptables";
-	public final static String ALTERNATIVE_IPTABLES = "/data/data/org.gaeproxy/iptables";
+	public final static String DEFAULT_IPTABLES = "/data/data/org.gaeproxy/iptables";
+	public final static String ALTERNATIVE_IPTABLES = "/system/bin/iptables";
 	
 	private static boolean initialized = false;
 	private static int isRoot = -1;

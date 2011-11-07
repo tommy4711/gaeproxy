@@ -147,7 +147,7 @@ public class Utils {
 			process = Runtime.getRuntime().exec(getRoot());
 			es = new DataInputStream(process.getInputStream());
 			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(iptables + " --version");
+			os.writeBytes(iptables + " --version\n");
 			os.writeBytes(iptables + " -L -t nat\n");
 			os.writeBytes("exit\n");
 			os.flush();

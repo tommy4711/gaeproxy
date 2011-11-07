@@ -22,12 +22,12 @@ public class Utils {
 
 	public final static String DEFAULT_IPTABLES = "/data/data/org.gaeproxy/iptables";
 	public final static String ALTERNATIVE_IPTABLES = "/system/bin/iptables";
-	
+
 	private static boolean initialized = false;
 	private static int isRoot = -1;
 	private static String root_shell = null;
 	private static String iptables = null;
-	
+
 	public static String getSignature(Context ctx) {
 		Signature sig = null;
 		try {
@@ -43,7 +43,7 @@ public class Utils {
 			return null;
 		return sig.toCharsString();
 	}
-	
+
 	public static boolean isInitialized() {
 		if (initialized)
 			return true;
@@ -51,7 +51,7 @@ public class Utils {
 			initialized = true;
 			return false;
 		}
-			
+
 	}
 
 	// always return a string
@@ -133,12 +133,7 @@ public class Utils {
 			return;
 
 		// Check iptables binary
-		if (new File(DEFAULT_IPTABLES).exists()) {
-			iptables = DEFAULT_IPTABLES;
-		} else {
-			iptables = ALTERNATIVE_IPTABLES;
-			return;
-		}
+		iptables = DEFAULT_IPTABLES;
 
 		Process process = null;
 		DataInputStream es = null;

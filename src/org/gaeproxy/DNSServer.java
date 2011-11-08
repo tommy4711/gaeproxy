@@ -672,7 +672,7 @@ public class DNSServer implements WrapServer {
 					}
 
 					while (threadNum >= MAX_THREAD_NUM) {
-						Thread.sleep(2000);
+						Thread.sleep(5000);
 					}
 
 					if (dnsError > DNS_ERROR_LIMIT)

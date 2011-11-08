@@ -577,7 +577,7 @@ public class DNSServer implements WrapServer {
 
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
-		if (dnsError > DNS_ERROR_LIMIT / 5) {
+		if (dnsError > DNS_ERROR_LIMIT / 2) {
 			url = "http://www.hosts.dotcloud.com/lookup.php?host="
 					+ encode_host;
 		} else {

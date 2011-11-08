@@ -154,7 +154,7 @@ public class DNSServer implements WrapServer {
 
 	private boolean inService = false;
 	private boolean httpMode = false;
-	private int dnsError = 0;
+	private volatile int dnsError = 0;
 
 	private Hashtable<String, DnsResponse> dnsCache = new Hashtable<String, DnsResponse>();
 
@@ -577,7 +577,7 @@ public class DNSServer implements WrapServer {
 
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
-		if (dnsError > DNS_ERROR_LIMIT / 2) {
+		if (dnsError > DNS_ERROR_LIMIT / 5) {
 			url = "http://www.hosts.dotcloud.com/lookup.php?host="
 					+ encode_host;
 		} else {
@@ -587,11 +587,9 @@ public class DNSServer implements WrapServer {
 				url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
 			else if (n == 2)
 				url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
-			else if (n == 3)
-				url = "http://gaednsproxy3.appspot.com/?d=" + encode_host;
 		}
 
-		// Log.d(TAG, "DNS Relay URL: " + url);
+		Log.d(TAG, "DNS Relay URL: " + url);
 
 		try {
 			URL aURL = new URL(url);
@@ -679,6 +677,8 @@ public class DNSServer implements WrapServer {
 
 					if (dnsError > DNS_ERROR_LIMIT)
 						httpMode = false;
+					else
+						httpMode = true;
 
 					threadNum++;
 
@@ -708,11 +708,13 @@ public class DNSServer implements WrapServer {
 								} else {
 									Log.e(TAG,
 											"The size of DNS packet returned is 0");
-									dnsError++;
+									if (httpMode)
+										dnsError++;
 								}
 							} catch (Exception e) {
 								// Nothing
-								dnsError++;
+								if (httpMode)
+									dnsError++;
 							}
 							synchronized (DNSServer.this) {
 								domains.remove(questDomain);

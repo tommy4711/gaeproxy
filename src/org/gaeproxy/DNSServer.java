@@ -166,7 +166,7 @@ public class DNSServer implements WrapServer {
 
 	private String target = "8.8.8.8:53";
 
-	private String appHost = "203.208.39.104";
+	private String appHost = "203.208.46.1";
 	private String dnsRelay = "174.129.17.131";
 
 	private static final String CANT_RESOLVE = "Error";
@@ -185,15 +185,15 @@ public class DNSServer implements WrapServer {
 		initOrgCache();
 
 		// upper dns server not reachable, so use http mode
-		// if (httpMode) {
-		// try {
-		// InetAddress addr = InetAddress
-		// .getByName("www.hosts.dotcloud.com");
-		// dnsRelay = addr.getHostAddress();
-		// } catch (Exception ignore) {
-		// dnsRelay = "174.129.17.131";
-		// }
-		// }
+		if (httpMode) {
+			try {
+				InetAddress addr = InetAddress
+						.getByName("www.hosts.dotcloud.com");
+				dnsRelay = addr.getHostAddress();
+			} catch (Exception ignore) {
+				dnsRelay = "174.129.17.131";
+			}
+		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -577,16 +577,20 @@ public class DNSServer implements WrapServer {
 
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
-		Random random = new Random(System.currentTimeMillis());
-		int n = random.nextInt(3);
-		if (n == 1)
-			url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
-		else if (n == 2)
-			url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
-		else if (n == 3)
-			url = "http://gaednsproxy3.appspot.com/?d=" + encode_host;
+		if (dnsError > DNS_ERROR_LIMIT / 2) {
+			url = "http://www.hosts.dotcloud.com/lookup.php?host=" + encode_host;
+		} else {
+			Random random = new Random(System.currentTimeMillis());
+			int n = random.nextInt(3);
+			if (n == 1)
+				url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
+			else if (n == 2)
+				url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
+			else if (n == 3)
+				url = "http://gaednsproxy3.appspot.com/?d=" + encode_host;
+		}
 
-		//Log.d(TAG, "DNS Relay URL: " + url);
+		// Log.d(TAG, "DNS Relay URL: " + url);
 
 		try {
 			URL aURL = new URL(url);
@@ -673,7 +677,7 @@ public class DNSServer implements WrapServer {
 					while (threadNum >= MAX_THREAD_NUM) {
 						Thread.sleep(2000);
 					}
-					
+
 					if (dnsError > DNS_ERROR_LIMIT)
 						httpMode = false;
 

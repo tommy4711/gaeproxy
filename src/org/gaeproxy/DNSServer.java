@@ -150,7 +150,7 @@ public class DNSServer implements WrapServer {
 			0x00, 0x00, 0x00, 0x3c, 0x00, 0x04 };
 
 	final private int IP_SECTION_LEN = 4;
-	final private int DNS_ERROR_LIMIT = 10;
+	final private int DNS_ERROR_LIMIT = 20;
 
 	private boolean inService = false;
 	private boolean httpMode = false;
@@ -577,7 +577,7 @@ public class DNSServer implements WrapServer {
 
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
-		if (dnsError > DNS_ERROR_LIMIT / 5) {
+		if (dnsError > DNS_ERROR_LIMIT / 10) {
 			url = "http://www.hosts.dotcloud.com/lookup.php?host="
 					+ encode_host;
 		} else {
@@ -703,8 +703,6 @@ public class DNSServer implements WrapServer {
 													+ (System
 															.currentTimeMillis() - startTime)
 													/ 1000 + "s");
-									if (httpMode && dnsError > 0)
-										dnsError--;
 								} else {
 									Log.e(TAG,
 											"The size of DNS packet returned is 0");

@@ -150,9 +150,11 @@ public class DNSServer implements WrapServer {
 			0x00, 0x00, 0x00, 0x3c, 0x00, 0x04 };
 
 	final private int IP_SECTION_LEN = 4;
+	final private int DNS_ERROR_LIMIT = 10;
 
 	private boolean inService = false;
 	private boolean httpMode = false;
+	private int dnsError = 0;
 
 	private Hashtable<String, DnsResponse> dnsCache = new Hashtable<String, DnsResponse>();
 
@@ -395,8 +397,8 @@ public class DNSServer implements WrapServer {
 				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 				HttpURLConnection conn = (HttpURLConnection) aURL
 						.openConnection();
-				conn.setConnectTimeout(2000);
-				conn.setReadTimeout(5000);
+				conn.setConnectTimeout(5000);
+				conn.setReadTimeout(10000);
 				conn.connect();
 				is = conn.getInputStream();
 			} else {
@@ -576,17 +578,21 @@ public class DNSServer implements WrapServer {
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
 		Random random = new Random(System.currentTimeMillis());
-		int n = random.nextInt(2);
+		int n = random.nextInt(3);
 		if (n == 1)
 			url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
+		else if (n == 2)
+			url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
+		else if (n == 3)
+			url = "http://gaednsproxy3.appspot.com/?d=" + encode_host;
 
 		//Log.d(TAG, "DNS Relay URL: " + url);
 
 		try {
 			URL aURL = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
-			conn.setConnectTimeout(2000);
-			conn.setReadTimeout(5000);
+			conn.setConnectTimeout(30000);
+			conn.setReadTimeout(30000);
 			conn.connect();
 			is = conn.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -667,6 +673,9 @@ public class DNSServer implements WrapServer {
 					while (threadNum >= MAX_THREAD_NUM) {
 						Thread.sleep(2000);
 					}
+					
+					if (dnsError > DNS_ERROR_LIMIT)
+						httpMode = false;
 
 					threadNum++;
 
@@ -694,9 +703,11 @@ public class DNSServer implements WrapServer {
 								} else {
 									Log.e(TAG,
 											"The size of DNS packet returned is 0");
+									dnsError++;
 								}
 							} catch (Exception e) {
 								// Nothing
+								dnsError++;
 							}
 							synchronized (DNSServer.this) {
 								domains.remove(questDomain);

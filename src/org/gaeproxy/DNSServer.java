@@ -578,7 +578,8 @@ public class DNSServer implements WrapServer {
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
 
 		if (dnsError > DNS_ERROR_LIMIT / 2) {
-			url = "http://www.hosts.dotcloud.com/lookup.php?host=" + encode_host;
+			url = "http://www.hosts.dotcloud.com/lookup.php?host="
+					+ encode_host;
 		} else {
 			Random random = new Random(System.currentTimeMillis());
 			int n = random.nextInt(3);
@@ -657,14 +658,12 @@ public class DNSServer implements WrapServer {
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "Custom DNS resolver: " + questDomain);
-					// } else if
-					// (questDomain.toLowerCase().contains("dotcloud.com")) { //
-					// 如果为apphost域名解析
-					// byte[] ips = parseIPString(dnsRelay);
-					// byte[] answer = createDNSResponse(udpreq, ips);
-					// addToCache(questDomain, answer);
-					// sendDns(answer, dnsq, srvSocket);
-					// Log.d(TAG, "Custom DNS resolver" + orgCache);
+				} else if (questDomain.toLowerCase().contains("dotcloud.com")) { // 如果为dotcloud域名解析
+					byte[] ips = parseIPString(dnsRelay);
+					byte[] answer = createDNSResponse(udpreq, ips);
+					addToCache(questDomain, answer);
+					sendDns(answer, dnsq, srvSocket);
+					Log.d(TAG, "Custom DNS resolver" + orgCache);
 				} else {
 
 					synchronized (this) {
@@ -704,6 +703,8 @@ public class DNSServer implements WrapServer {
 													+ (System
 															.currentTimeMillis() - startTime)
 													/ 1000 + "s");
+									if (httpMode && dnsError > 0)
+										dnsError--;
 								} else {
 									Log.e(TAG,
 											"The size of DNS packet returned is 0");

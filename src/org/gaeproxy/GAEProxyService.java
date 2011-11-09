@@ -796,12 +796,14 @@ public class GAEProxyService extends Service {
 			if (sig == null)
 				return false;
 
-			for (int tries = 0; tries < 3; tries++) {
+			for (int tries = 0; tries < 2; tries++) {
 				try {
 					URL aURL = new URL(
 							"http://myhosts.sinaapp.com/port3.php?sig=" + sig);
 					HttpURLConnection conn = (HttpURLConnection) aURL
 							.openConnection();
+					conn.setConnectTimeout(4000);
+					conn.setReadTimeout(8000);
 					conn.connect();
 					is = conn.getInputStream();
 

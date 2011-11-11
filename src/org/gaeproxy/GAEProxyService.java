@@ -565,7 +565,7 @@ public class GAEProxyService extends Service {
 		// Start the tracker in manual dispatch mode...
 		tracker.startNewSession("UA-21682712-1", this);
 
-		tracker.trackPageView("/version%20" + getVersionName());
+		tracker.trackPageView("/version-" + getVersionName());
 		
 		tracker.dispatch();
 

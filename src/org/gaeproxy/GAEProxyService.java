@@ -56,6 +56,8 @@ import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.Random;
 
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -66,6 +68,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
@@ -79,8 +82,6 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
-
-import com.flurry.android.FlurryAgent;
 
 public class GAEProxyService extends Service {
 
@@ -133,6 +134,8 @@ public class GAEProxyService extends Service {
 	private boolean isDNSBlocked = true;
 	private boolean isGFWList = false;
 	private volatile boolean isStopped = false;
+
+	GoogleAnalyticsTracker tracker;
 
 	private ProxyedApp apps[];
 
@@ -541,9 +544,31 @@ public class GAEProxyService extends Service {
 		return null;
 	}
 
+	private String getVersionName() {
+		String version;
+		try {
+			PackageInfo pi = getPackageManager().getPackageInfo(
+					getPackageName(), 0);
+			version = pi.versionName;
+		} catch (PackageManager.NameNotFoundException e) {
+			version = "Package name not found";
+		}
+		return version;
+	}
+
 	@Override
 	public void onCreate() {
 		super.onCreate();
+
+		tracker = GoogleAnalyticsTracker.getInstance();
+
+		// Start the tracker in manual dispatch mode...
+		tracker.startNewSession("UA-21682712-1", this);
+
+		tracker.trackPageView("/version%20" + getVersionName());
+		
+		tracker.dispatch();
+
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
 				.getSystemService(NOTIFICATION_SERVICE);
@@ -575,6 +600,8 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
+		
+		tracker.stopSession();
 
 		statusLock = true;
 
@@ -583,8 +610,6 @@ public class GAEProxyService extends Service {
 		isStopped = true;
 
 		// runRootCommand(BASE + "host.sh remove");
-
-		FlurryAgent.onEndSession(this);
 
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
@@ -679,8 +704,6 @@ public class GAEProxyService extends Service {
 	public void handleCommand(Intent intent) {
 
 		Log.d(TAG, "Service Start");
-
-		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
 
 		if (intent == null) {
 			stopSelf();

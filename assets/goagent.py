@@ -3,7 +3,7 @@
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang@188.com>
 # Based on WallProxy 0.4.0 by hexieshe <www.ehust@gmail.com>
 
-__version__ = '1.6.6'
+__version__ = '1.6.7'
 __author__ = "{phus.lu,hewigovens}@gmail.com (Phus Lu and Hewig Xu)"
 
 import sys, os, re, time, errno, binascii, zlib
@@ -70,10 +70,11 @@ class Common(object):
 
         self.FETCHMAX_LOCAL       = self.CONFIG.getint('fetchmax', 'local') if self.CONFIG.get('fetchmax', 'local') else 3
         self.FETCHMAX_SERVER      = self.CONFIG.get('fetchmax', 'server')
-        self.AUTORANGE_HOSTS      = tuple(self.CONFIG.get('autorange', 'hosts').split('|'))
 
+        self.AUTORANGE_HOSTS      = tuple(self.CONFIG.get('autorange', 'hosts').split('|'))
         self.AUTORANGE_HOSTS_TAIL = tuple(x.rpartition('*')[2] for x in self.AUTORANGE_HOSTS)
         self.AUTORANGE_ENDSWITH   = tuple(self.CONFIG.get('autorange', 'endswith').split('|'))
+        self.AUTORANGE_MAXSIZE    = self.CONFIG.getint('autorange', 'maxsize')
 
         self.USERAGENT_ENABLE     = self.CONFIG.getint('useragent', 'enable')
         self.USERAGENT_STRING     = self.CONFIG.get('useragent', 'string')
@@ -348,6 +349,33 @@ class CertUtil(object):
         crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
         return (keyFile, crtFile)
 
+    @staticmethod
+    def checkCA():
+        #Check CA exists
+        keyFile = os.path.join(os.path.dirname(__file__), 'CA.key')
+        crtFile = os.path.join(os.path.dirname(__file__), 'CA.crt')
+        if not os.path.exists(keyFile):
+            if not OpenSSL:
+                logging.critical('CA.crt is not exist and OpenSSL is disabled, ABORT!')
+                sys.exit(-1)
+            key, crt = CertUtil.makeCA()
+            CertUtil.writeFile(keyFile, key)
+            CertUtil.writeFile(crtFile, crt)
+            [os.remove(os.path.join('certs', x)) for x in os.listdir('certs')]
+        #Check CA imported
+        cmd = {
+                'win32'  : r'cd /d "%s" && certmgr.exe -add CA.crt -c -s -r localMachine Root >NUL' % os.path.dirname(__file__),
+                #'darwin' : r'sudo security add-trusted-cert -d –r trustRoot –k /Library/Keychains/System.keychain CA.crt',
+              }.get(sys.platform)
+        if cmd and os.system(cmd) != 0:
+            logging.warn('GoAgent install trusted root CA certificate failed, Please run goagent by administrator/root.')
+        if OpenSSL:
+            keyFile = os.path.join(os.path.dirname(__file__), 'CA.key')
+            crtFile = os.path.join(os.path.dirname(__file__), 'CA.crt')
+            cakey = CertUtil.readFile(keyFile)
+            cacrt = CertUtil.readFile(crtFile)
+            CertUtil.CA = (CertUtil.loadPEM(cakey, 0), CertUtil.loadPEM(cacrt, 2))
+
 def urlfetch(url, payload, method, headers, fetchhost, fetchserver, on_error=None):
     errors = []
     params = {'url':url, 'method':method, 'headers':str(headers), 'payload':payload}
@@ -423,6 +451,15 @@ class SimpleMessageClass(object):
     def get(self, name, default=None):
         return self.dict.get(name.lower(), default)
 
+    def iteritems(self):
+        return self.dict.iteritems()
+
+    def iterkeys(self):
+        return self.dict.iterkeys()
+
+    def itervalues(self):
+        return self.dict.itervalues()
+
     def __getitem__(self, name):
         return self.dict[name.lower()]
 
@@ -451,9 +488,8 @@ class SimpleMessageClass(object):
         return ''.join(self.headers or self.linedict.itervalues())
 
 class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    part_size = 1024 * 1024
     skip_headers = frozenset(['host', 'vary', 'via', 'x-forwarded-for', 'proxy-authorization', 'proxy-connection', 'upgrade', 'keep-alive'])
-    setuplock = threading.Lock()
+    SetupLock = threading.Lock()
     MessageClass = SimpleMessageClass
 
     def handle_fetch_error(self, error):
@@ -517,7 +553,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             data['code'] = 200
             del data['headers']['content-range']
         data['headers']['content-length'] = end-start+1
-        partSize = self.part_size
+        partSize = common.AUTORANGE_MAXSIZE
 
         respline = '%s %d %s\r\n' % (self.protocol_version, data['code'], '')
         strheaders = ''.join('%s: %s\r\n' % ('-'.join(x.title() for x in k.split('-')), v) for k, v in data['headers'].iteritems())
@@ -528,7 +564,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             start = m[1] + 1
             partSize = len(data['content'])
         failed = 0
-        logging.info('>>>>>>>>>>>>>>> Range Fetch started')
+        logging.info('>>>>>>>>>>>>>>> Range Fetch started(host=%r)', self.headers.get('Host'))
         while start <= end:
             if failed > 16:
                 break
@@ -548,7 +584,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             logging.info('>>>>>>>>>>>>>>> %s %d' % (data['headers']['content-range'], end))
             failed = 0
             self.wfile.write(data['content'])
-        logging.info('>>>>>>>>>>>>>>> Range Fetch ended')
+        logging.info('>>>>>>>>>>>>>>> Range Fetch ended(host=%r)', self.headers.get('Host'))
         return True
 
     def address_string(self):
@@ -685,7 +721,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     idlecall = conn.close
                 else:
                     sock = socket.create_connection((host, port))
-                self.headers['connection'] = 'close'
+                self.headers['Connection'] = 'close'
                 data = '%s %s %s\r\n'  % (self.command, urlparse.urlunparse(('', '', path, params, query, '')), self.request_version)
                 data += ''.join('%s: %s\r\n' % (k, self.headers[k]) for k in self.headers if not k.startswith('proxy-'))
                 data += '\r\n'
@@ -701,7 +737,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data += 'Host: %s\r\n' % netloc
                 if common.PROXY_USERNAME and not common.PROXY_NTLM:
                     data += '%s\r\n' % common.proxy_basic_auth_header()
-                data += 'Proxy-connection: close\r\n'
+                data += 'Proxy-Connection: close\r\n'
                 data += '\r\n'
 
             content_length = int(self.headers.get('content-length', 0))
@@ -728,13 +764,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             payload = ''
 
-        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.dict.iteritems() if k not in self.skip_headers)
+        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in self.skip_headers)
 
         if host.endswith(common.AUTORANGE_HOSTS_TAIL):
             for pattern in common.AUTORANGE_HOSTS:
                 if host.endswith(pattern) or fnmatch.fnmatch(host, pattern):
                     logging.debug('autorange pattern=%r match url=%r', pattern, self.path)
-                    headers += 'range: bytes=0-%d\r\n' % self.part_size
+                    headers += 'range: bytes=0-%d\r\n' % common.AUTORANGE_MAXSIZE
                     break
 
         retval, data = self.fetch(self.path, payload, self.command, headers)
@@ -748,7 +784,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', headers.get('content-range',''))
                 if m and self.rangefetch(m, data):
                     return
-            content = '%s %d %s\r\n%s\r\n%s' % (self.protocol_version, code, self.responses.get(code, ('GoAgent Notify', ''))[0], ''.join('%s: %s\r\n' % (k, v) for k, v in headers.iteritems()), data['content'])
+            content = '%s %d %s\r\n%s\r\n%s' % (self.protocol_version, code, self.responses.get(code, ('GoAgent Notify', ''))[0], ''.join('%s: %s\r\n' % ('-'.join(x.title() for x in k.split('-')), v) for k, v in headers.iteritems()), data['content'])
             self.connection.sendall(content)
             if 'close' == headers.get('connection',''):
                 self.close_connection = 1
@@ -772,7 +808,7 @@ class PHPProxyHandler(LocalProxyHandler):
             fetchhost = common.PHP_FETCHHOST
             logging.info('PHPProxyHandler.setup check %s is in common.HOSTS', fetchhost)
             if fetchhost not in common.HOSTS:
-                with LocalProxyHandler.setuplock:
+                with LocalProxyHandler.SetupLock:
                     if fetchhost not in common.HOSTS:
                         try:
                             logging.info('Resole php fetchserver address.')
@@ -835,7 +871,8 @@ def main():
     except OSError, e:   
         print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)   
         sys.exit(1)
-
+    
+    
     if ctypes and os.name == 'nt':
         ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % __version__)
         try_show_love()
@@ -843,7 +880,7 @@ def main():
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     if common.GAE_DEBUGLEVEL:
         logging.root.setLevel(logging.DEBUG)
-
+    
     common.install_opener()
     sys.stdout.write(common.info())
     LocalProxyServer.address_family = (socket.AF_INET, socket.AF_INET6)[':' in common.LISTEN_IP]
@@ -851,13 +888,13 @@ def main():
     if common.PHP_ENABLE:
         httpd = LocalProxyServer((common.PHP_IP, common.PHP_PORT), PHPProxyHandler)
         thread.start_new_thread(httpd.serve_forever, ())
-        
+    
     pid = str(os.getpid())
     f = open('/data/data/org.gaeproxy/python.pid','a')
     f.write(" ")
     f.write(pid)
     f.close()
-        
+    
     httpd = LocalProxyServer((common.LISTEN_IP, common.LISTEN_PORT), LocalProxyHandler)
     httpd.serve_forever()
 

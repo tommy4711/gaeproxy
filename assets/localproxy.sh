@@ -59,6 +59,7 @@ server =
 [autorange]
 hosts = .youtube.com|.googlevideo.com|av.vimeo.com|.mediafire.com|.filesonic.com|.filesonic.jp|smile-*.nicovideo.jp|video.*.fbcdn.net
 endswith = .7z|.zip|.rar|.bz2|.tar|.wmv|.avi
+maxsize = 2097152
 
 [useragent]
 enable = 0

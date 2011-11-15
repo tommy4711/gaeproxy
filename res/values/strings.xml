@@ -125,7 +125,7 @@
 		IPTABLES support)
 	</string>
 	<string name="toast_start">Connecting to GAE Proxy</string>
-	<string name="toast_start">Reconnecting to GAE Proxy</string>
+	<string name="toast_restart">Reconnecting to GAE Proxy</string>
 
 	<string name="browser">Start GAE Browser</string>
 	<string name="browser_summary">Start a browser through GAE proxy, for users

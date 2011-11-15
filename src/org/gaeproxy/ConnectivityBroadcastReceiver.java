@@ -105,7 +105,7 @@ public class ConnectivityBroadcastReceiver extends BroadcastReceiver {
 								GAEProxyService.class));
 						
 						Toast.makeText(context,
-								context.getString(R.string.toast_start),
+								context.getString(R.string.toast_restart),
 								Toast.LENGTH_LONG).show();
 						
 						try {

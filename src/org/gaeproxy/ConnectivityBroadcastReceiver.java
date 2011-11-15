@@ -101,12 +101,13 @@ public class ConnectivityBroadcastReceiver extends BroadcastReceiver {
 
 				if (!currentSSID.equals(lastSSID)) {
 					if (GAEProxyService.isServiceStarted()) {
-						context.stopService(new Intent(context,
-								GAEProxyService.class));
 						
 						Toast.makeText(context,
 								context.getString(R.string.toast_restart),
 								Toast.LENGTH_LONG).show();
+						
+						context.stopService(new Intent(context,
+								GAEProxyService.class));
 						
 						try {
 							Thread.sleep(2000);

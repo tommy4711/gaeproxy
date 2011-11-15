@@ -67,6 +67,10 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.AssetManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -570,7 +574,31 @@ public class GAEProxy extends PreferenceActivity implements
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
 
-				if (!Utils.isInitialized() && !GAEProxyService.isServiceStarted()) {
+				if (!Utils.isInitialized()
+						&& !GAEProxyService.isServiceStarted()) {
+					
+					ConnectivityManager manager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+					NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+
+					String currentSSID = "-1";
+
+					if (networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+						WifiManager wm = (WifiManager) getSystemService(Context.WIFI_SERVICE);
+						WifiInfo wInfo = wm.getConnectionInfo();
+						if (wInfo != null) {
+							currentSSID = wInfo.getSSID();
+						}
+					} else if (networkInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
+						currentSSID = Integer
+								.toString(ConnectivityManager.TYPE_MOBILE);
+					}
+
+					SharedPreferences settings = PreferenceManager
+							.getDefaultSharedPreferences(GAEProxy.this);
+
+					Editor ed = settings.edit();
+					ed.putString("lastSSID", currentSSID);
+					ed.commit();
 
 					if (Environment.MEDIA_MOUNTED.equals(Environment
 							.getExternalStorageState())) {

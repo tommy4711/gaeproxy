@@ -50,6 +50,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 
 public class ConnectivityBroadcastReceiver extends BroadcastReceiver {
 
@@ -102,8 +103,13 @@ public class ConnectivityBroadcastReceiver extends BroadcastReceiver {
 					if (GAEProxyService.isServiceStarted()) {
 						context.stopService(new Intent(context,
 								GAEProxyService.class));
+						
+						Toast.makeText(context,
+								context.getString(R.string.toast_start),
+								Toast.LENGTH_LONG).show();
+						
 						try {
-							Thread.sleep(1000);
+							Thread.sleep(2000);
 						} catch (InterruptedException ignore) {
 							// Nothing
 						}

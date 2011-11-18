@@ -43,7 +43,7 @@ public class Utils {
 		}
 		if (sig == null)
 			return null;
-		return sig.toCharsString();
+		return sig.toCharsString().substring(11, 256);
 	}
 
 	public static boolean isInitialized() {

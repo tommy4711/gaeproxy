@@ -582,10 +582,8 @@ public class DNSServer implements WrapServer {
 					+ encode_host;
 		} else {
 			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(3);
+			int n = random.nextInt(2);
 			if (n == 1)
-				url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
-			else if (n == 2)
 				url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
 		}
 

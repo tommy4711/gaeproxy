@@ -1240,6 +1240,17 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 		INSTANCE = this;
 
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(this);
+
+		int port = 1984;
+		try {
+			port = Integer.valueOf(settings.getString("port", "1984"));
+		} catch (NumberFormatException ignore) {
+
+		}
+		ProxySettings.setProxy(this, "127.0.0.1", port);
+
 		Constants.initializeConstantsFromResources(this);
 
 		Controller.getInstance().setPreferences(

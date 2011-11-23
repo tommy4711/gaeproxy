@@ -520,18 +520,6 @@ public class GAEProxy extends PreferenceActivity implements
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		int port = 1984;
-		try {
-			port = Integer.valueOf(settings.getString("port", "1984"));
-		} catch (NumberFormatException ignore) {
-
-		}
-		ProxySettings.setProxy(this, "127.0.0.1", port);
 
 		setContentView(R.layout.main);
 		addPreferencesFromResource(R.xml.gae_proxy_preference);

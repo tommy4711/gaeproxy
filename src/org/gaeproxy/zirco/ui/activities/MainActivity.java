@@ -1312,17 +1312,6 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 		startToolbarsHideRunnable();
 
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		int port = 1984;
-		try {
-			port = Integer.valueOf(settings.getString("port", "1984"));
-		} catch (NumberFormatException ignore) {
-
-		}
-		ProxySettings.setProxy(this, "127.0.0.1", port);
-
 	}
 
 	@Override

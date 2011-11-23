@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import org.apache.http.HttpHost;
 
 import android.content.Context;
+import android.util.Log;
 
 /**
  * Utility class for setting WebKit proxy used by Android WebView
@@ -13,6 +14,8 @@ import android.content.Context;
  */
 public class ProxySettings {
 
+	private static final String TAG = "GAEProxy.ProxySettings";
+	
 	private static Object getDeclaredField(Object obj, String name)
 			throws SecurityException, NoSuchFieldException,
 			IllegalArgumentException, IllegalAccessException {
@@ -79,6 +82,7 @@ public class ProxySettings {
 	 */
 	public static boolean setProxy(Context ctx, String host, int port) {
 		boolean ret = false;
+		setSystemProperties(host, port);
 		try {
 			Object requestQueueObject = getRequestQueue(ctx);
 			if (requestQueueObject != null) {
@@ -88,8 +92,21 @@ public class ProxySettings {
 				ret = true;
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			Log.e(TAG, "error setting up webkit proxying", e);
 		}
 		return ret;
+	}
+
+	private static void setSystemProperties(String host, int port) {
+
+		System.setProperty("http.proxyHost", host);
+		System.setProperty("http.proxyPort", port + "");
+
+		System.setProperty("https.proxyHost", host);
+		System.setProperty("https.proxyPort", port + "");
+
+		System.setProperty("socks.proxyHost", host);
+		System.setProperty("socks.proxyPort", port + "");
+
 	}
 }

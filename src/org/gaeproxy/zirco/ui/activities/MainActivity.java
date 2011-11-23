@@ -1549,6 +1549,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 	@Override
 	protected void onPause() {
+		WebView.disablePlatformNotifications();
 		mCurrentWebView.doOnPause();
 		super.onPause();
 	}
@@ -1562,6 +1563,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 	@Override
 	protected void onResume() {
+		WebView.enablePlatformNotifications();
 		mCurrentWebView.doOnResume();
 		super.onResume();
 	}

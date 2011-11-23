@@ -99,14 +99,12 @@ public class ProxySettings {
 
 	private static void setSystemProperties(String host, int port) {
 
-		System.setProperty("http.proxyHost", host);
-		System.setProperty("http.proxyPort", port + "");
-
-		System.setProperty("https.proxyHost", host);
-		System.setProperty("https.proxyPort", port + "");
-
-		System.setProperty("socks.proxyHost", host);
-		System.setProperty("socks.proxyPort", port + "");
+        System.getProperties().put("proxySet", "true");
+        System.getProperties().put("proxyHost", host);
+        System.getProperties().put("proxyPort", port);
+        
+        System.setProperty("http.proxyHost", host);
+        System.setProperty("http.proxyPort", port + "");
 
 	}
 }

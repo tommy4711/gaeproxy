@@ -589,17 +589,18 @@ public class GAEProxy extends PreferenceActivity implements
 
 					CopyAssets("");
 
-					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables\n"
+							+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
+							+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
+							+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
+							+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 
 					try {
 						URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
 						HttpURLConnection conn = (HttpURLConnection) aURL
 								.openConnection();
-						conn.setReadTimeout(5 * 1000);
+						conn.setConnectTimeout(3 * 1000);
+						conn.setReadTimeout(6 * 1000);
 						conn.connect();
 						InputStream input = new BufferedInputStream(
 								conn.getInputStream());
@@ -1021,11 +1022,11 @@ public class GAEProxy extends PreferenceActivity implements
 
 				CopyAssets("");
 
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables");
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/redsocks");
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/proxy.sh");
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy.sh");
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables\n"
+						+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
+						+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
+						+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
+						+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
 
 				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 				h.sendEmptyMessage(0);

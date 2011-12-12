@@ -99,16 +99,16 @@ public class GAEProxyService extends Service {
 	private static final int MSG_HOST_CHANGE = 4;
 	private static final int MSG_STOP_SELF = 5;
 
+	final static String CMD_IPTABLES_RETURN = " -t nat -A OUTPUT -p tcp -d 0.0.0.0 -j RETURN\n";
+
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTP = " -t nat -A OUTPUT -p tcp "
-			+ "! -d 203.208.0.0/16 " + "--dport 80 -j REDIRECT --to 8123\n";
+			+ "--dport 80 -j REDIRECT --to 8123\n";
 	final static String CMD_IPTABLES_REDIRECT_ADD_HTTPS = " -t nat -A OUTPUT -p tcp "
-			+ "! -d 203.208.0.0/16 " + "--dport 443 -j REDIRECT --to 8124\n";
+			+ "--dport 443 -j REDIRECT --to 8124\n";
 
 	final static String CMD_IPTABLES_DNAT_ADD_HTTP = " -t nat -A OUTPUT -p tcp "
-			+ "! -d 203.208.0.0/16 "
 			+ "--dport 80 -j DNAT --to-destination 127.0.0.1:8123\n";
 	final static String CMD_IPTABLES_DNAT_ADD_HTTPS = " -t nat -A OUTPUT -p tcp "
-			+ "! -d 203.208.0.0/16 "
 			+ "--dport 443 -j DNAT --to-destination 127.0.0.1:8124\n";
 
 	private static final String TAG = "GAEProxyService";
@@ -566,7 +566,7 @@ public class GAEProxyService extends Service {
 		tracker.startNewSession("UA-21682712-1", this);
 
 		tracker.trackPageView("/version-" + getVersionName());
-		
+
 		tracker.dispatch();
 
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
@@ -600,7 +600,7 @@ public class GAEProxyService extends Service {
 	/** Called when the activity is closed. */
 	@Override
 	public void onDestroy() {
-		
+
 		tracker.stopSession();
 
 		statusLock = true;
@@ -875,36 +875,33 @@ public class GAEProxyService extends Service {
 					+ "127.0.0.1" + " " + port);
 		}
 
+		StringBuffer init_sb = new StringBuffer();
+		
 		StringBuffer http_sb = new StringBuffer();
 
 		StringBuffer https_sb = new StringBuffer();
 
 		if (hasRedirectSupport) {
-			http_sb.append(Utils.getIptables()
+			init_sb.append(Utils.getIptables()
 					+ " -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
 		} else {
-			http_sb.append(Utils.getIptables()
+			init_sb.append(Utils.getIptables()
 					+ " -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
 		}
 
+		String cmd_bypass = Utils.getIptables() + CMD_IPTABLES_RETURN;
+
+		init_sb.append(cmd_bypass.replace("0.0.0.0", appMask + "/16"));
+
 		if (isGFWList) {
-			String cmd_http = hasRedirectSupport ? Utils.getIptables()
-					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
-					+ CMD_IPTABLES_DNAT_ADD_HTTP;
-			String cmd_https = hasRedirectSupport ? Utils.getIptables()
-					+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
-					+ CMD_IPTABLES_DNAT_ADD_HTTPS;
 
-			String[] gfw_list = getResources().getStringArray(R.array.gfw_list);
+			String[] chn_list = getResources().getStringArray(R.array.chn_list);
 
-			for (String item : gfw_list) {
-				http_sb.append(cmd_http.replace("! -d 203.208.0.0/16", "-d "
-						+ item));
-				if (isHTTPSProxy)
-					https_sb.append(cmd_https.replace("! -d 203.208.0.0/16",
-							"-d " + item));
+			for (String item : chn_list) {
+				init_sb.append(cmd_bypass.replace("0.0.0.0", item));
 			}
-		} else if (isGlobalProxy) {
+		}
+		if (isGlobalProxy) {
 			http_sb.append(hasRedirectSupport ? Utils.getIptables()
 					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTP);
@@ -937,13 +934,14 @@ public class GAEProxyService extends Service {
 			}
 		}
 
-		String iptables_http_rules = http_sb.toString().replace("203.208.0.0",
-				appMask);
+		String iptables_init_rules = init_sb.toString();
+		Utils.runRootCommand(iptables_init_rules);
+		
+		String iptables_http_rules = http_sb.toString();
 		Utils.runRootCommand(iptables_http_rules);
 
 		if (isHTTPSProxy) {
-			String iptables_https_rules = https_sb.toString().replace(
-					"203.208.0.0", appMask);
+			String iptables_https_rules = https_sb.toString();
 			Utils.runRootCommand(iptables_https_rules);
 		}
 

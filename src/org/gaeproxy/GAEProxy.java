@@ -441,12 +441,10 @@ public class GAEProxy extends PreferenceActivity implements
 		if (proxyTypeList.getValue().equals("WallProxy")
 				|| proxyTypeList.getValue().equals("GoAgent"))
 			sitekeyText.setEnabled(true);
-		if (!isGFWListCheck.isChecked()) {
-			isGlobalProxyCheck.setEnabled(true);
-			if (!isGlobalProxyCheck.isChecked())
-				proxyedApps.setEnabled(true);
-		}
+		if (!isGlobalProxyCheck.isChecked())
+			proxyedApps.setEnabled(true);
 
+		isGlobalProxyCheck.setEnabled(true);
 		isAutoConnectCheck.setEnabled(true);
 		isGFWListCheck.setEnabled(true);
 		isHTTPSProxyCheck.setEnabled(true);
@@ -761,16 +759,10 @@ public class GAEProxy extends PreferenceActivity implements
 		SharedPreferences settings = PreferenceManager
 				.getDefaultSharedPreferences(this);
 
-		if (settings.getBoolean("isGFWList", false)) {
-			isGlobalProxyCheck.setEnabled(false);
+		if (settings.getBoolean("isGlobalProxy", false))
 			proxyedApps.setEnabled(false);
-		} else {
-			isGlobalProxyCheck.setEnabled(true);
-			if (settings.getBoolean("isGlobalProxy", false))
-				proxyedApps.setEnabled(false);
-			else
-				proxyedApps.setEnabled(true);
-		}
+		else
+			proxyedApps.setEnabled(true);
 
 		if (proxyTypeList.getValue().equals("WallProxy")
 				|| proxyTypeList.getValue().equals("GoAgent"))
@@ -889,26 +881,11 @@ public class GAEProxy extends PreferenceActivity implements
 				isInstalledCheck.setChecked(false);
 		}
 
-		if (key.equals("isGFWList")) {
-			if (settings.getBoolean("isGFWList", false)) {
-				isGlobalProxyCheck.setEnabled(false);
-				proxyedApps.setEnabled(false);
-			} else {
-				isGlobalProxyCheck.setEnabled(true);
-				if (settings.getBoolean("isGlobalProxy", false))
-					proxyedApps.setEnabled(false);
-				else
-					proxyedApps.setEnabled(true);
-			}
-		}
-
 		if (key.equals("isGlobalProxy")) {
-			if (!settings.getBoolean("isGFWList", false)) {
-				if (settings.getBoolean("isGlobalProxy", false))
-					proxyedApps.setEnabled(false);
-				else
-					proxyedApps.setEnabled(true);
-			}
+			if (settings.getBoolean("isGlobalProxy", false))
+				proxyedApps.setEnabled(false);
+			else
+				proxyedApps.setEnabled(true);
 		}
 
 		if (key.equals("isRunning")) {

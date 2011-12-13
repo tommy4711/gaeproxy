@@ -49,7 +49,7 @@
     <string name="proxyed_apps_summary">为应用单独设置代理，需要 ROOT 权限以及 IPTABLES 的支持</string>
     <string name="proxyed_help">选择使用GAE代理的应用:</string>
     <string name="crash_alert">检测到一次非正常退出，状态已重置</string>
-    <string name="copy_rights">GAE代理是一款开源软件，以GPLv3协议发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
+    <string name="copy_rights">GAE代理是一款开源软件，依照GPLv3协议发布。\n\n如果您有任何问题，请前往项目网站进行反馈。
 		\n\n(gaeproxy.googlecode.com)
 	</string>
     <string name="about">关于</string>
@@ -69,8 +69,8 @@
     <string name="loading">正在加载应用列表...</string>
     <string name="enable_market">启用电子市场</string>
     <string name="enable_market_summary">帮助大陆用户从电子市场中获得程序更新（需要重启）</string>
-    <string name="auto_set_gfwlist">启用GFW列表</string>
-    <string name="auto_set_gfwlist_summary">为部分被屏蔽网站设置代理（实验性）</string>
+    <string name="auto_set_gfwlist">启用国内路由</string>
+    <string name="auto_set_gfwlist_summary">访问国内站点时忽略本地代理（实验性）</string>
     <string name="toast_start">GAE代理正在启动</string>
     <string name="toast_restart">GAE代理正在重新启动</string>
     <string name="browser">启动GAE浏览器</string>

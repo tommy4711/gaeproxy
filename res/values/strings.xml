@@ -147,8 +147,8 @@
     <string name="enable_market_summary">Only for users in China, help to update app from
 		Android Market (need reboot)
 	</string>
-    <string name="auto_set_gfwlist">Enable GFW List</string>
-    <string name="auto_set_gfwlist_summary">Set proxy only for blocked sites (needs ROOT
+    <string name="auto_set_gfwlist">Enable CHN Route</string>
+    <string name="auto_set_gfwlist_summary">Bypass all sites located in China (needs ROOT
 		permission and
 		IPTABLES support)
 	</string>

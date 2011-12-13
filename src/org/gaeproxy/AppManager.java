@@ -113,7 +113,7 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 
 	private ProgressDialog pd = null;
 	private ListAdapter adapter;
-	
+
 	private ImageLoader dm;
 
 	private static final int MSG_LOAD_START = 1;
@@ -243,6 +243,9 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 		Arrays.sort(apps, new Comparator<ProxyedApp>() {
 			@Override
 			public int compare(ProxyedApp o1, ProxyedApp o2) {
+				if (o1 == null || o2 == null || o1.getName() == null
+						|| o2.getName() == null)
+					return 1;
 				if (o1.isProxyed() == o2.isProxyed())
 					return o1.getName().compareTo(o2.getName());
 				if (o1.isProxyed())
@@ -284,7 +287,7 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 				final ProxyedApp app = apps[position];
 
 				entry.icon.setTag(app.getUid());
-				
+
 				dm.DisplayImage(app.getUid(),
 						(Activity) convertView.getContext(), entry.icon);
 
@@ -338,7 +341,7 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 		super.onCreate(savedInstanceState);
 
 		this.setContentView(R.layout.layout_apps);
-		
+
 		this.dm = ImageLoaderFactory.getImageLoader(this);
 
 		this.overlay = (TextView) View.inflate(this, R.layout.overlay, null);

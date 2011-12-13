@@ -82,7 +82,7 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 			aInfo = itAppInfo.next();
 
 			// ignore system apps
-			if (aInfo.uid > 10000)
+			if (aInfo.uid < 10000)
 				continue;
 			
 			apps[appIdx] = new ProxyedApp();

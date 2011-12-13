@@ -209,6 +209,10 @@ public class AppManager extends Activity implements OnCheckedChangeListener,
 
 		while (itAppInfo.hasNext()) {
 			aInfo = itAppInfo.next();
+			
+			// ignore system apps
+			if (aInfo.uid < 10000)
+				continue;
 
 			if (aInfo.processName == null)
 				continue;

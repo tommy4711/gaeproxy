@@ -282,8 +282,6 @@ public class GAEProxy extends PreferenceActivity implements
 	private boolean isHTTPSProxy = false;
 	private boolean isGFWList = false;
 
-	public static String data_path = "/sdcard";
-
 	// Notification Progress Bar
 	int notification_id = 19172439;
 	NotificationManager nm;
@@ -458,6 +456,8 @@ public class GAEProxy extends PreferenceActivity implements
 				.getDefaultSharedPreferences(this);
 		if (settings.getBoolean("isInstalling", false))
 			return false;
+		
+		String data_path = Utils.getDataPath(this);
 
 		if (data_path.contains("sdcard")
 				&& checkApkExist("org.gaeproxy.runtime.module")) {
@@ -574,16 +574,6 @@ public class GAEProxy extends PreferenceActivity implements
 
 				if (!Utils.isInitialized()
 						&& !GAEProxyService.isServiceStarted()) {
-
-					if (Environment.MEDIA_MOUNTED.equals(Environment
-							.getExternalStorageState())) {
-						data_path = Environment.getExternalStorageDirectory()
-								.getAbsolutePath();
-					} else {
-						data_path = getFilesDir().getAbsolutePath();
-					}
-
-					Log.d(TAG, "Python Data Path: " + data_path);
 
 					CopyAssets("");
 

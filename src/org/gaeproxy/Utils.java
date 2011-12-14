@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.graphics.drawable.Drawable;
+import android.os.Environment;
 import android.util.Log;
 
 public class Utils {
@@ -25,10 +26,29 @@ public class Utils {
 
 	private static boolean initialized = false;
 	private static int isRoot = -1;
-	
+
 	private static String shell = null;
 	private static String root_shell = null;
 	private static String iptables = null;
+	private static String data_path = null;
+
+	public static String getDataPath(Context ctx) {
+
+		if (data_path == null) {
+
+			if (Environment.MEDIA_MOUNTED.equals(Environment
+					.getExternalStorageState())) {
+				data_path = Environment.getExternalStorageDirectory()
+						.getAbsolutePath();
+			} else {
+				data_path = ctx.getFilesDir().getAbsolutePath();
+			}
+
+			Log.d(TAG, "Python Data Path: " + data_path);
+		}
+		
+		return data_path;
+	}
 
 	public static String getSignature(Context ctx) {
 		Signature sig = null;
@@ -55,7 +75,7 @@ public class Utils {
 		}
 
 	}
-	
+
 	public static String getShell() {
 		if (shell == null) {
 			shell = DEFAULT_SHELL;

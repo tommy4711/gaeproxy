@@ -154,6 +154,9 @@ public class GAEProxy extends PreferenceActivity implements
 					URLConnection conexion = url.openConnection();
 					conexion.connect();
 					int lenghtOfFile = conexion.getContentLength();
+					
+					if (lenghtOfFile < 0)
+						throw new Exception("Length of File: " + lenghtOfFile);
 
 					if (!zip.exists() || lenghtOfFile != zip.length()) {
 
@@ -195,6 +198,9 @@ public class GAEProxy extends PreferenceActivity implements
 					conexion.connect();
 
 					int lenghtOfFile = conexion.getContentLength();
+					
+					if (lenghtOfFile < 0)
+						throw new Exception("Length of File: " + lenghtOfFile);
 
 					if (!zip.exists() || zip.length() != lenghtOfFile) {
 

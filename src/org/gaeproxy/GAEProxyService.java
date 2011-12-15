@@ -285,17 +285,13 @@ public class GAEProxyService extends Service {
 
 				httpOS = new DataOutputStream(httpProcess.getOutputStream());
 				httpOS.write((cmd + "\n").getBytes());
-				httpOS.write("exit\n".getBytes());
 				httpOS.flush();
-				httpProcess.waitFor();
+				
 			} catch (NullPointerException e) {
 				// Cannot get runtime
 				return false;
 			} catch (IOException e) {
 				// Cannot allocate stdin
-				return false;
-			} catch (InterruptedException e) {
-				// Interrupted
 				return false;
 			}
 

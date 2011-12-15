@@ -976,10 +976,10 @@ public class GAEProxyService extends Service {
 				mStopForeground.invoke(this, mStopForegroundArgs);
 			} catch (InvocationTargetException e) {
 				// Should not happen.
-				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+				Log.w(TAG, "Unable to invoke stopForeground", e);
 			} catch (IllegalAccessException e) {
 				// Should not happen.
-				Log.w("ApiDemos", "Unable to invoke stopForeground", e);
+				Log.w(TAG, "Unable to invoke stopForeground", e);
 			}
 			return;
 		}

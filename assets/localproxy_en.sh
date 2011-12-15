@@ -5,7 +5,7 @@ export LD_LIBRARY_PATH=/data/data/org.gaeproxy/python/lib
 export PYTHONHOME=$PYTHONHOME:/data/data/org.gaeproxy/python
 export TEMP=$1/python-extras
 
-chmod 755 /data/data/org.gaeproxy/python.pid
+chmod 644 /data/data/org.gaeproxy/python.pid
 kill -9 `cat /data/data/org.gaeproxy/python.pid`
 rm /data/data/org.gaeproxy/python.pid
 killall -9 python

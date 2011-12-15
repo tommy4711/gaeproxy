@@ -484,8 +484,8 @@ public class DNSServer implements WrapServer {
 			String[] hosts = line.split(" ");
 			if (hosts.length == 2) {
 				orgCache.put(hosts[1], hosts[0]);
-				Log.d(TAG, hosts[0] + " " + hosts[1]);
 			}
+			Log.d(TAG, "Load hosts: " + orgCache.size());
 		}
 	}
 

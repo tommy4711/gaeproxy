@@ -235,10 +235,11 @@ public class GAEProxyService extends Service {
 
 			StringBuffer sb = new StringBuffer();
 			if (isDNSBlocked)
-				sb.append(BASE + "localproxy.sh \"" + Utils.getDataPath(this) + "\"");
-			else
-				sb.append(BASE + "localproxy_en.sh \"" + Utils.getDataPath(this)
+				sb.append(BASE + "localproxy.sh \"" + Utils.getDataPath(this)
 						+ "\"");
+			else
+				sb.append(BASE + "localproxy_en.sh \""
+						+ Utils.getDataPath(this) + "\"");
 
 			if (proxyType.equals("GAppProxy")) {
 
@@ -286,7 +287,7 @@ public class GAEProxyService extends Service {
 				httpOS = new DataOutputStream(httpProcess.getOutputStream());
 				httpOS.write((cmd + "\n").getBytes());
 				httpOS.flush();
-				
+
 			} catch (NullPointerException e) {
 				// Cannot get runtime
 				return false;
@@ -672,10 +673,7 @@ public class GAEProxyService extends Service {
 
 		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
-		if (Utils.isRoot())
-			Utils.runRootCommand(BASE + "proxy.sh stop");
-		else
-			Utils.runCommand(BASE + "proxy.sh stop");
+		Utils.runCommand(BASE + "proxy.sh stop");
 
 	}
 
@@ -872,7 +870,7 @@ public class GAEProxyService extends Service {
 		}
 
 		StringBuffer init_sb = new StringBuffer();
-		
+
 		StringBuffer http_sb = new StringBuffer();
 
 		StringBuffer https_sb = new StringBuffer();
@@ -932,7 +930,7 @@ public class GAEProxyService extends Service {
 
 		String iptables_init_rules = init_sb.toString();
 		Utils.runRootCommand(iptables_init_rules);
-		
+
 		String iptables_http_rules = http_sb.toString();
 		Utils.runRootCommand(iptables_http_rules);
 

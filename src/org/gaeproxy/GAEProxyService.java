@@ -281,7 +281,7 @@ public class GAEProxyService extends Service {
 					httpProcess = null;
 				}
 
-				httpProcess = Runtime.getRuntime().exec(Utils.getRoot());
+				httpProcess = Runtime.getRuntime().exec(Utils.getShell());
 
 				httpOS = new DataOutputStream(httpProcess.getOutputStream());
 				httpOS.write((cmd + "\n").getBytes());

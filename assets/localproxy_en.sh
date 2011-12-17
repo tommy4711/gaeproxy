@@ -1,8 +1,8 @@
 #!/system/bin/sh
 
-export PYTHONPATH=/data/data/org.gaeproxy/python:/data/data/org.gaeproxy/python/lib/python2.6:/data/data/org.gaeproxy/python/lib/python2.6/lib-dynload:/data/data/org.gaeproxy/python/lib:$1/python-extras
-export LD_LIBRARY_PATH=/data/data/org.gaeproxy/python/lib
-export PYTHONHOME=$PYTHONHOME:/data/data/org.gaeproxy/python
+export PYTHONPATH=/data/data/org.gaeproxy/python:/data/data/org.gaeproxy/python/lib/python2.6/lib-dynload:/data/data/org.gaeproxy/python/lib:$1/python-extras
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHONPATH:/system/lib/
+export PYTHONHOME=$PYTHONPATH:/data/data/org.gaeproxy/python
 export TEMP=$1/python-extras
 
 chmod 644 /data/data/org.gaeproxy/python.pid

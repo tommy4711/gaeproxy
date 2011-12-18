@@ -925,7 +925,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
-		handler.sendEmptyMessage(MSG_INSTALL_FAIL);
+		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 
 	}
 

@@ -1,10 +1,44 @@
+/* gaeproxy - GAppProxy / WallProxy client App for Android
+ * Copyright (C) 2011 <max.c.lv@gmail.com>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * 
+ *                            ___====-_  _-====___
+ *                      _--^^^#####//      \\#####^^^--_
+ *                   _-^##########// (    ) \\##########^-_
+ *                  -############//  |\^^/|  \\############-
+ *                _/############//   (@::@)   \\############\_
+ *               /#############((     \\//     ))#############\
+ *              -###############\\    (oo)    //###############-
+ *             -#################\\  / VV \  //#################-
+ *            -###################\\/      \//###################-
+ *           _#/|##########/\######(   /\   )######/\##########|\#_
+ *           |/ |#/\#/\#/\/  \#/\##\  |  |  /##/\#/  \/\#/\#/\#| \|
+ *           `  |/  V  V  `   V  \#\| |  | |/#/  V   '  V  V  \|  '
+ *              `   `  `      `   / | |  | | \   '      '  '   '
+ *                               (  | |  | |  )
+ *                              __\ | |  | | /__
+ *                             (vvv(VVV)(VVV)vvv)
+ *
+ *                              HERE BE DRAGONS
+ *
+ */
+
 package org.gaeproxy;
 
-import java.util.ArrayList;
-
-import android.app.ActivityManager;
 import android.app.PendingIntent;
-import android.app.ActivityManager.RunningServiceInfo;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -12,9 +46,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
@@ -27,61 +63,30 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 	private int port;
 	private String sitekey;
 	private boolean isGlobalProxy;
-
-	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
-			int[] appWidgetIds) {
-		final int N = appWidgetIds.length;
-
-		// Perform this loop procedure for each App Widget that belongs to this
-		// provider
-		for (int i = 0; i < N; i++) {
-			int appWidgetId = appWidgetIds[i];
-
-			// Create an Intent to launch ExampleActivity
-			Intent intent = new Intent(context, GAEProxyWidgetProvider.class);
-			intent.setAction(PROXY_SWITCH_ACTION);
-			PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
-					0, intent, 0);
-
-			// Get the layout for the App Widget and attach an on-click listener
-			// to the button
-			RemoteViews views = new RemoteViews(context.getPackageName(),
-					R.layout.gaeproxy_appwidget);
-			views.setOnClickPendingIntent(R.id.serviceToggle, pendingIntent);
-
-			if (isWorked(context, SERVICE_NAME)) {
-				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
-				Log.d(TAG, "Service running");
-			} else {
-				views.setImageViewResource(R.id.serviceToggle, R.drawable.off);
-				Log.d(TAG, "Service stopped");
-			}
-
-			// Tell the AppWidgetManager to perform an update on the current App
-			// Widget
-			appWidgetManager.updateAppWidget(appWidgetId, views);
-		}
-	}
-
-	public boolean isWorked(Context context, String service) {
-		ActivityManager myManager = (ActivityManager) context
-				.getSystemService(Context.ACTIVITY_SERVICE);
-		ArrayList<RunningServiceInfo> runningService = (ArrayList<RunningServiceInfo>) myManager
-				.getRunningServices(30);
-		for (int i = 0; i < runningService.size(); i++) {
-			if (runningService.get(i).service.getClassName().toString()
-					.equals(service)) {
-				return true;
-			}
-		}
-		return false;
-	}
+	private boolean isHTTPSProxy;
+	private boolean isGFWList;
 
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public synchronized void onReceive(Context context, Intent intent) {
 		super.onReceive(context, intent);
 
 		if (intent.getAction().equals(PROXY_SWITCH_ACTION)) {
+
+			SharedPreferences settings = PreferenceManager
+					.getDefaultSharedPreferences(context);
+
+			if (GAEProxyService.statusLock) {
+				// only one request a time
+				return;
+			}
+
+			// Get instance of Vibrator from current Context
+			Vibrator v = (Vibrator) context
+					.getSystemService(Context.VIBRATOR_SERVICE);
+
+			// Vibrate for 10 milliseconds
+			v.vibrate(10);
+
 			RemoteViews views = new RemoteViews(context.getPackageName(),
 					R.layout.gaeproxy_appwidget);
 			try {
@@ -95,8 +100,9 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			}
 
 			Log.d(TAG, "Proxy switch action");
+
 			// do some really cool stuff here
-			if (isWorked(context, SERVICE_NAME)) {
+			if (GAEProxyService.isServiceStarted()) {
 				// Service is working, so stop it
 				try {
 					context.stopService(new Intent(context,
@@ -108,14 +114,15 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 			} else {
 
 				// Service is not working, then start it
-				SharedPreferences settings = PreferenceManager
-						.getDefaultSharedPreferences(context);
-
 				boolean isInstalled = settings.getBoolean("isInstalled", false);
 
 				if (isInstalled) {
+					Toast.makeText(context,
+							context.getString(R.string.toast_start),
+							Toast.LENGTH_LONG).show();
+
 					proxy = settings.getString("proxy", "");
-					proxyType = settings.getString("proxyType", "GAppProxy");
+					proxyType = settings.getString("proxyType", "GoAgent");
 					String portText = settings.getString("port", "");
 					if (portText != null && portText.length() > 0) {
 						port = Integer.valueOf(portText);
@@ -126,6 +133,8 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					}
 					sitekey = settings.getString("sitekey", "");
 					isGlobalProxy = settings.getBoolean("isGlobalProxy", false);
+					isHTTPSProxy = settings.getBoolean("isHTTPSProxy", false);
+					isGFWList = settings.getBoolean("isGFWList", false);
 
 					Intent it = new Intent(context, GAEProxyService.class);
 					Bundle bundle = new Bundle();
@@ -134,6 +143,8 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 					bundle.putString("proxyType", proxyType);
 					bundle.putString("sitekey", sitekey);
 					bundle.putBoolean("isGlobalProxy", isGlobalProxy);
+					bundle.putBoolean("isHTTPSProxy", isHTTPSProxy);
+					bundle.putBoolean("isGFWList", isGFWList);
 
 					it.putExtras(bundle);
 					context.startService(it);
@@ -159,6 +170,42 @@ public class GAEProxyWidgetProvider extends AppWidgetProvider {
 
 			}
 
+		}
+	}
+
+	@Override
+	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
+			int[] appWidgetIds) {
+		final int N = appWidgetIds.length;
+
+		// Perform this loop procedure for each App Widget that belongs to this
+		// provider
+		for (int i = 0; i < N; i++) {
+			int appWidgetId = appWidgetIds[i];
+
+			// Create an Intent to launch ExampleActivity
+			Intent intent = new Intent(context, GAEProxyWidgetProvider.class);
+			intent.setAction(PROXY_SWITCH_ACTION);
+			PendingIntent pendingIntent = PendingIntent.getBroadcast(context,
+					0, intent, 0);
+
+			// Get the layout for the App Widget and attach an on-click listener
+			// to the button
+			RemoteViews views = new RemoteViews(context.getPackageName(),
+					R.layout.gaeproxy_appwidget);
+			views.setOnClickPendingIntent(R.id.serviceToggle, pendingIntent);
+
+			if (GAEProxyService.isServiceStarted()) {
+				views.setImageViewResource(R.id.serviceToggle, R.drawable.on);
+				Log.d(TAG, "Service running");
+			} else {
+				views.setImageViewResource(R.id.serviceToggle, R.drawable.off);
+				Log.d(TAG, "Service stopped");
+			}
+
+			// Tell the AppWidgetManager to perform an update on the current App
+			// Widget
+			appWidgetManager.updateAppWidget(appWidgetId, views);
 		}
 	}
 }

@@ -28,9 +28,11 @@ redsocks {
 redsocks {
  local_ip = 127.0.0.1;
  local_port = 8124;
- ip = 127.0.0.1;
- port = $2;
+ ip = $3;
+ port = $4;
  type = http-connect;
+ login = "gaeproxy";
+ password = "gaeproxy";
 } 
 " >>$DIR/redsocks.conf
 
@@ -40,11 +42,11 @@ redsocks {
 stop)
   kill -9 `cat $DIR/redsocks.pid`
   kill -9 `cat $DIR/python.pid`
-
-  rm $DIR/redsocks.pid
+  rm $DIR/redsocks.conf
   rm $DIR/python.pid
   
-  rm $DIR/redsocks.conf
+  killall -9 python
+  killall -9 redsocks
   
   ;;
 esac

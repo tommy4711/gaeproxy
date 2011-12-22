@@ -27,7 +27,7 @@ try:
 except ImportError:
     ntlm = None
 
-logging.basicConfig(level=logging.INFO, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
+logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
 
 class Common(object):
     '''global config module'''
@@ -492,6 +492,10 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     skip_headers = frozenset(['host', 'vary', 'via', 'x-forwarded-for', 'proxy-authorization', 'proxy-connection', 'upgrade', 'keep-alive'])
     SetupLock = threading.Lock()
     MessageClass = SimpleMessageClass
+    
+    # Disable logging DNS lookups
+    def address_string(self):
+        return str(self.client_address[0])
 
     def handle_fetch_error(self, error):
         if isinstance(error, urllib2.HTTPError):

@@ -318,6 +318,7 @@ public class GAEProxy extends PreferenceActivity implements
 					pd.dismiss();
 					pd = null;
 				}
+				Utils.isRoot();
 				break;
 			}
 			ed.commit();

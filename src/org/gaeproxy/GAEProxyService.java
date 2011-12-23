@@ -271,7 +271,7 @@ public class GAEProxyService extends Service {
 			final String cmd = sb.toString();
 
 			Log.e(TAG, cmd);
-			
+
 			Utils.runCommand(cmd);
 
 		} catch (Exception e) {
@@ -402,7 +402,6 @@ public class GAEProxyService extends Service {
 
 		return true;
 	}
-
 
 	private void initSoundVibrateLights(Notification notification) {
 		final String ringtone = settings.getString(
@@ -601,21 +600,8 @@ public class GAEProxyService extends Service {
 	}
 
 	private void onDisconnect() {
-
-		Thread t = new Thread() {
-			public void run() {
-				Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
-				Utils.runCommand(BASE + "proxy.sh stop");
-			}
-		};
-		
-		t.start();
-		
-		try {
-			t.join(1000);
-		} catch (InterruptedException e) {
-			// Ignore
-		}
+		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+		Utils.runCommand(BASE + "proxy.sh stop");
 	}
 
 	// This is the old onStart method that will be called on the pre-2.0

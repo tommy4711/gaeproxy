@@ -597,7 +597,7 @@ public class GAEProxyService extends Service {
 	}
 
 	private void onDisconnect() {
-		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+		Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 		Utils.runCommand(BASE + "proxy.sh stop");
 	}
 
@@ -654,7 +654,7 @@ public class GAEProxyService extends Service {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
 				
-				Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+				Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 				try {
 					URL url = new URL("http://gae-ip-country.appspot.com/");

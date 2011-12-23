@@ -493,8 +493,6 @@ public class GAEProxyService extends Service {
 
 		tracker.dispatch();
 		
-		Utils.isInitialized(this);
-
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
 				.getSystemService(NOTIFICATION_SERVICE);

@@ -148,8 +148,6 @@ public class Utils {
 	
 	private static String data_path = null;
 
-	private static Context context = null;
-
 	private static void checkIptables() {
 
 		if (!isRoot()) {
@@ -169,7 +167,7 @@ public class Utils {
 		String command = iptables + " --version\n" + iptables
 				+ " -L -t nat\n" + "exit\n";
 		
-		int exitcode = runScript(context, command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 5000, true);
 		
 		if (exitcode == TIME_OUT)
 			return;
@@ -279,7 +277,7 @@ public class Utils {
 		String command = Utils.getIptables()
 				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 		
-		int exitcode = runScript(context, command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 5000, true);
 		
 		hasRedirectSupport = 1;
 
@@ -296,8 +294,7 @@ public class Utils {
 		}
 	}
 
-	public static boolean isInitialized(Context ctx) {
-		context = ctx;
+	public static boolean isInitialized() {
 		if (initialized)
 			return true;
 		else {
@@ -326,7 +323,7 @@ public class Utils {
 		StringBuilder sb = new StringBuilder();
 		String command = "ls /\n" + "exit\n";
 		
-		int exitcode = runScript(context, command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 5000, true);
 		
 		if (exitcode == TIME_OUT) {
 			isRoot = 0;
@@ -346,7 +343,7 @@ public class Utils {
 
 		Log.d(TAG, command);
 		
-		runScript(context, command, null, 5000, false);
+		runScript(command, null, 5000, false);
 		
 		return true;
 	}
@@ -358,13 +355,15 @@ public class Utils {
 
 		Log.d(TAG, command);
 
-		runScript(context, command, null, 5000, true);
+		runScript(command, null, 5000, true);
 		
 		return true;
 	}
 
-	private static int runScript(Context ctx, String script, StringBuilder res,
+	private static int runScript(String script, StringBuilder res,
 			long timeout, boolean asroot) {
+		
+		Context ctx = GAEProxyContext.getContext();
 		final File file = new File(ctx.getDir("bin", 0), SCRIPT_FILE);
 		final ScriptRunner runner = new ScriptRunner(file, script, res, asroot);
 		runner.start();

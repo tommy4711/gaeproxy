@@ -548,7 +548,7 @@ public class GAEProxy extends PreferenceActivity implements
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
 
-				if (!Utils.isInitialized(GAEProxy.this)
+				if (!Utils.isInitialized()
 						&& !GAEProxyService.isServiceStarted()) {
 
 					CopyAssets("");

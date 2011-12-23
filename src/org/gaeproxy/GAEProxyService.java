@@ -271,30 +271,8 @@ public class GAEProxyService extends Service {
 			final String cmd = sb.toString();
 
 			Log.e(TAG, cmd);
-
-			try {
-				if (httpOS != null) {
-					httpOS.close();
-					httpOS = null;
-				}
-				if (httpProcess != null) {
-					httpProcess.destroy();
-					httpProcess = null;
-				}
-
-				httpProcess = Runtime.getRuntime().exec(Utils.getShell());
-
-				httpOS = new DataOutputStream(httpProcess.getOutputStream());
-				httpOS.write((cmd + "\n").getBytes());
-				httpOS.flush();
-
-			} catch (NullPointerException e) {
-				// Cannot get runtime
-				return false;
-			} catch (IOException e) {
-				// Cannot allocate stdin
-				return false;
-			}
+			
+			Utils.runCommand(cmd);
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
@@ -425,55 +403,6 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
-	private void initHasRedirectSupported() {
-
-		if (!Utils.isRoot())
-			return;
-
-		Process process = null;
-		DataOutputStream os = null;
-		DataInputStream es = null;
-
-		String command;
-		String line = null;
-
-		command = Utils.getIptables()
-				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
-
-		try {
-			process = Runtime.getRuntime().exec(Utils.getRoot());
-			es = new DataInputStream(process.getErrorStream());
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
-			os.flush();
-			process.waitFor();
-
-			while (null != (line = es.readLine())) {
-				Log.d(TAG, line);
-				if (line.contains("No chain/target/match")) {
-					this.hasRedirectSupport = false;
-					break;
-				}
-			}
-		} catch (Exception e) {
-			Log.e(TAG, e.getMessage());
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-				if (es != null)
-					es.close();
-				process.destroy();
-			} catch (Exception e) {
-				// nothing
-			}
-		}
-
-		// flush the check command
-		Utils.runRootCommand(command.replace("-A", "-D"));
-	}
 
 	private void initSoundVibrateLights(Notification notification) {
 		final String ringtone = settings.getString(
@@ -606,8 +535,6 @@ public class GAEProxyService extends Service {
 
 		isStopped = true;
 
-		// runRootCommand(BASE + "host.sh remove");
-
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);
@@ -616,10 +543,14 @@ public class GAEProxyService extends Service {
 		onDisconnect();
 
 		try {
-			if (httpOS != null)
+			if (httpOS != null) {
 				httpOS.close();
-			if (httpProcess != null)
+				httpOS = null;
+			}
+			if (httpProcess != null) {
 				httpProcess.destroy();
+				httpProcess = null;
+			}
 		} catch (Exception e) {
 			Log.e(TAG, "HTTP Server close unexpected");
 		}
@@ -671,10 +602,20 @@ public class GAEProxyService extends Service {
 
 	private void onDisconnect() {
 
-		Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
-
-		Utils.runCommand(BASE + "proxy.sh stop");
-
+		Thread t = new Thread() {
+			public void run() {
+				Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
+				Utils.runCommand(BASE + "proxy.sh stop");
+			}
+		};
+		
+		t.start();
+		
+		try {
+			t.join(1000);
+		} catch (InterruptedException e) {
+			// Ignore
+		}
 	}
 
 	// This is the old onStart method that will be called on the pre-2.0
@@ -755,7 +696,7 @@ public class GAEProxyService extends Service {
 				Log.d(TAG, "IPTABLES: " + Utils.getIptables());
 
 				// Test for Redirect Support
-				initHasRedirectSupported();
+				hasRedirectSupport = Utils.getHasRedirectSupport();
 
 				if (handleConnection()) {
 					// Connection and forward successful

@@ -852,7 +852,7 @@ public class GAEProxyService extends Service {
 		rules += http_sb.toString();
 
 		if (isHTTPSProxy) {
-			rules = https_sb.toString();
+			rules += https_sb.toString();
 		}
 		
 		Utils.runRootCommand(rules);

@@ -245,16 +245,7 @@ public class Utils {
 		return iptables;
 	}
 
-	// always return a string
-	public static String getRoot() {
-		// check root
-		if (isRoot())
-			return root_shell;
-		else
-			return getShell();
-	}
-
-	public static String getShell() {
+	private static String getShell() {
 		if (shell == null) {
 			shell = DEFAULT_SHELL;
 			if (!new File(shell).exists())

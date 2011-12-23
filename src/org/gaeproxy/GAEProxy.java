@@ -297,6 +297,10 @@ public class GAEProxy extends PreferenceActivity implements
 				ed.putBoolean("isInstalling", false);
 				ed.putBoolean("isInstalled", true);
 				isInstalledCheck.setEnabled(true);
+
+				// prepare for python
+				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
+				
 				break;
 			case MSG_INSTALL_FAIL:
 				ed.putBoolean("isInstalling", false);

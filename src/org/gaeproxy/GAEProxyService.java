@@ -223,9 +223,6 @@ public class GAEProxyService extends Service {
 			return false;
 		}
 
-		// prepare for python
-		Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
-
 		try {
 
 			StringBuffer sb = new StringBuffer();
@@ -649,8 +646,6 @@ public class GAEProxyService extends Service {
 			public void run() {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
-				
-				Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 				try {
 					URL url = new URL("http://gae-ip-country.appspot.com/");
@@ -796,6 +791,8 @@ public class GAEProxyService extends Service {
 		StringBuffer http_sb = new StringBuffer();
 
 		StringBuffer https_sb = new StringBuffer();
+		
+		init_sb.append(Utils.getIptables() + " -t nat -F OUTPUT");
 
 		if (hasRedirectSupport) {
 			init_sb.append(Utils.getIptables()
@@ -850,16 +847,15 @@ public class GAEProxyService extends Service {
 			}
 		}
 
-		String iptables_init_rules = init_sb.toString();
-		Utils.runRootCommand(iptables_init_rules);
+		String rules = init_sb.toString();
 
-		String iptables_http_rules = http_sb.toString();
-		Utils.runRootCommand(iptables_http_rules);
+		rules += http_sb.toString();
 
 		if (isHTTPSProxy) {
-			String iptables_https_rules = https_sb.toString();
-			Utils.runRootCommand(iptables_https_rules);
+			rules = https_sb.toString();
 		}
+		
+		Utils.runRootCommand(rules);
 
 		return true;
 

@@ -19,15 +19,6 @@
     <!-- Base application theme is the default theme -->
     <style name="Theme" parent="android:Theme" />
 
-    <!-- Variation on the Light theme that turns off the title -->
-    <style name="Theme.GAEProxy">
-        <item name="android:windowNoTitle">true</item>
-        <item name="android:windowContentOverlay">@null</item>
-    </style>
-
-    <style name="Theme.GAEProxy.Preferences" parent="style/Theme.GAEProxy">
-    </style>
-
     <style name="Bookmarks"></style>
 
     <style name="Bookmarks.Title">

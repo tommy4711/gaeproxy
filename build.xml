@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="GAEProxy" default="help">
+<project name="gaeproxy" default="all">
 
     <!-- The local.properties file is created and updated by the 'android' tool.
          It contains the path to the SDK. It should *NOT* be checked into
@@ -41,9 +41,17 @@
 
     <!-- quick check on sdk.dir -->
     <fail
-            message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or to inject it through an env var"
-            unless="sdk.dir"
-    />
+        message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or to inject it through an env var"
+        unless="sdk.dir"
+        />
+
+    <target name="all" depends="clean,release">
+        <echo>Get a package with the version name ${version-name} </echo>
+        <exec executable="mv" failonerror="true">
+            <arg value="${out.final.file}" />
+            <arg value="bin/${ant.project.name}-${version-name}.apk" />
+        </exec>
+    </target>
 
 
 <!-- extension targets. Uncomment the ones where you want to do custom work
@@ -55,11 +63,11 @@
     </target>
 
     /* This is typically used for code obfuscation.
-       Compiled code location: ${out.classes.absolute.dir}
-       If this is not done in place, override ${out.dex.input.absolute.dir} */
+    Compiled code location: ${out.classes.absolute.dir}
+    If this is not done in place, override ${out.dex.input.absolute.dir} */
     <target name="-post-compile">
     </target>
--->
+    -->
 
     <!-- Import the actual build file.
 

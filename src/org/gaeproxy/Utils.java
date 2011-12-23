@@ -1,5 +1,6 @@
 package org.gaeproxy;
 
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -159,8 +160,10 @@ public class Utils {
 
 	private static void checkIptables() {
 
-		if (!isRoot())
+		if (!isRoot()) {
+			iptables = DEFAULT_IPTABLES;
 			return;
+		}
 
 		// Check iptables binary
 		iptables = DEFAULT_IPTABLES;
@@ -221,13 +224,13 @@ public class Utils {
 	public static boolean runCommand(String command) {
 
 		Process process = null;
-		DataOutputStream os = null;
+		BufferedOutputStream os = null;
 		Log.d(TAG, command);
 		try {
 			process = Runtime.getRuntime().exec(getShell());
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
+			os = new BufferedOutputStream(process.getOutputStream(), 32 * 1024);
+			String scripts = command + "\n" + "exit\n"; 
+			os.write(scripts.getBytes());
 			os.flush();
 			process.waitFor();
 		} catch (Exception e) {
@@ -256,12 +259,12 @@ public class Utils {
 		Log.d(TAG, command);
 
 		Process process = null;
-		DataOutputStream os = null;
+		BufferedOutputStream os = null;
 		try {
 			process = Runtime.getRuntime().exec(getRoot());
-			os = new DataOutputStream(process.getOutputStream());
-			os.writeBytes(command + "\n");
-			os.writeBytes("exit\n");
+			os = new BufferedOutputStream(process.getOutputStream(), 32 * 1024);
+			String scripts = command + "\n" + "exit\n"; 
+			os.write(scripts.getBytes());
 			os.flush();
 			process.waitFor();
 		} catch (Exception e) {

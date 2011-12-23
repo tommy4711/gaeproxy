@@ -133,7 +133,6 @@ public class GAEProxyService extends Service {
 	private boolean isHTTPSProxy = false;
 	private boolean isDNSBlocked = true;
 	private boolean isGFWList = false;
-	private volatile boolean isStopped = false;
 
 	GoogleAnalyticsTracker tracker;
 
@@ -493,6 +492,8 @@ public class GAEProxyService extends Service {
 		tracker.trackPageView("/version-" + getVersionName());
 
 		tracker.dispatch();
+		
+		Utils.isInitialized(this);
 
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
@@ -531,8 +532,6 @@ public class GAEProxyService extends Service {
 		statusLock = true;
 
 		stopForegroundCompat(1);
-
-		isStopped = true;
 
 		notifyAlert(getString(R.string.forward_stop),
 				getString(R.string.service_stopped),

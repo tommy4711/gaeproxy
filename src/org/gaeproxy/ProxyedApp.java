@@ -1,7 +1,5 @@
 package org.gaeproxy;
 
-import android.graphics.drawable.Drawable;
-
 public class ProxyedApp {
 
 	private boolean enabled;

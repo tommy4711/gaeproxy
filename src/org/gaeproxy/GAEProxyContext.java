@@ -6,7 +6,8 @@ import android.content.Context;
 public class GAEProxyContext extends Application{
     private static Context context;
 
-    public void onCreate(){
+    @Override
+	public void onCreate(){
     	GAEProxyContext.context=getApplicationContext();
     }
 

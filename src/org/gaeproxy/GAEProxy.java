@@ -555,7 +555,8 @@ public class GAEProxy extends PreferenceActivity implements
 							+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
 							+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
 							+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
-							+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+							+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n"
+							+ "chmod 755 /data/data/org.gaeproxy/python/bin/python\n");
 
 					try {
 						URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
@@ -966,7 +967,8 @@ public class GAEProxy extends PreferenceActivity implements
 						+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
 						+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
 						+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
-						+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh");
+						+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n"
+						+ "chmod 755 /data/data/org.gaeproxy/python/bin/python\n");
 
 				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 				h.sendEmptyMessage(0);

@@ -653,6 +653,8 @@ public class GAEProxyService extends Service {
 			public void run() {
 
 				handler.sendEmptyMessage(MSG_CONNECT_START);
+				
+				Utils.runRootCommand(BASE + "iptables -t nat -F OUTPUT");
 
 				try {
 					URL url = new URL("http://gae-ip-country.appspot.com/");

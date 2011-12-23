@@ -279,6 +279,8 @@ public class Utils {
 		
 		int exitcode = runScript(command, sb, 5000, true);
 		
+		String lines = sb.toString();
+		
 		hasRedirectSupport = 1;
 
 		// flush the check command
@@ -286,8 +288,6 @@ public class Utils {
 		
 		if (exitcode == TIME_OUT)
 			return;
-		
-		String lines = sb.toString();
 		
 		if (lines.contains("No chain/target/match")) {
 			hasRedirectSupport = 0;

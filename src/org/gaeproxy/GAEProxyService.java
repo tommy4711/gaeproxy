@@ -255,7 +255,11 @@ public class GAEProxyService extends Service {
 
 			Log.e(TAG, cmd);
 
-			Utils.runCommand(cmd);
+			if (Utils.isRoot()) {
+				Utils.runRootCommand(cmd);
+			} else {
+				Utils.runCommand(cmd);
+			}
 
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot connect");
@@ -582,7 +586,10 @@ public class GAEProxyService extends Service {
 
 	private void onDisconnect() {
 		Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
-		Utils.runCommand(BASE + "proxy.sh stop");
+		if (Utils.isRoot())
+			Utils.runRootCommand(BASE + "proxy.sh stop");
+		else
+			Utils.runCommand(BASE + "proxy.sh stop");
 	}
 
 	// This is the old onStart method that will be called on the pre-2.0
@@ -703,7 +710,7 @@ public class GAEProxyService extends Service {
 		}).start();
 		markServiceStarted();
 	}
-	
+
 	/**
 	 * Internal method to request actual PTY terminal once we've finished
 	 * authentication. If called before authenticated, it will just fail.

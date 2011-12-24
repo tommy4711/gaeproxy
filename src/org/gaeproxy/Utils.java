@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
@@ -121,12 +122,13 @@ public class Utils {
 		@Override
 		public void run() {
 			try {
+				new File(DEFOUT_FILE).createNewFile();
 				file.createNewFile();
 				final String abspath = file.getAbsolutePath();
 
 				// TODO: Rewrite this line
 				// make sure we have execution permission on the script file
-//				Runtime.getRuntime().exec("chmod 755 " + abspath).waitFor();
+				// Runtime.getRuntime().exec("chmod 755 " + abspath).waitFor();
 
 				// Write the script to be executed
 				final OutputStreamWriter out = new OutputStreamWriter(
@@ -187,6 +189,7 @@ public class Utils {
 	public final static String DEFAULT_IPTABLES = "/data/data/org.gaeproxy/iptables";
 	public final static String ALTERNATIVE_IPTABLES = "/system/bin/iptables";
 	public final static String SCRIPT_FILE = "/data/data/org.gaeproxy/script";
+	public final static String DEFOUT_FILE = "/data/data/org.gaeproxy/defout";
 
 	public final static int TIME_OUT = -99;
 	private static boolean initialized = false;
@@ -413,8 +416,6 @@ public class Utils {
 
 	private synchronized static int runScript(String script, StringBuilder res,
 			long timeout, boolean asroot) {
-
-		Context ctx = GAEProxyContext.getContext();
 		final File file = new File(SCRIPT_FILE);
 		final ScriptRunner runner = new ScriptRunner(file, script, res, asroot);
 		runner.start();

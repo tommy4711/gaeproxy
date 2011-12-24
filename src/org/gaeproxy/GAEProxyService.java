@@ -121,6 +121,7 @@ public class GAEProxyService extends Service {
 	private String sitekey;
 	private String proxyType = "GoAgent";
 	private DNSServer dnsServer = null;
+	private int dnsPort = 8153;
 
 	private SharedPreferences settings = null;
 
@@ -351,9 +352,10 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
-		dnsServer = new DNSServer("DNS Server", 8153, "8.8.8.8", 53, appHost,
+		dnsServer = new DNSServer("DNS Server", "8.8.8.8", 53, appHost,
 				isDNSBlocked);
 		dnsServer.setBasePath(BASE);
+		dnsPort = dnsServer.getServPort();
 
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
@@ -794,10 +796,12 @@ public class GAEProxyService extends Service {
 
 		if (hasRedirectSupport) {
 			init_sb.append(Utils.getIptables()
-					+ " -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to 8153\n");
+					+ " -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to "
+					+ dnsPort + "\n");
 		} else {
 			init_sb.append(Utils.getIptables()
-					+ " -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:8153\n");
+					+ " -t nat -A OUTPUT -p udp --dport 53 -j DNAT --to-destination 127.0.0.1:"
+					+ dnsPort + "\n");
 		}
 
 		String cmd_bypass = Utils.getIptables() + CMD_IPTABLES_RETURN;

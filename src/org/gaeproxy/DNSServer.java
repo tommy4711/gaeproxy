@@ -171,10 +171,9 @@ public class DNSServer implements WrapServer {
 
 	private static final String CANT_RESOLVE = "Error";
 
-	public DNSServer(String name, int port, String dnsHost, int dnsPort,
+	public DNSServer(String name, String dnsHost, int dnsPort,
 			String appHost, boolean httpMode) {
 		this.name = name;
-		this.srvPort = port;
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.appHost = appHost;
@@ -199,17 +198,17 @@ public class DNSServer implements WrapServer {
 			target = dnsHost + ":" + dnsPort;
 
 		try {
-			srvSocket = new DatagramSocket(srvPort,
+			srvSocket = new DatagramSocket(0,
 					InetAddress.getByName("127.0.0.1"));
-
-			Log.d(TAG, this.name + "启动于端口： " + port);
+			srvPort = srvSocket.getLocalPort();
+			Log.d(TAG, this.name + "启动于端口： " + srvPort);
 
 			inService = true;
 
 		} catch (SocketException e) {
-			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
+			Log.e(TAG, "DNSServer初始化错误，端口号" + srvPort, e);
 		} catch (UnknownHostException e) {
-			Log.e(TAG, "DNSServer初始化错误，端口号" + port, e);
+			Log.e(TAG, "DNSServer初始化错误，端口号" + srvPort, e);
 		}
 	}
 

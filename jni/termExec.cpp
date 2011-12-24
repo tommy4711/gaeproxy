@@ -40,6 +40,7 @@
 #define LOGE(...) do { __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__); } while(0)
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/wait.h>
 #include <errno.h>
@@ -101,12 +102,20 @@ static int create_subprocess(const char *cmd,
     char *const argv[], char *const envp[], int* pProcessId)
 {
     char filename[] = "/data/data/org.gaeproxy/defout";
+    char script[] = "/data/data/org.gaeproxy/script";
     pid_t pid;
-    int defout;
 
-    defout = open(filename, O_WRONLY | O_CREAT);
+    if (chmod(script, 0755) < 0) {
+        LOGE("error to chmod\n");
+        exit(-1);
+    }
 
-    if(defout < 0) exit(-1);
+    int defout = open(filename, O_RDWR | O_CREAT | O_TRUNC, 0600);
+
+    if(defout < 0) { 
+        LOGE("open file error\n");
+        exit(-1);
+    }
 
     pid = fork();
 

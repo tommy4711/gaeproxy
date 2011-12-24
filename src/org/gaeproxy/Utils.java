@@ -1,8 +1,12 @@
 package org.gaeproxy;
 
 import java.io.File;
+import java.io.FileDescriptor;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -24,7 +28,66 @@ public class Utils {
 		private final StringBuilder res;
 		private final boolean asroot;
 		public int exitcode = -1;
-		private Process exec;
+		// private Process exec;
+		private int mProcId;
+		private FileDescriptor mTermFd;
+
+		private int createSubprocess(int[] processId, String cmd) {
+			ArrayList<String> argList = parse(cmd);
+			String arg0 = argList.get(0);
+			String[] args = argList.toArray(new String[1]);
+
+			mTermFd = Exec.createSubprocess(arg0, args, null, processId);
+			return processId[0];
+		}
+
+		private ArrayList<String> parse(String cmd) {
+			final int PLAIN = 0;
+			final int WHITESPACE = 1;
+			final int INQUOTE = 2;
+			int state = WHITESPACE;
+			ArrayList<String> result = new ArrayList<String>();
+			int cmdLen = cmd.length();
+			StringBuilder builder = new StringBuilder();
+			for (int i = 0; i < cmdLen; i++) {
+				char c = cmd.charAt(i);
+				if (state == PLAIN) {
+					if (Character.isWhitespace(c)) {
+						result.add(builder.toString());
+						builder.delete(0, builder.length());
+						state = WHITESPACE;
+					} else if (c == '"') {
+						state = INQUOTE;
+					} else {
+						builder.append(c);
+					}
+				} else if (state == WHITESPACE) {
+					if (Character.isWhitespace(c)) {
+						// do nothing
+					} else if (c == '"') {
+						state = INQUOTE;
+					} else {
+						state = PLAIN;
+						builder.append(c);
+					}
+				} else if (state == INQUOTE) {
+					if (c == '\\') {
+						if (i + 1 < cmdLen) {
+							i += 1;
+							builder.append(cmd.charAt(i));
+						}
+					} else if (c == '"') {
+						state = PLAIN;
+					} else {
+						builder.append(c);
+					}
+				}
+			}
+			if (builder.length() > 0) {
+				result.add(builder.toString());
+			}
+			return result;
+		}
 
 		/**
 		 * Creates a new script runner.
@@ -51,9 +114,8 @@ public class Utils {
 		 */
 		@Override
 		public synchronized void destroy() {
-			if (exec != null)
-				exec.destroy();
-			exec = null;
+			Exec.hangupProcessGroup(mProcId);
+			Exec.close(mTermFd);
 		}
 
 		@Override
@@ -61,8 +123,11 @@ public class Utils {
 			try {
 				file.createNewFile();
 				final String abspath = file.getAbsolutePath();
+
+				// TODO: Rewrite this line
 				// make sure we have execution permission on the script file
-				Runtime.getRuntime().exec("chmod 755 " + abspath).waitFor();
+//				Runtime.getRuntime().exec("chmod 755 " + abspath).waitFor();
+
 				// Write the script to be executed
 				final OutputStreamWriter out = new OutputStreamWriter(
 						new FileOutputStream(file));
@@ -73,51 +138,37 @@ public class Utils {
 				out.write("exit\n");
 				out.flush();
 				out.close();
+
 				if (this.asroot) {
 					// Create the "su" request to run the script
-					exec = Runtime.getRuntime().exec(
-							root_shell + " -c " + abspath);
+					// exec = Runtime.getRuntime().exec(
+					// root_shell + " -c " + abspath);
+
+					int pid[] = new int[1];
+					mProcId = createSubprocess(pid, root_shell + " -c "
+							+ abspath);
 				} else {
 					// Create the "sh" request to run the script
-					exec = Runtime.getRuntime().exec(getShell() + " " + abspath);
+					// exec = Runtime.getRuntime().exec(getShell() + " " +
+					// abspath);
+
+					int pid[] = new int[1];
+					mProcId = createSubprocess(pid, getShell() + " " + abspath);
 				}
-				final java.io.InputStream stdout = exec.getInputStream();
-				final java.io.InputStream stderr = exec.getErrorStream();
+
+				final InputStream stdout = new FileInputStream(mTermFd);
 				final byte buf[] = new byte[8192];
 				int read = 0;
-				while (true) {
-					final Process localexec = exec;
-					if (localexec == null)
-						break;
-					try {
-						// get the process exit code - will raise
-						// IllegalThreadStateException if still running
-						this.exitcode = localexec.exitValue();
-					} catch (IllegalThreadStateException ex) {
-						// The process is still running
-					}
-					// Read stdout
-					if (stdout.available() > 0) {
-						read = stdout.read(buf);
-						if (res != null)
-							res.append(new String(buf, 0, read));
-					}
-					// Read stderr
-					if (stderr.available() > 0) {
-						read = stderr.read(buf);
-						if (res != null)
-							res.append(new String(buf, 0, read));
-					}
-					if (this.exitcode != -1) {
-						// finished
-						break;
-					}
-					// Sleep for the next round
-					Thread.sleep(50);
+
+				exitcode = Exec.waitFor(mProcId);
+
+				// Read stdout
+				if (stdout.available() > 0) {
+					read = stdout.read(buf);
+					if (res != null)
+						res.append(new String(buf, 0, read));
 				}
-			} catch (InterruptedException ex) {
-				if (res != null)
-					res.append("\nOperation timed-out");
+
 			} catch (Exception ex) {
 				if (res != null)
 					res.append("\n" + ex);
@@ -126,6 +177,7 @@ public class Utils {
 			}
 		}
 	}
+
 	public final static String TAG = "GAEProxy";
 
 	public final static String DEFAULT_SHELL = "/system/bin/sh";
@@ -134,8 +186,7 @@ public class Utils {
 	public final static String ALTERNATIVE_ROOT = "/system/xbin/su";
 	public final static String DEFAULT_IPTABLES = "/data/data/org.gaeproxy/iptables";
 	public final static String ALTERNATIVE_IPTABLES = "/system/bin/iptables";
-	public final static String SCRIPT_FILE = "scripts"; 
-	
+	public final static String SCRIPT_FILE = "/data/data/org.gaeproxy/script";
 
 	public final static int TIME_OUT = -99;
 	private static boolean initialized = false;
@@ -145,7 +196,7 @@ public class Utils {
 	private static String shell = null;
 	private static String root_shell = null;
 	private static String iptables = null;
-	
+
 	private static String data_path = null;
 
 	private static void checkIptables() {
@@ -162,18 +213,18 @@ public class Utils {
 
 		boolean compatible = false;
 		boolean version = false;
-		
+
 		StringBuilder sb = new StringBuilder();
-		String command = iptables + " --version\n" + iptables
-				+ " -L -t nat\n" + "exit\n";
-		
+		String command = iptables + " --version\n" + iptables + " -L -t nat\n"
+				+ "exit\n";
+
 		int exitcode = runScript(command, sb, 5000, true);
-		
+
 		if (exitcode == TIME_OUT)
 			return;
-		
+
 		lines = sb.toString();
-		
+
 		if (lines.contains("OUTPUT")) {
 			compatible = true;
 		}
@@ -272,23 +323,23 @@ public class Utils {
 
 		if (!Utils.isRoot())
 			return;
-		
+
 		StringBuilder sb = new StringBuilder();
 		String command = Utils.getIptables()
 				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
-		
+
 		int exitcode = runScript(command, sb, 5000, true);
-		
+
 		String lines = sb.toString();
-		
+
 		hasRedirectSupport = 1;
 
 		// flush the check command
 		Utils.runRootCommand(command.replace("-A", "-D"));
-		
+
 		if (exitcode == TIME_OUT)
 			return;
-		
+
 		if (lines.contains("No chain/target/match")) {
 			hasRedirectSupport = 0;
 		}
@@ -319,19 +370,19 @@ public class Utils {
 		}
 
 		String lines = null;
-		
+
 		StringBuilder sb = new StringBuilder();
 		String command = "ls /\n" + "exit\n";
-		
+
 		int exitcode = runScript(command, sb, 5000, true);
-		
+
 		if (exitcode == TIME_OUT) {
 			isRoot = 0;
 			return false;
 		}
-		
+
 		lines = sb.toString();
-		
+
 		if (lines.contains("system")) {
 			isRoot = 1;
 		}
@@ -342,9 +393,9 @@ public class Utils {
 	public static boolean runCommand(String command) {
 
 		Log.d(TAG, command);
-		
+
 		runScript(command, null, 5000, false);
-		
+
 		return true;
 	}
 
@@ -356,15 +407,15 @@ public class Utils {
 		Log.d(TAG, command);
 
 		runScript(command, null, 5000, true);
-		
+
 		return true;
 	}
 
-	private static int runScript(String script, StringBuilder res,
+	private synchronized static int runScript(String script, StringBuilder res,
 			long timeout, boolean asroot) {
-		
+
 		Context ctx = GAEProxyContext.getContext();
-		final File file = new File(ctx.getDir("bin", 0), SCRIPT_FILE);
+		final File file = new File(SCRIPT_FILE);
 		final ScriptRunner runner = new ScriptRunner(file, script, res, asroot);
 		runner.start();
 		try {

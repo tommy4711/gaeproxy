@@ -28,39 +28,38 @@
         android:targetSdkVersion="15" />
 
     <application
+        android:hardwareAccelerated="true"
         android:icon="@drawable/icon"
-        android:label="@string/app_name"
-        android:name="GAEProxyContext"
-        android:hardwareAccelerated="true" >
+        android:label="@string/app_name" >
         <activity
+            android:name=".GAEProxy"
             android:label="@string/app_name"
             android:launchMode="singleTask"
-            android:name=".GAEProxy"
-            android:taskAffinity=".GAEProxy">
-            <intent-filter >
+            android:taskAffinity=".GAEProxy" >
+            <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize"
-            android:name="com.google.ads.AdActivity" />
+            android:name="com.google.ads.AdActivity"
+            android:configChanges="keyboard|keyboardHidden|orientation|screenLayout|uiMode|screenSize|smallestScreenSize" />
         <activity
-            android:label="@string/app_name"
-            android:name=".AppManager" />
+            android:name=".AppManager"
+            android:label="@string/app_name" />
 
         <service
-            android:enabled="true"
-            android:name=".GAEProxyService" />
+            android:name=".GAEProxyService"
+            android:enabled="true" />
 
         <receiver android:name=".GAEProxyReceiver" >
-            <intent-filter >
+            <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
         <receiver android:name=".GAEProxyWidgetProvider" >
-            <intent-filter >
+            <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
                 <action android:name="org.gaeproxy.GAEProxyWidgetProvider.PROXY_SWITCH_ACTION" />
             </intent-filter>
@@ -71,21 +70,20 @@
         </receiver>
 
         <activity
+            android:name="org.gaeproxy.zirco.ui.activities.MainActivity"
             android:configChanges="keyboardHidden|orientation"
             android:label="@string/ApplicationName"
             android:launchMode="singleTask"
-            android:name="org.gaeproxy.zirco.ui.activities.MainActivity"
             android:theme="@style/Theme.GAEProxy" >
         </activity>
-        
         <activity
-            android:label="@string/AboutActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.AboutActivity"
+            android:label="@string/AboutActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity
-            android:label="@string/EditBookmarkActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.EditBookmarkActivity"
+            android:label="@string/EditBookmarkActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity android:name="org.gaeproxy.zirco.ui.activities.BookmarksListActivity" >
@@ -97,29 +95,29 @@
         <activity android:name="org.gaeproxy.zirco.ui.activities.AdBlockerWhiteListActivity" >
         </activity>
         <activity
-            android:configChanges="keyboardHidden|orientation"
-            android:name="org.gaeproxy.zirco.ui.activities.BookmarksHistoryActivity" >
+            android:name="org.gaeproxy.zirco.ui.activities.BookmarksHistoryActivity"
+            android:configChanges="keyboardHidden|orientation" >
         </activity>
         <activity
-            android:label="@string/ChangelogActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.ChangelogActivity"
+            android:label="@string/ChangelogActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity android:name="org.gaeproxy.zirco.ui.activities.preferences.PreferencesActivity" >
         </activity>
         <activity
-            android:label="@string/HomepagePreferenceActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.preferences.HomepagePreferenceActivity"
+            android:label="@string/HomepagePreferenceActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity
-            android:label="@string/SearchUrlPreferenceActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.preferences.SearchUrlPreferenceActivity"
+            android:label="@string/SearchUrlPreferenceActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity
-            android:label="@string/UserAgentPreferenceActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.preferences.UserAgentPreferenceActivity"
+            android:label="@string/UserAgentPreferenceActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
         <activity android:name="org.gaeproxy.zirco.ui.activities.MobileViewListActivity" >
@@ -129,14 +127,14 @@
         <activity android:name="org.gaeproxy.zirco.ui.activities.preferences.WeavePreferencesActivity" >
         </activity>
         <activity
-            android:label="@string/WeaveServerPreferenceActivity.Title"
             android:name="org.gaeproxy.zirco.ui.activities.preferences.WeaveServerPreferenceActivity"
+            android:label="@string/WeaveServerPreferenceActivity.Title"
             android:theme="@android:style/Theme.Dialog" >
         </activity>
 
         <provider
-            android:authorities="org.gaeproxy.zirco.providers.weavecontentprovider"
-            android:name="org.gaeproxy.zirco.providers.WeaveContentProvider" >
+            android:name="org.gaeproxy.zirco.providers.WeaveContentProvider"
+            android:authorities="org.gaeproxy.zirco.providers.weavecontentprovider" >
         </provider>
     </application>
 

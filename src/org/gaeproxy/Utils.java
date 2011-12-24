@@ -218,7 +218,7 @@ public class Utils {
 		boolean version = false;
 
 		StringBuilder sb = new StringBuilder();
-		String command = iptables + " --version\n" + iptables + " -L -t nat\n"
+		String command = iptables + " --version\n" + iptables + " -L -t nat -n\n"
 				+ "exit\n";
 
 		int exitcode = runScript(command, sb, 5000, true);

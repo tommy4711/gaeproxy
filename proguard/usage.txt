@@ -467,6 +467,8 @@ org.gaeproxy.DomainValidator:
     private static final java.lang.String DOMAIN_LABEL_REGEX
     private static final java.lang.String TOP_LABEL_REGEX
     private static final java.lang.String DOMAIN_NAME_REGEX
+org.gaeproxy.Exec:
+    public static native void setPtyWindowSize(java.io.FileDescriptor,int,int,int,int)
 org.gaeproxy.GAEProxy:
     private static final java.lang.String TAG
     public static final java.lang.String PREFS_NAME
@@ -475,7 +477,9 @@ org.gaeproxy.GAEProxy:
     private static final int MSG_INSTALL_FAIL
     private static final int MSG_CRASH_RECOVER
     private static final int MSG_INITIAL_FINISH
-    349:359:private boolean checkApkExist(java.lang.String)
+    351:361:private boolean checkApkExist(java.lang.String)
+org.gaeproxy.GAEProxyContext:
+    15:15:public static android.content.Context getContext()
 org.gaeproxy.GAEProxyReceiver:
     private static final java.lang.String TAG
 org.gaeproxy.GAEProxyService:
@@ -504,8 +508,8 @@ org.gaeproxy.InnerSocketBuilder:
 org.gaeproxy.ProxySettings:
     private static final java.lang.String TAG
 org.gaeproxy.ProxyedApp:
-    26:26:public java.lang.String getProcname()
-    47:47:public boolean isEnabled()
+    24:24:public java.lang.String getProcname()
+    45:45:public boolean isEnabled()
 org.gaeproxy.R
 org.gaeproxy.R$anim
 org.gaeproxy.R$array
@@ -530,6 +534,9 @@ org.gaeproxy.Utils:
     public static final java.lang.String ALTERNATIVE_ROOT
     public static final java.lang.String DEFAULT_IPTABLES
     public static final java.lang.String ALTERNATIVE_IPTABLES
+    public static final java.lang.String SCRIPT_FILE
+    public static final java.lang.String DEFOUT_FILE
+    public static final int TIME_OUT
 org.gaeproxy.WrapServer:
     public abstract void close()
     public abstract int getServPort()

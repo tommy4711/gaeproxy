@@ -1613,6 +1613,11 @@ org.gaeproxy.DomainValidator -> org.gaeproxy.l:
     org.gaeproxy.DomainValidator getInstance() -> a
     java.lang.String chompLeadingDot(java.lang.String) -> b
     boolean isValid(java.lang.String) -> a
+org.gaeproxy.Exec -> org.gaeproxy.Exec:
+    java.io.FileDescriptor createSubprocess(java.lang.String,java.lang.String[],java.lang.String[],int[]) -> createSubprocess
+    int waitFor(int) -> waitFor
+    void close(java.io.FileDescriptor) -> close
+    void hangupProcessGroup(int) -> hangupProcessGroup
 org.gaeproxy.GAEProxy -> org.gaeproxy.GAEProxy:
     java.lang.String proxy -> e
     int port -> f
@@ -1691,6 +1696,9 @@ org.gaeproxy.GAEProxy$DownloadFileRunnable -> org.gaeproxy.t:
     void publishProgress(java.lang.String) -> a
     void run() -> run
     void unzip(java.lang.String,java.lang.String) -> a
+org.gaeproxy.GAEProxyContext -> org.gaeproxy.GAEProxyContext:
+    android.content.Context context -> a
+    void onCreate() -> onCreate
 org.gaeproxy.GAEProxyReceiver -> org.gaeproxy.GAEProxyReceiver:
     java.lang.String proxy -> a
     java.lang.String proxyType -> b
@@ -1724,19 +1732,18 @@ org.gaeproxy.GAEProxyService -> org.gaeproxy.GAEProxyService:
     boolean isHTTPSProxy -> u
     boolean isDNSBlocked -> v
     boolean isGFWList -> w
-    boolean isStopped -> x
     com.google.android.apps.analytics.GoogleAnalyticsTracker tracker -> b
-    org.gaeproxy.ProxyedApp[] apps -> y
-    java.lang.Class[] mStartForegroundSignature -> z
-    java.lang.Class[] mStopForegroundSignature -> A
-    java.lang.Class[] mSetForegroundSignature -> B
-    java.lang.reflect.Method mSetForeground -> C
-    java.lang.reflect.Method mStartForeground -> D
-    java.lang.reflect.Method mStopForeground -> E
-    java.lang.Object[] mSetForegroundArgs -> F
-    java.lang.Object[] mStartForegroundArgs -> G
-    java.lang.Object[] mStopForegroundArgs -> H
-    java.lang.ref.WeakReference sRunningInstance -> I
+    org.gaeproxy.ProxyedApp[] apps -> x
+    java.lang.Class[] mStartForegroundSignature -> y
+    java.lang.Class[] mStopForegroundSignature -> z
+    java.lang.Class[] mSetForegroundSignature -> A
+    java.lang.reflect.Method mSetForeground -> B
+    java.lang.reflect.Method mStartForeground -> C
+    java.lang.reflect.Method mStopForeground -> D
+    java.lang.Object[] mSetForegroundArgs -> E
+    java.lang.Object[] mStartForegroundArgs -> F
+    java.lang.Object[] mStopForegroundArgs -> G
+    java.lang.ref.WeakReference sRunningInstance -> H
     android.os.Handler handler -> c
     boolean isServiceStarted() -> a
     boolean connect() -> c
@@ -1756,7 +1763,7 @@ org.gaeproxy.GAEProxyService -> org.gaeproxy.GAEProxyService:
     android.os.PowerManager$WakeLock access$2(org.gaeproxy.GAEProxyService) -> b
     java.lang.String access$3(org.gaeproxy.GAEProxyService) -> c
     void access$4(org.gaeproxy.GAEProxyService,boolean) -> a
-    void access$5(org.gaeproxy.GAEProxyService) -> d
+    void access$5(org.gaeproxy.GAEProxyService,boolean) -> b
     void access$6(org.gaeproxy.GAEProxyService,java.lang.String,java.lang.String) -> a
 org.gaeproxy.GAEProxyService$1 -> org.gaeproxy.u:
     org.gaeproxy.GAEProxyService this$0 -> a
@@ -1841,22 +1848,36 @@ org.gaeproxy.RegexValidator -> org.gaeproxy.af:
     java.lang.String toString() -> toString
 org.gaeproxy.Utils -> org.gaeproxy.ag:
     boolean initialized -> a
-    int isRoot -> b
-    java.lang.String shell -> c
-    java.lang.String root_shell -> d
-    java.lang.String iptables -> e
-    java.lang.String data_path -> f
+    int hasRedirectSupport -> b
+    int isRoot -> c
+    java.lang.String shell -> d
+    java.lang.String root_shell -> e
+    java.lang.String iptables -> f
+    java.lang.String data_path -> g
+    android.graphics.drawable.Drawable getAppIcon(android.content.Context,int) -> a
     java.lang.String getDataPath(android.content.Context) -> a
+    boolean getHasRedirectSupport() -> a
+    java.lang.String getIptables() -> b
     java.lang.String getSignature(android.content.Context) -> b
-    boolean isInitialized() -> a
-    java.lang.String getShell() -> b
-    java.lang.String getRoot() -> c
-    java.lang.String getIptables() -> d
-    boolean isRoot() -> e
+    boolean isInitialized() -> c
+    boolean isRoot() -> d
     boolean runCommand(java.lang.String) -> a
     boolean runRootCommand(java.lang.String) -> b
-    android.graphics.drawable.Drawable getAppIcon(android.content.Context,int) -> a
-org.gaeproxy.WrapServer -> org.gaeproxy.ah:
+    int runScript$3050d48f(java.lang.String,java.lang.StringBuilder,boolean) -> a
+    java.lang.String access$0() -> e
+    java.lang.String access$1() -> f
+org.gaeproxy.Utils$ScriptRunner -> org.gaeproxy.ah:
+    java.io.File file -> b
+    java.lang.String script -> c
+    java.lang.StringBuilder res -> d
+    boolean asroot -> e
+    int exitcode -> a
+    int mProcId -> f
+    java.io.FileDescriptor mTermFd -> g
+    int createSubprocess(int[],java.lang.String) -> a
+    void destroy() -> destroy
+    void run() -> run
+org.gaeproxy.WrapServer -> org.gaeproxy.ai:
 org.gaeproxy.zirco.controllers.Controller -> org.gaeproxy.zirco.a.a:
     android.content.SharedPreferences mPreferences -> a
     java.util.List mWebViewList -> b

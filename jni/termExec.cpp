@@ -244,26 +244,6 @@ static jobject android_os_Exec_createSubProcess(JNIEnv *env, jobject clazz,
 }
 
 
-static void android_os_Exec_setPtyWindowSize(JNIEnv *env, jobject clazz,
-    jobject fileDescriptor, jint row, jint col, jint xpixel, jint ypixel)
-{
-    int fd;
-    struct winsize sz;
-
-    fd = env->GetIntField(fileDescriptor, field_fileDescriptor_descriptor);
-
-    if (env->ExceptionOccurred() != NULL) {
-        return;
-    }
-
-    sz.ws_row = row;
-    sz.ws_col = col;
-    sz.ws_xpixel = xpixel;
-    sz.ws_ypixel = ypixel;
-
-    ioctl(fd, TIOCSWINSZ, &sz);
-}
-
 static int android_os_Exec_waitFor(JNIEnv *env, jobject clazz,
     jint procId) {
     int status;
@@ -333,8 +313,6 @@ static const char *classPathName = "org/gaeproxy/Exec";
 static JNINativeMethod method_table[] = {
     { "createSubprocess", "(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/String;[I)Ljava/io/FileDescriptor;",
         (void*) android_os_Exec_createSubProcess },
-    { "setPtyWindowSize", "(Ljava/io/FileDescriptor;IIII)V",
-        (void*) android_os_Exec_setPtyWindowSize},
     { "waitFor", "(I)I",
         (void*) android_os_Exec_waitFor},
     { "close", "(Ljava/io/FileDescriptor;)V",

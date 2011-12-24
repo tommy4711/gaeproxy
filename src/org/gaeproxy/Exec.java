@@ -52,12 +52,6 @@ public class Exec
     public static native FileDescriptor createSubprocess(
         String cmd, String[] args, String[] envVars, int[] processId);
         
-    /**
-     * Set the widow size for a given pty. Allows programs
-     * connected to the pty learn how large their screen is.
-     */
-    public static native void setPtyWindowSize(FileDescriptor fd,
-       int row, int col, int xpixel, int ypixel);
 
     /**
      * Causes the calling thread to wait for the process associated with the

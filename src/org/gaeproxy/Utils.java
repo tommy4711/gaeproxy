@@ -158,14 +158,14 @@ public class Utils {
 					mProcId = createSubprocess(pid, getShell() + " " + abspath);
 				}
 
-				final InputStream stdout = new FileInputStream(mTermFd);
+				final InputStream stdout = new FileInputStream(DEFOUT_FILE);
 				final byte buf[] = new byte[8192];
 				int read = 0;
 
 				exitcode = Exec.waitFor(mProcId);
 
 				// Read stdout
-				if (stdout.available() > 0) {
+				while (stdout.available() > 0) {
 					read = stdout.read(buf);
 					if (res != null)
 						res.append(new String(buf, 0, read));

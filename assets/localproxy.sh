@@ -5,11 +5,6 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHONPATH:/system/lib/
 export PYTHONHOME=$PYTHONPATH:/data/data/org.gaeproxy/python
 export TEMP=$1/python-extras
 
-chmod 644 /data/data/org.gaeproxy/python.pid
-kill -9 `cat /data/data/org.gaeproxy/python.pid`
-rm /data/data/org.gaeproxy/python.pid
-killall -9 python
-
 case $2 in
 
  goagent)

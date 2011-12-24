@@ -221,7 +221,7 @@ public class Utils {
 		String command = iptables + " --version\n" + iptables + " -L -t nat -n\n"
 				+ "exit\n";
 
-		int exitcode = runScript(command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 10 * 1000, true);
 
 		if (exitcode == TIME_OUT)
 			return;
@@ -331,7 +331,7 @@ public class Utils {
 		String command = Utils.getIptables()
 				+ " -t nat -A OUTPUT -p udp --dport 54 -j REDIRECT --to 8154";
 
-		int exitcode = runScript(command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 10 * 1000, true);
 
 		String lines = sb.toString();
 
@@ -377,7 +377,7 @@ public class Utils {
 		StringBuilder sb = new StringBuilder();
 		String command = "ls /\n" + "exit\n";
 
-		int exitcode = runScript(command, sb, 5000, true);
+		int exitcode = runScript(command, sb, 10 * 1000, true);
 
 		if (exitcode == TIME_OUT) {
 			isRoot = 0;
@@ -397,7 +397,7 @@ public class Utils {
 
 		Log.d(TAG, command);
 
-		runScript(command, null, 5000, false);
+		runScript(command, null, 10 * 1000, false);
 
 		return true;
 	}
@@ -409,7 +409,7 @@ public class Utils {
 
 		Log.d(TAG, command);
 
-		runScript(command, null, 5000, true);
+		runScript(command, null, 10 * 1000, true);
 
 		return true;
 	}

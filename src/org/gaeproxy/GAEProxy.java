@@ -142,6 +142,8 @@ public class GAEProxy extends PreferenceActivity implements
 				URL url = new URL(path[0]);
 				URLConnection conexion = url.openConnection();
 				conexion.connect();
+				conexion.setConnectTimeout(4 * 1000);
+				conexion.setReadTimeout(8 * 1000);
 				int lenghtOfFile = conexion.getContentLength();
 
 				if (lenghtOfFile < 0)
@@ -180,6 +182,8 @@ public class GAEProxy extends PreferenceActivity implements
 
 				url = new URL(path[3]);
 				conexion = url.openConnection();
+				conexion.setConnectTimeout(4 * 1000);
+				conexion.setReadTimeout(8 * 1000);
 				conexion.connect();
 
 				lenghtOfFile = conexion.getContentLength();

@@ -214,15 +214,6 @@ public class GAEProxyService extends Service {
 
 	public boolean connect() {
 
-		// pid
-		try {
-			File pid = new File(BASE + "python.pid");
-			if (pid.exists())
-				pid.createNewFile();
-		} catch (IOException e1) {
-			return false;
-		}
-
 		try {
 
 			StringBuffer sb = new StringBuffer();
@@ -485,7 +476,7 @@ public class GAEProxyService extends Service {
 		tracker.trackPageView("/version-" + getVersionName());
 
 		tracker.dispatch();
-		
+
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this
 				.getSystemService(NOTIFICATION_SERVICE);
@@ -712,7 +703,7 @@ public class GAEProxyService extends Service {
 		}).start();
 		markServiceStarted();
 	}
-
+	
 	/**
 	 * Internal method to request actual PTY terminal once we've finished
 	 * authentication. If called before authenticated, it will just fail.
@@ -791,7 +782,7 @@ public class GAEProxyService extends Service {
 		StringBuffer http_sb = new StringBuffer();
 
 		StringBuffer https_sb = new StringBuffer();
-		
+
 		init_sb.append(Utils.getIptables() + " -t nat -F OUTPUT");
 
 		if (hasRedirectSupport) {
@@ -854,7 +845,7 @@ public class GAEProxyService extends Service {
 		if (isHTTPSProxy) {
 			rules += https_sb.toString();
 		}
-		
+
 		Utils.runRootCommand(rules);
 
 		return true;

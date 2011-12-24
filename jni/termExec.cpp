@@ -126,7 +126,7 @@ static int create_subprocess(const char *cmd,
 
     if(pid == 0){
 
-        setsid();
+        //setsid();
 
         dup2(defout, 1);
         dup2(defout, 2);

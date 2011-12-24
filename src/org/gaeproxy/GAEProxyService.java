@@ -783,7 +783,7 @@ public class GAEProxyService extends Service {
 
 		StringBuffer https_sb = new StringBuffer();
 
-		init_sb.append(Utils.getIptables() + " -t nat -F OUTPUT");
+		init_sb.append(Utils.getIptables() + " -t nat -F OUTPUT\n");
 
 		if (hasRedirectSupport) {
 			init_sb.append(Utils.getIptables()

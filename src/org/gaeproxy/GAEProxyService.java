@@ -776,14 +776,22 @@ public class GAEProxyService extends Service {
 				return false;
 
 			Log.d(TAG, "Forward Successful");
-			Utils.runCommand(BASE + "proxy.sh start " + port + " " + socksIp
-					+ " " + socksPort);
+			if (Utils.isRoot())
+				Utils.runRootCommand(BASE + "proxy.sh start " + port + " "
+						+ socksIp + " " + socksPort);
+			else
+				Utils.runCommand(BASE + "proxy.sh start " + port + " "
+						+ socksIp + " " + socksPort);
 
 		} else {
 
 			Log.d(TAG, "Forward Successful");
-			Utils.runCommand(BASE + "proxy.sh start " + port + " "
-					+ "127.0.0.1" + " " + port);
+			if (Utils.isRoot())
+				Utils.runRootCommand(BASE + "proxy.sh start " + port + " "
+						+ "127.0.0.1" + " " + port);
+			else
+				Utils.runCommand(BASE + "proxy.sh start " + port + " "
+						+ "127.0.0.1" + " " + port);
 		}
 
 		StringBuffer init_sb = new StringBuffer();

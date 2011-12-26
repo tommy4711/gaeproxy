@@ -858,7 +858,7 @@ public class GAEProxyService extends Service {
 		}
 
 		String init_rules = init_sb.toString();
-		Utils.runRootCommand(init_rules);
+		Utils.runRootCommand(init_rules, 30 * 1000);
 
 		String redt_rules = http_sb.toString();
 

@@ -393,7 +393,7 @@ public class Utils {
 		return isRoot == 1 ? true : false;
 	}
 
-	public static boolean runCommand(String command) {
+	public static boolean runCommand(String command, int timeout) {
 
 		Log.d(TAG, command);
 
@@ -401,17 +401,29 @@ public class Utils {
 
 		return true;
 	}
-
-	public static boolean runRootCommand(String command) {
+	
+	public static boolean runCommand(String command) {
+		
+		return runCommand(command, 10 * 1000);
+		
+	}
+	
+	public static boolean runRootCommand(String command, int timeout) {
 
 		if (!isRoot())
 			return false;
 
 		Log.d(TAG, command);
 
-		runScript(command, null, 10 * 1000, true);
+		runScript(command, null, timeout, true);
 
 		return true;
+	}
+
+	public static boolean runRootCommand(String command) {
+
+		return runRootCommand(command, 10 * 1000);
+		
 	}
 
 	private synchronized static int runScript(String script, StringBuilder res,
@@ -427,10 +439,8 @@ public class Utils {
 			}
 			if (runner.isAlive()) {
 				// Timed-out
-				runner.interrupt();
-				runner.join(150);
 				runner.destroy();
-				runner.join(50);
+				runner.join(1000);
 			}
 		} catch (InterruptedException ex) {
 			return TIME_OUT;

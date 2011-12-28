@@ -863,7 +863,7 @@ def main():
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     if common.GAE_DEBUGLEVEL:
         logging.root.setLevel(logging.DEBUG)
-    CertUtil.checkCA()
+
     common.install_opener()
     sys.stdout.write(common.info())
     LocalProxyServer.address_family = (socket.AF_INET, socket.AF_INET6)[':' in common.LISTEN_IP]

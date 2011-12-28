@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
+# coding:utf-8
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang@188.com>
 # Based on WallProxy 0.4.0 by hexieshe <www.ehust@gmail.com>
 
-__version__ = '1.6.7'
+__version__ = '1.7.4'
 __author__ = "{phus.lu,hewigovens}@gmail.com (Phus Lu and Hewig Xu)"
 
 import sys, os, re, time, errno, binascii, zlib
@@ -13,7 +13,6 @@ import thread, threading
 import socket, ssl, select
 import httplib, urllib2, urlparse
 import BaseHTTPServer, SocketServer
-
 try:
     import ctypes
 except ImportError:
@@ -22,10 +21,6 @@ try:
     import OpenSSL
 except ImportError:
     OpenSSL = None
-try:
-    import ntlm, ntlm.HTTPNtlmAuthHandler
-except ImportError:
-    ntlm = None
 
 logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
 
@@ -56,7 +51,6 @@ class Common(object):
         self.PROXY_PORT           = self.CONFIG.getint('proxy', 'port')
         self.PROXY_USERNAME       = self.CONFIG.get('proxy', 'username')
         self.PROXY_PASSWROD       = self.CONFIG.get('proxy', 'password')
-        self.PROXY_NTLM           = bool(self.CONFIG.getint('proxy', 'ntlm')) if self.CONFIG.has_option('proxy', 'ntlm') else '\\' in self.PROXY_USERNAME
 
         self.GOOGLE_MODE          = self.CONFIG.get('google', 'mode')
         self.GOOGLE_SITES         = tuple(self.CONFIG.get('google', 'sites').split('|'))
@@ -83,15 +77,17 @@ class Common(object):
         self.LOVE_TIMESTAMP       = self.CONFIG.get('love', 'timestamp')
         self.LOVE_TIP             = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m:unichr(int(m.group(1),16)), self.CONFIG.get('love','tip')).split('|')
 
-        self.HOSTS                = dict((k, v) for k, v in self.CONFIG.items('hosts') if not k.startswith('_'))
+        self.HOSTS                = dict((k, v) for k, v in self.CONFIG.items('hosts') if not k.startswith('.'))
+        self.HOSTS_ENDSWITH_DICT  = dict((k, v) for k, v in self.CONFIG.items('hosts') if k.startswith('.'))
+        self.HOSTS_ENDSWITH_TUPLE = tuple(k for k, v in self.CONFIG.items('hosts') if k.startswith('.'))
 
         self.build_gae_fetchserver()
         self.PHP_FETCHHOST        = re.sub(':\d+$', '', urlparse.urlparse(self.PHP_FETCHSERVER).netloc)
 
     def build_gae_fetchserver(self):
         self.GAE_FETCHHOST = '%s.appspot.com' % self.GAE_APPIDS[0]
-        # append '?' to url, it can avoid china telicom/unicom AD
         if not self.PROXY_ENABLE:
+            # append '?' to url, it can avoid china telicom/unicom AD
             self.GAE_FETCHSERVER = '%s://%s%s?' % (self.GOOGLE_MODE, self.GAE_FETCHHOST, self.GAE_PATH)
         else:
             self.GAE_FETCHSERVER = '%s://%s%s?' % (self.GOOGLE_MODE, random.choice(self.GOOGLE_APPSPOT), self.GAE_PATH)
@@ -102,15 +98,19 @@ class Common(object):
     def install_opener(self):
         if self.PROXY_ENABLE:
             proxy = '%s:%s@%s:%d'%(self.PROXY_USERNAME, self.PROXY_PASSWROD, self.PROXY_HOST, self.PROXY_PORT)
-            handlers = [urllib2.ProxyHandler({'http':proxy,'https':proxy})]
-            if self.PROXY_NTLM:
-                if ntlm is None:
-                    logging.critical('You need install python-ntlm to support windows domain proxy! "%s:%s"', self.PROXY_HOST, self.PROXY_PORT)
+            if '\\' in self.PROXY_USERNAME:
+                if not os.path.isfile('ntlmaps.zip'):
+                    logging.critical('ntlmaps.zip not found!')
                     sys.exit(-1)
-                passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
-                passman.add_password(None, '%s:%s' % (self.PROXY_HOST, self.PROXY_PORT), self.PROXY_USERNAME, self.PROXY_PASSWROD)
-                auth_NTLM = ntlm.HTTPNtlmAuthHandler.HTTPNtlmAuthHandler(passman)
-                handlers.append(auth_NTLM)
+                os.environ['NTLMAPS-GENERAL-PARENT_PROXY'] = common.PROXY_HOST
+                os.environ['NTLMAPS-GENERAL-PARENT_PROXY_PORT'] = str(common.PROXY_PORT)
+                os.environ['NTLMAPS-NTLM_AUTH-NT_DOMAIN'] = self.PROXY_USERNAME.split('\\')[0]
+                os.environ['NTLMAPS-NTLM_AUTH-USER'] = self.PROXY_USERNAME.split('\\')[1]
+                os.environ['NTLMAPS-NTLM_AUTH-PASSWORD'] = common.PROXY_PASSWROD
+                os.environ['PYTHONSCRIPT'] = 'ntlmaps.zip'
+                ret = os.startfile('proxy.exe') if os.name == 'nt' else os.system('python ntlmaps.zip &')
+                proxy = '127.0.0.1:5865'
+            handlers = [urllib2.ProxyHandler({'http':proxy,'https':proxy})]
         else:
             handlers = [urllib2.ProxyHandler({})]
         opener = urllib2.build_opener(*handlers)
@@ -125,7 +125,7 @@ class Common(object):
         info += 'Local Proxy     : %s:%s\n' % (self.PROXY_HOST, self.PROXY_PORT) if self.PROXY_ENABLE else ''
         info += 'Debug Level     : %s\n' % self.GAE_DEBUGLEVEL if self.GAE_DEBUGLEVEL else ''
         info += 'GAE Mode        : %s\n' % self.GOOGLE_MODE if self.GAE_ENABLE else ''
-        info += 'GAE Aera        : %s\n' % self.CONFIG.get('google', 'appspot')
+        info += 'GAE Area        : %s\n' % self.CONFIG.get('google', 'appspot')
         info += 'GAE APPID       : %s\n' % '|'.join(self.GAE_APPIDS)
         info += 'PHP Mode Listen : %s:%d\n' % (self.PHP_IP, self.PHP_PORT) if self.PHP_ENABLE else ''
         info += 'PHP FetchServer : %s\n' % self.PHP_FETCHSERVER if self.PHP_ENABLE else ''
@@ -148,10 +148,9 @@ class MultiplexConnection(object):
         self.socket = None
         self._sockets = set([])
         self.connect(hosts, port, MultiplexConnection.timeout, MultiplexConnection.window)
-    def connect(self, hosts, port, timeout, window):
+    def connect(self, hostlist, port, timeout, window):
         for i in xrange(MultiplexConnection.retry):
-            if len(hosts) > window:
-                hosts = random.sample(hosts, window)
+            hosts = random.sample(hostlist, window) if len(hostlist) > window else hostlist
             logging.debug('MultiplexConnection try connect hosts=%s, port=%d', hosts, port)
             socks = []
             for host in hosts:
@@ -169,7 +168,7 @@ class MultiplexConnection(object):
                 self._sockets.remove(self.socket)
                 if window > MultiplexConnection.window_min:
                     MultiplexConnection.window_ack += 1
-                    if MultiplexConnection.window_ack > 10 and window > MultiplexConnection.window_min:
+                    if MultiplexConnection.window_ack > 10:
                         MultiplexConnection.window = window - 1
                         MultiplexConnection.window_ack = 0
                         logging.info('MultiplexConnection CONNECT port=%s OK 10 times, switch new window=%d', port, MultiplexConnection.window)
@@ -177,7 +176,7 @@ class MultiplexConnection(object):
             else:
                 logging.warning('MultiplexConnection Cannot hosts %r:%r, window=%d', hosts, port, window)
         else:
-            MultiplexConnection.window = min(int(round(window*1.5)), len(hosts), self.window_max)
+            MultiplexConnection.window = min(int(round(window*1.5)), len(hostlist), self.window_max)
             MultiplexConnection.window_ack = 0
             raise RuntimeError(r'MultiplexConnection Connect hosts %s:%s fail %d times!' % (hosts, port, MultiplexConnection.retry))
     def close(self):
@@ -350,43 +349,16 @@ class CertUtil(object):
         crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
         return (keyFile, crtFile)
 
-    @staticmethod
-    def checkCA():
-        #Check CA exists
-        keyFile = os.path.join(os.path.dirname(__file__), 'CA.key')
-        crtFile = os.path.join(os.path.dirname(__file__), 'CA.crt')
-        if not os.path.exists(keyFile):
-            if not OpenSSL:
-                logging.critical('CA.crt is not exist and OpenSSL is disabled, ABORT!')
-                sys.exit(-1)
-            key, crt = CertUtil.makeCA()
-            CertUtil.writeFile(keyFile, key)
-            CertUtil.writeFile(crtFile, crt)
-            [os.remove(os.path.join('certs', x)) for x in os.listdir('certs')]
-        #Check CA imported
-        cmd = {
-                'win32'  : r'cd /d "%s" && certmgr.exe -add CA.crt -c -s -r localMachine Root >NUL' % os.path.dirname(__file__),
-                #'darwin' : r'sudo security add-trusted-cert -d –r trustRoot –k /Library/Keychains/System.keychain CA.crt',
-              }.get(sys.platform)
-        if cmd and os.system(cmd) != 0:
-            logging.warn('GoAgent install trusted root CA certificate failed, Please run goagent by administrator/root.')
-        if OpenSSL:
-            keyFile = os.path.join(os.path.dirname(__file__), 'CA.key')
-            crtFile = os.path.join(os.path.dirname(__file__), 'CA.crt')
-            cakey = CertUtil.readFile(keyFile)
-            cacrt = CertUtil.readFile(crtFile)
-            CertUtil.CA = (CertUtil.loadPEM(cakey, 0), CertUtil.loadPEM(cacrt, 2))
-
-def urlfetch(url, payload, method, headers, fetchhost, fetchserver, on_error=None):
+def urlfetch(url, payload, method, headers, fetchhost, fetchserver, dns=None, on_error=None):
     errors = []
-    params = {'url':url, 'method':method, 'headers':str(headers), 'payload':payload}
+    params = {'url':url, 'method':method, 'headers':headers, 'payload':payload}
     logging.debug('urlfetch params %s', params)
     if common.GAE_PASSWORD:
         params['password'] = common.GAE_PASSWORD
     if common.FETCHMAX_SERVER:
         params['fetchmax'] = common.FETCHMAX_SERVER
-    if common.USERAGENT_ENABLE:
-        params['useragent'] = common.USERAGENT_STRING
+    if dns:
+        params['dns'] = dns
     params =  '&'.join('%s=%s' % (k, binascii.b2a_hex(v)) for k, v in params.iteritems())
     for i in xrange(common.FETCHMAX_LOCAL):
         try:
@@ -415,11 +387,11 @@ def urlfetch(url, payload, method, headers, fetchhost, fetchserver, on_error=Non
                 data['content'] = raw_data[12+hlen:tlen]
             else:
                 raise ValueError('Data length is short than excepted!')
-            data['headers'] = dict((k, binascii.a2b_hex(v)) for k, _, v in (x.partition('=') for x in raw_data[12:12+hlen].split('&')))
+            data['headers'] = dict((k.title(), binascii.a2b_hex(v)) for k, _, v in (x.partition('=') for x in raw_data[12:12+hlen].split('&')))
             return (0, data)
         except Exception, e:
             if on_error:
-                logging.info('urlfetch trigger on_error %s', getattr(on_error, 'func_name', ''))
+                logging.info('urlfetch error=%s on_error=%s', str(e), str(on_error))
                 data = on_error(e)
                 if data:
                     fetchhost = data.get('fetchhost', fetchhost)
@@ -434,23 +406,20 @@ class SimpleMessageClass(object):
     def __init__(self, fp, seekable = 0):
         self.fp = fp
         self.dict = dict = {}
-        self.linedict = linedict = {}
-        self.headers = []
-        headers_append = self.headers.append
         readline = fp.readline
         while 1:
-            line = readline()
+            line = readline(8192)
             if not line or line == '\r\n':
                 break
             key, _, value = line.partition(':')
-            key = key.lower()
             if value:
-                dict[key] = value.strip()
-                linedict[key] = line
-                headers_append(line)
+                dict[key.title()] = value.strip()
+
+    def getheader(self, name, default=None):
+        return self.dict.get(name.title(), default)
 
     def get(self, name, default=None):
-        return self.dict.get(name.lower(), default)
+        return self.dict.get(name.title(), default)
 
     def iteritems(self):
         return self.dict.iteritems()
@@ -461,23 +430,26 @@ class SimpleMessageClass(object):
     def itervalues(self):
         return self.dict.itervalues()
 
+    def keys(self):
+        return self.dict.keys()
+
+    def values(self):
+        return self.dict.values()
+
+    def items(self):
+        return self.dict.items()
+
     def __getitem__(self, name):
-        return self.dict[name.lower()]
+        return self.dict[name.title()]
 
     def __setitem__(self, name, value):
-        key = name.lower()
-        self.dict[key] = value
-        self.linedict[key] = '%s: %s\r\n' % (name, value)
-        self.headers = None
+        self.dict[name.title()] = value
 
     def __delitem__(self, name):
-        key = name.lower()
-        del self.dict[key]
-        del self.linedict[key]
-        self.headers = None
+        del self.dict[name.title()]
 
     def __contains__(self, name):
-        return name.lower() in self.dict
+        return name.title() in self.dict
 
     def __len__(self):
         return len(self.dict)
@@ -486,66 +458,59 @@ class SimpleMessageClass(object):
         return iter(self.dict)
 
     def __str__(self):
-        return ''.join(self.headers or self.linedict.itervalues())
+        return ''.join('%s: %s\r\n' % (k, v) for k, v in self.dict.iteritems())
 
 class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
-    skip_headers = frozenset(['host', 'vary', 'via', 'x-forwarded-for', 'proxy-authorization', 'proxy-connection', 'upgrade', 'keep-alive'])
+    skip_headers = frozenset(['Host', 'Vary', 'Via', 'X-Forwarded-For', 'Proxy-Authorization', 'Proxy-Connection', 'Upgrade', 'Keep-Alive'])
     SetupLock = threading.Lock()
     MessageClass = SimpleMessageClass
     
     # Disable logging DNS lookups
     def address_string(self):
-        return str(self.client_address[0])
+        return str(self.client_address[0])    
 
     def handle_fetch_error(self, error):
         if isinstance(error, urllib2.HTTPError):
             # seems that current appid is over qouta, swith to next appid
             if error.code == 503:
                 common.GAE_APPIDS.append(common.GAE_APPIDS.pop(0))
-                common.build_gae_fetchserver()
-                logging.info('Appspot 503 Error, switch to new fetchserver: %r', common.GAE_FETCHSERVER)
-                sys.stdout.write(common.info())
-                return {'fetchhost':common.GAE_FETCHHOST, 'fetchserver':common.GAE_FETCHSERVER}
+                logging.info('APPSPOT 503 Error, switch to next fetchserver: %r', common.GAE_APPIDS[0])
             # seems that www.google.cn:80 is down, switch to https
             if error.code in (502, 504):
                 common.GOOGLE_MODE = 'https'
-                #common.GOOGLE_APPSPOT = common.GOOGLE_HOSTS_HK
-                common.build_gae_fetchserver()
-                sys.stdout.write(common.info())
-                return {'fetchhost':common.GAE_FETCHHOST, 'fetchserver':common.GAE_FETCHSERVER}
         elif isinstance(error, urllib2.URLError):
             if error.reason[0] in (11004, 10051, 10054, 10060, 'timed out'):
                 # it seems that google.cn is reseted, switch to https
                 common.GOOGLE_MODE = 'https'
-                #common.GOOGLE_APPSPOT = common.GOOGLE_HOSTS_HK
-                common.build_gae_fetchserver()
-                sys.stdout.write(common.info())
-                return {'fetchhost':common.GAE_FETCHHOST, 'fetchserver':common.GAE_FETCHSERVER}
         elif isinstance(error, httplib.HTTPException):
             common.GOOGLE_MODE = 'https'
-            common.build_gae_fetchserver()
-            sys.stdout.write(common.info())
-            return {'fetchhost':common.GAE_FETCHHOST, 'fetchserver':common.GAE_FETCHSERVER}
         else:
             logging.warning('LocalProxyHandler.handle_fetch_error Exception %s', error, exc_info=True)
+            return {}
+        common.build_gae_fetchserver()
+        sys.stdout.write(common.info())
+        return {'fetchhost':common.GAE_FETCHHOST, 'fetchserver':common.GAE_FETCHSERVER}
 
     def fetch(self, url, payload, method, headers):
         return urlfetch(url, payload, method, headers, common.GAE_FETCHHOST, common.GAE_FETCHSERVER, on_error=self.handle_fetch_error)
 
     def rangefetch(self, m, data):
         m = map(int, m.groups())
-        start = m[0]
-        end = m[2] - 1
-        if 'range' in self.headers:
-            req_range = re.search(r'(\d+)?-(\d+)?', self.headers['range'])
+        start = m[1] + 1
+        end   = m[2] - 1
+        if m[0] == 0:
+            data['code'] = 200
+            del data['headers']['Content-Range']
+            data['headers']['Content-Length'] = m[2]
+        elif 'Range' in self.headers:
+            req_range = re.search(r'(\d+)?-(\d+)?', self.headers['Range'])
             if req_range:
                 req_range = [u and int(u) for u in req_range.groups()]
-                if req_range[0] is None:
-                    if req_range[1] is not None:
-                        if m[1]-m[0]+1==req_range[1] and m[1]+1==m[2]:
-                            return False
-                        if m[2] >= req_range[1]:
-                            start = m[2] - req_range[1]
+                if req_range[0] is None and req_range[1] is not None:
+                    if m[1]-m[0]+1==req_range[1] and m[1]+1==m[2]:
+                        return False
+                    if m[2] >= req_range[1]:
+                        start = m[2] - req_range[1]
                 else:
                     start = req_range[0]
                     if req_range[1] is not None:
@@ -553,59 +518,50 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                             return False
                         if end > req_range[1]:
                             end = req_range[1]
-            data['headers']['content-range'] = 'bytes %d-%d/%d' % (start, end, m[2])
-        elif start == 0:
-            data['code'] = 200
-            del data['headers']['content-range']
-        data['headers']['content-length'] = end-start+1
-        partSize = common.AUTORANGE_MAXSIZE
+            data['headers']['Content-Range'] = 'bytes %d-%d/%d' % (start,  m[2]-1, m[2])
+        else:
+            pass
 
-        respline = '%s %d %s\r\n' % (self.protocol_version, data['code'], '')
-        strheaders = ''.join('%s: %s\r\n' % ('-'.join(x.title() for x in k.split('-')), v) for k, v in data['headers'].iteritems())
-        self.wfile.write(respline+strheaders+'\r\n')
+        self.wfile.write('%s %d %s\r\n%s\r\n%s' % (self.protocol_version, data['code'], 'OK', ''.join('%s: %s\r\n' % (k, v) for k, v in data['headers'].iteritems()), data['content']))
 
-        if start == m[0]:
-            self.wfile.write(data['content'])
-            start = m[1] + 1
-            partSize = len(data['content'])
         failed = 0
-        logging.info('>>>>>>>>>>>>>>> Range Fetch started(host=%r)', self.headers.get('Host'))
-        while start <= end:
-            if failed > 16:
+        logging.info('>>>>>>>>>>>>>>> Range Fetch started(%r)', self.headers.get('Host'))
+        while start < end:
+            if failed > 5:
                 break
-            self.headers['Range'] = 'bytes=%d-%d' % (start, start + partSize - 1)
-            retval, data = self.fetch(self.path, '', self.command, self.headers)
+            self.headers['Range'] = 'bytes=%d-%d' % (start, min(start+common.AUTORANGE_MAXSIZE-1, end))
+            retval, data = self.fetch(self.path, '', self.command, str(self.headers))
             if retval != 0 or data['code'] >= 400:
                 failed += 1
                 seconds = random.randint(2*failed, 2*(failed+1))
-                logging.error('rangefetch fail %d times: retval=%d http_code=%d, retry after %d secs!', failed, retval, data['code'] if not retval else 'Unkown', seconds)
+                logging.error('Range Fetch fail %d times, retry after %d secs!', failed, seconds)
                 time.sleep(seconds)
                 continue
-            m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', data['headers'].get('content-range',''))
+            m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', data['headers'].get('Content-Range',''))
             if not m or int(m.group(1))!=start:
                 failed += 1
                 continue
             start = int(m.group(2)) + 1
-            logging.info('>>>>>>>>>>>>>>> %s %d' % (data['headers']['content-range'], end))
+            logging.info('>>>>>>>>>>>>>>> %s %d' % (data['headers']['Content-Range'], end+1))
             failed = 0
             self.wfile.write(data['content'])
-        logging.info('>>>>>>>>>>>>>>> Range Fetch ended(host=%r)', self.headers.get('Host'))
+        logging.info('>>>>>>>>>>>>>>> Range Fetch ended(%r)', self.headers.get('Host'))
         return True
 
     def address_string(self):
-        return '%s:%s' % (self.client_address[0], self.client_address[1])
+        return '%s:%s' % self.client_address[:2]
 
     def send_response(self, code, message=None):
         self.log_request(code)
         message = message or self.responses.get(code, ('GoAgent Notify',))[0]
-        self.wfile.write('%s %d %s\r\n' % (self.protocol_version, code, message))
+        self.connection.sendall('%s %d %s\r\n' % (self.protocol_version, code, message))
 
     def end_error(self, code, message=None, data=None):
         if not data:
             self.send_error(code, message)
         else:
             self.send_response(code, message)
-            self.wfile.write(data)
+            self.connection.sendall(data)
 
     def setup(self):
         if not common.GAE_ENABLE:
@@ -625,6 +581,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.do_CONNECT_Direct()
         elif host in common.HOSTS:
             return self.do_CONNECT_Direct()
+        elif common.HOSTS_ENDSWITH_TUPLE and host.endswith(common.HOSTS_ENDSWITH_TUPLE):
+            ip = (ip for p, ip in common.HOSTS_ENDSWITH_DICT.iteritems() if host.endswith(p)).next()
+            if not ip and not common.PROXY_ENABLE:
+                logging.info('try resolve %r', host)
+                ip = socket.gethostbyname(host)
+            common.HOSTS[host] = ip
+            self.do_CONNECT_Direct()
         else:
             return self.do_CONNECT_Thunnel()
 
@@ -641,7 +604,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     sock = socket.create_connection((host, int(port)))
                 self.log_request(200)
-                self.wfile.write('%s 200 Tunnel established\r\n\r\n' % self.protocol_version)
+                self.connection.sendall('%s 200 Tunnel established\r\n\r\n' % self.protocol_version)
             else:
                 sock = socket.create_connection((common.PROXY_HOST, common.PROXY_PORT))
                 if host.endswith(common.GOOGLE_SITES):
@@ -649,7 +612,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 else:
                     ip = random.choice(common.HOSTS.get(host, host)[0])
                 data = '%s %s:%s %s\r\n' % (self.command, ip, port, self.protocol_version)
-                data += ''.join('%s: %s\r\n' % (k, self.headers[k]) for k in self.headers if k != 'host')
+                data += ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k != 'Host')
                 if common.PROXY_USERNAME and not common.PROXY_NTLM:
                     data += '%s\r\n' % common.proxy_basic_auth_header()
                 data += '\r\n'
@@ -678,7 +641,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.connection = ssl.wrap_socket(self.connection, keyFile, crtFile, True)
             self.rfile = self.connection.makefile('rb', self.rbufsize)
             self.wfile = self.connection.makefile('wb', self.wbufsize)
-            self.raw_requestline = self.rfile.readline()
+            self.raw_requestline = self.rfile.readline(8192)
             if self.raw_requestline == '':
                 return
             self.parse_request()
@@ -689,13 +652,16 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         except socket.error, e:
             logging.exception('do_CONNECT_Thunnel socket.error: %s', e)
         finally:
-            self.connection.shutdown(socket.SHUT_WR)
+            try:
+                self.connection.shutdown(socket.SHUT_WR)
+            except socket.error:
+                pass
             self.rfile = self._realrfile
             self.wfile = self._realwfile
             self.connection = self._realconnection
 
     def do_METHOD(self):
-        host = self.headers['host']
+        host = self.headers['Host']
         if host.endswith(common.GOOGLE_SITES) and host not in common.GOOGLE_WITHGAE:
             if host in common.GOOGLE_FORCEHTTPS:
                 self.send_response(301)
@@ -705,6 +671,12 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             return self.do_METHOD_Direct()
         elif host in common.HOSTS:
             return self.do_METHOD_Direct()
+        elif common.HOSTS_ENDSWITH_TUPLE and host.endswith(common.HOSTS_ENDSWITH_TUPLE):
+            ip = (ip for p, ip in common.HOSTS_ENDSWITH_DICT.iteritems() if host.endswith(p)).next()
+            if not ip and not common.PROXY_ENABLE:
+                ip = socket.gethostbyname(host)
+            common.HOSTS[host] = ip
+            self.do_METHOD_Direct()
         else:
             return self.do_METHOD_Thunnel()
 
@@ -728,7 +700,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     sock = socket.create_connection((host, port))
                 self.headers['Connection'] = 'close'
                 data = '%s %s %s\r\n'  % (self.command, urlparse.urlunparse(('', '', path, params, query, '')), self.request_version)
-                data += ''.join('%s: %s\r\n' % (k, self.headers[k]) for k in self.headers if not k.startswith('proxy-'))
+                data += ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if not k.startswith('Proxy-'))
                 data += '\r\n'
             else:
                 sock = socket.create_connection((common.PROXY_HOST, common.PROXY_PORT))
@@ -738,14 +710,14 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     host = common.HOSTS.get(host, host)
                 url = urlparse.urlunparse((scheme, host + ('' if port == 80 else ':%d' % port), path, params, query, ''))
                 data ='%s %s %s\r\n'  % (self.command, url, self.request_version)
-                data += ''.join('%s: %s\r\n' % (k, self.headers[k]) for k in self.headers if k != 'host')
+                data += ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k != 'Host')
                 data += 'Host: %s\r\n' % netloc
                 if common.PROXY_USERNAME and not common.PROXY_NTLM:
                     data += '%s\r\n' % common.proxy_basic_auth_header()
                 data += 'Proxy-Connection: close\r\n'
                 data += '\r\n'
 
-            content_length = int(self.headers.get('content-length', 0))
+            content_length = int(self.headers.get('Content-Length', 0))
             if content_length > 0:
                 data += self.rfile.read(content_length)
             sock.sendall(data)
@@ -760,23 +732,26 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 pass
 
     def do_METHOD_Thunnel(self):
-        host = self.headers.dict.get('host') or urlparse.urlparse(self.path).netloc.partition(':')[0]
+        host = self.headers.get('Host') or urlparse.urlparse(self.path).netloc.partition(':')[0]
         if self.path[0] == '/':
             self.path = 'http://%s%s' % (host, self.path)
-        payload_len = int(self.headers.get('content-length', 0))
+        payload_len = int(self.headers.get('Content-Length', 0))
         if payload_len > 0:
             payload = self.rfile.read(payload_len)
         else:
             payload = ''
 
-        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in self.skip_headers)
+        if common.USERAGENT_ENABLE:
+            self.headers['User-Agent'] = common.USERAGENT_STRING
 
         if host.endswith(common.AUTORANGE_HOSTS_TAIL):
             for pattern in common.AUTORANGE_HOSTS:
                 if host.endswith(pattern) or fnmatch.fnmatch(host, pattern):
                     logging.debug('autorange pattern=%r match url=%r', pattern, self.path)
-                    headers += 'range: bytes=0-%d\r\n' % common.AUTORANGE_MAXSIZE
+                    self.headers['Range'] = 'bytes=0-%d' % (common.AUTORANGE_MAXSIZE-1)
                     break
+
+        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in self.skip_headers)
 
         retval, data = self.fetch(self.path, payload, self.command, headers)
         try:
@@ -786,12 +761,13 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             headers = data['headers']
             self.log_request(code)
             if code == 206 and self.command=='GET':
-                m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', headers.get('content-range',''))
+                content_range = headers.get('Content-Range') or headers.get('content-range') or ''
+                m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', content_range)
                 if m and self.rangefetch(m, data):
                     return
-            content = '%s %d %s\r\n%s\r\n%s' % (self.protocol_version, code, self.responses.get(code, ('GoAgent Notify', ''))[0], ''.join('%s: %s\r\n' % ('-'.join(x.title() for x in k.split('-')), v) for k, v in headers.iteritems()), data['content'])
+            content = '%s %d %s\r\n%s\r\n%s' % (self.protocol_version, code, self.responses.get(code, ('GoAgent Notify', ''))[0], ''.join('%s: %s\r\n' % (k, v) for k, v in headers.iteritems()), data['content'])
             self.connection.sendall(content)
-            if 'close' == headers.get('connection',''):
+            if 'close' == headers.get('Connection',''):
                 self.close_connection = 1
         except socket.error, (err, _):
             # Connection closed before proxy return
@@ -804,21 +780,21 @@ class PHPProxyHandler(LocalProxyHandler):
         logging.error('PHPProxyHandler handle_fetch_error %s', error)
 
     def fetch(self, url, payload, method, headers):
-        return urlfetch(url, payload, method, headers, common.PHP_FETCHHOST, common.PHP_FETCHSERVER, on_error=self.handle_fetch_error)
+        dns = common.HOSTS.get(self.headers.get('Host'))
+        return urlfetch(url, payload, method, headers, common.PHP_FETCHHOST, common.PHP_FETCHSERVER, dns=dns, on_error=self.handle_fetch_error)
 
     def setup(self):
         if common.PROXY_ENABLE:
             logging.info('Local Proxy is enable, PHPProxyHandler dont resole DNS')
         else:
-            fetchhost = common.PHP_FETCHHOST
-            logging.info('PHPProxyHandler.setup check %s is in common.HOSTS', fetchhost)
-            if fetchhost not in common.HOSTS:
+            logging.info('PHPProxyHandler.setup check %s is in common.HOSTS', common.PHP_FETCHHOST)
+            if common.PHP_FETCHHOST not in common.HOSTS:
                 with LocalProxyHandler.SetupLock:
-                    if fetchhost not in common.HOSTS:
+                    if common.PHP_FETCHHOST not in common.HOSTS:
                         try:
                             logging.info('Resole php fetchserver address.')
-                            common.HOSTS[fetchhost] = socket.gethostbyname(fetchhost)
-                            logging.info('Resole php fetchserver address OK. %s', common.HOSTS[fetchhost])
+                            common.HOSTS[common.PHP_FETCHHOST] = socket.gethostbyname(common.PHP_FETCHHOST)
+                            logging.info('Resole php fetchserver address OK. %s', common.HOSTS[common.PHP_FETCHHOST])
                         except Exception, e:
                             logging.exception('PHPProxyHandler.setup resolve fail: %s', e)
         PHPProxyHandler.do_CONNECT = LocalProxyHandler.do_CONNECT_Thunnel
@@ -834,6 +810,7 @@ class LocalProxyServer(SocketServer.ThreadingMixIn, BaseHTTPServer.HTTPServer):
     allow_reuse_address = True
 
 def try_show_love():
+    '''If you hate this funtion, please go back to gappproxy/wallproxy'''
     if ctypes and os.name == 'nt' and common.LOVE_ENABLE:
         SetConsoleTitleW = ctypes.windll.kernel32.SetConsoleTitleW
         GetConsoleTitleW = ctypes.windll.kernel32.GetConsoleTitleW
@@ -844,7 +821,7 @@ def try_show_love():
             with open('proxy.ini', 'w') as fp:
                 common.CONFIG.set('love', 'timestamp', int(time.time()))
                 common.CONFIG.write(fp)
-        if time.time() - common.LOVE_TIMESTAMP > 86400:
+        if time.time() - common.LOVE_TIMESTAMP > 86400 and random.randint(1,10) > 5:
             title = ctypes.create_unicode_buffer(1024)
             GetConsoleTitleW(ctypes.byref(title), len(title)-1)
             SetConsoleTitleW(u'%s %s' % (title.value, random.choice(common.LOVE_TIP)))
@@ -876,16 +853,17 @@ def main():
     except OSError, e:   
         print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)   
         sys.exit(1)
-    
-    
+
     if ctypes and os.name == 'nt':
         ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % __version__)
+        if not common.LOVE_TIMESTAMP.strip():
+            print(u'\u53cc\u51fb addto-startup.vbs \u53ef\u4ee5\u628agoagent.exe\u52a0\u5165\u5230\u542f\u52a8\u9879\u3002'.encode('mbcs'))
         try_show_love()
         if not common.LISTEN_VISIBLE:
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     if common.GAE_DEBUGLEVEL:
         logging.root.setLevel(logging.DEBUG)
-    
+    CertUtil.checkCA()
     common.install_opener()
     sys.stdout.write(common.info())
     LocalProxyServer.address_family = (socket.AF_INET, socket.AF_INET6)[':' in common.LISTEN_IP]
@@ -893,15 +871,18 @@ def main():
     if common.PHP_ENABLE:
         httpd = LocalProxyServer((common.PHP_IP, common.PHP_PORT), PHPProxyHandler)
         thread.start_new_thread(httpd.serve_forever, ())
-    
+
     pid = str(os.getpid())
     f = open('/data/data/org.gaeproxy/python.pid','a')
     f.write(" ")
     f.write(pid)
     f.close()
-    
+
     httpd = LocalProxyServer((common.LISTEN_IP, common.LISTEN_PORT), LocalProxyHandler)
     httpd.serve_forever()
 
 if __name__ == '__main__':
-    main()
+   try:
+       main()
+   except KeyboardInterrupt:
+       pass

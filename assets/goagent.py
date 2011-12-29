@@ -461,10 +461,6 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     SetupLock = threading.Lock()
     MessageClass = SimpleMessageClass
     rangefetch_bufsize = 8192
-    
-    # Disable logging DNS lookups
-    def address_string(self):
-        return str(self.client_address[0])    
 
     def handle_fetch_error(self, error):
         if isinstance(error, urllib2.HTTPError):

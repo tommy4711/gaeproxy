@@ -3,7 +3,7 @@
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang@188.com>
 # Based on WallProxy 0.4.0 by hexieshe <www.ehust@gmail.com>
 
-__version__ = '1.7.5'
+__version__ = '1.7.6'
 __author__ = "{phus.lu,hewigovens}@gmail.com (Phus Lu and Hewig Xu)"
 
 import sys, os, re, time, errno, binascii, zlib
@@ -767,7 +767,8 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     self.headers['Range'] = 'bytes=0-%d' % (common.AUTORANGE_MAXSIZE-1)
                     break
 
-        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in self.skip_headers)
+        skip_headers = self.skip_headers
+        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in skip_headers)
 
         retval, data = self.fetch(self.path, payload, self.command, headers)
         try:

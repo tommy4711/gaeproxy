@@ -3,7 +3,7 @@
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang@188.com>
 # Based on WallProxy 0.4.0 by hexieshe <www.ehust@gmail.com>
 
-__version__ = '1.7.6'
+__version__ = '1.7.7'
 __author__ = "{phus.lu,hewigovens}@gmail.com (Phus Lu and Hewig Xu)"
 
 import sys, os, re, time, errno, binascii, zlib
@@ -98,18 +98,6 @@ class Common(object):
     def install_opener(self):
         if self.PROXY_ENABLE:
             proxy = '%s:%s@%s:%d'%(self.PROXY_USERNAME, self.PROXY_PASSWROD, self.PROXY_HOST, self.PROXY_PORT)
-            if '\\' in self.PROXY_USERNAME:
-                if not os.path.isfile('ntlmaps.zip'):
-                    logging.critical('ntlmaps.zip not found!')
-                    sys.exit(-1)
-                os.environ['NTLMAPS-GENERAL-PARENT_PROXY'] = common.PROXY_HOST
-                os.environ['NTLMAPS-GENERAL-PARENT_PROXY_PORT'] = str(common.PROXY_PORT)
-                os.environ['NTLMAPS-NTLM_AUTH-NT_DOMAIN'] = self.PROXY_USERNAME.split('\\')[0]
-                os.environ['NTLMAPS-NTLM_AUTH-USER'] = self.PROXY_USERNAME.split('\\')[1]
-                os.environ['NTLMAPS-NTLM_AUTH-PASSWORD'] = common.PROXY_PASSWROD
-                os.environ['PYTHONSCRIPT'] = 'ntlmaps.zip'
-                ret = os.startfile('proxy.exe') if os.name == 'nt' else os.system('python ntlmaps.zip &')
-                proxy = '127.0.0.1:5865'
             handlers = [urllib2.ProxyHandler({'http':proxy,'https':proxy})]
         else:
             handlers = [urllib2.ProxyHandler({})]
@@ -516,16 +504,18 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             pass
 
         self.connection.sendall('%s %d %s\r\n%s\r\n' % (self.protocol_version, data['code'], 'OK', ''.join('%s: %s\r\n' % (k, v) for k, v in data['headers'].iteritems())))
-        if 'content' in data:
-            self.connection.sendall(data['content'])
-        else:
+        if 'response' in data:
             response = data['response']
+            bufsize = -1 if data['headers'].get('Content-Type', '').startswith('video/') else self.rangefetch_bufsize
+            #logging.debug('bufsize=%r, Content-Type=%r' % (bufsize, data['headers'].get('Content-Type')))
             while 1:
-                content = response.read(self.rangefetch_bufsize)
+                content = response.read(bufsize)
                 if not content:
                     response.close()
                     break
                 self.connection.sendall(content)
+        else:
+            self.connection.sendall(data['content'])
 
         failed = 0
         logging.info('>>>>>>>>>>>>>>> Range Fetch started(%r)', self.headers.get('Host'))

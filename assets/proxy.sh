@@ -1,7 +1,5 @@
 #!/system/bin/sh
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/system/lib
-
 DIR=/data/data/org.gaeproxy
 
 PATH=$DIR:$PATH

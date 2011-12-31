@@ -575,22 +575,31 @@ public class DNSServer implements WrapServer {
 				.encodeBytesToBytes(domain.getBytes())));
 
 		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
+		String host = "gaednsproxy.appspot.com";
+		url = url.replace(host, appHost);
 
 		if (dnsError > DNS_ERROR_LIMIT / 2) {
 			url = "http://www.hosts.dotcloud.com/lookup.php?host="
 					+ encode_host;
+			host = "www.hosts.dotcloud.com";
+			url = url.replace(host, dnsRelay);
 		} else {
 			Random random = new Random(System.currentTimeMillis());
 			int n = random.nextInt(2);
-			if (n == 1)
+			if (n == 1) {
 				url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
+				host = "gaednsproxy2.appspot.com";
+				url = url.replace(host, appHost);
+			}
 		}
 
 		Log.d(TAG, "DNS Relay URL: " + url);
 
 		try {
+			// RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
 			URL aURL = new URL(url);
 			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			conn.setRequestProperty("Host", host);
 			conn.setConnectTimeout(30000);
 			conn.setReadTimeout(30000);
 			conn.connect();

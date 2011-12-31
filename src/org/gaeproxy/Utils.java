@@ -380,7 +380,6 @@ public class Utils {
 		int exitcode = runScript(command, sb, 10 * 1000, true);
 
 		if (exitcode == TIME_OUT) {
-			isRoot = 0;
 			return false;
 		}
 

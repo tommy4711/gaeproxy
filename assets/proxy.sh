@@ -1,5 +1,7 @@
 #!/system/bin/sh
 
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/system/lib
+
 DIR=/data/data/org.gaeproxy
 
 PATH=$DIR:$PATH
@@ -15,9 +17,7 @@ base {
  daemon = on;
  redirector = iptables;
 }
-" >$DIR/redsocks.conf
 
-   echo "
 redsocks {
  local_ip = 127.0.0.1;
  local_port = 8123;
@@ -34,7 +34,7 @@ redsocks {
  login = "gaeproxy";
  password = "gaeproxy";
 } 
-" >>$DIR/redsocks.conf
+" > $DIR/redsocks.conf
 
   $DIR/redsocks -p $DIR/redsocks.pid -c $DIR/redsocks.conf
   

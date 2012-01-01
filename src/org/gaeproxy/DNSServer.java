@@ -27,6 +27,13 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Random;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
 import android.util.Log;
 
 /**
@@ -167,32 +174,37 @@ public class DNSServer implements WrapServer {
 	private String target = "8.8.8.8:53";
 
 	private String appHost = "203.208.46.1";
-	private String dnsRelay = "174.129.17.131";
 
 	private static final String CANT_RESOLVE = "Error";
 
-	public DNSServer(String name, String dnsHost, int dnsPort,
-			String appHost, boolean httpMode) {
+	public DNSServer(String name, String dnsHost, int dnsPort, String appHost,
+			boolean httpMode) {
+
 		this.name = name;
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
-		this.appHost = appHost;
 		this.httpMode = httpMode;
 
 		domains = new HashSet<String>();
 
 		initOrgCache();
+		
+//		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
+//			@Override
+//			public boolean verify(String hostname, SSLSession session) {
+//				return true;
+//			}
+//		});
 
 		// upper dns server not reachable, so use http mode
-		if (httpMode) {
-			try {
-				InetAddress addr = InetAddress
-						.getByName("www.hosts.dotcloud.com");
-				dnsRelay = addr.getHostAddress();
-			} catch (Exception ignore) {
-				dnsRelay = "174.129.17.131";
-			}
-		}
+//		if (httpMode) {
+//			try {
+//				InetAddress addr = InetAddress.getByName("www.google.com");
+//				this.appHost = addr.getHostAddress();
+//			} catch (Exception ignore) {
+//				this.appHost = appHost;
+//			}
+//		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -578,19 +590,12 @@ public class DNSServer implements WrapServer {
 		String host = "gaednsproxy.appspot.com";
 		url = url.replace(host, appHost);
 
-		if (dnsError > DNS_ERROR_LIMIT / 2) {
-			url = "http://www.hosts.dotcloud.com/lookup.php?host="
-					+ encode_host;
-			host = "www.hosts.dotcloud.com";
-			url = url.replace(host, dnsRelay);
-		} else {
-			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(2);
-			if (n == 1) {
-				url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
-				host = "gaednsproxy2.appspot.com";
-				url = url.replace(host, appHost);
-			}
+		Random random = new Random(System.currentTimeMillis());
+		int n = random.nextInt(2);
+		if (n == 1) {
+			url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
+			host = "gaednsproxy2.appspot.com";
+			url = url.replace(host, appHost);
 		}
 
 		Log.d(TAG, "DNS Relay URL: " + url);
@@ -598,10 +603,11 @@ public class DNSServer implements WrapServer {
 		try {
 			// RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
 			URL aURL = new URL(url);
-			HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
+			HttpURLConnection conn = (HttpURLConnection) aURL
+					.openConnection();
 			conn.setRequestProperty("Host", host);
-			conn.setConnectTimeout(10 * 1000);
-			conn.setReadTimeout(20 * 1000);
+			conn.setConnectTimeout(5 * 1000);
+			conn.setReadTimeout(10 * 1000);
 			conn.connect();
 			is = conn.getInputStream();
 			BufferedReader br = new BufferedReader(new InputStreamReader(is));
@@ -662,12 +668,6 @@ public class DNSServer implements WrapServer {
 					addToCache(questDomain, answer);
 					sendDns(answer, dnsq, srvSocket);
 					Log.d(TAG, "Custom DNS resolver: " + questDomain);
-				} else if (questDomain.toLowerCase().contains("dotcloud.com")) { // 如果为dotcloud域名解析
-					byte[] ips = parseIPString(dnsRelay);
-					byte[] answer = createDNSResponse(udpreq, ips);
-					addToCache(questDomain, answer);
-					sendDns(answer, dnsq, srvSocket);
-					Log.d(TAG, "Custom DNS resolver" + orgCache);
 				} else {
 
 					synchronized (this) {
@@ -677,8 +677,12 @@ public class DNSServer implements WrapServer {
 							domains.add(questDomain);
 					}
 
-					while (threadNum >= MAX_THREAD_NUM) {
-						Thread.sleep(5000);
+//					while (threadNum >= MAX_THREAD_NUM) {
+//						Thread.sleep(5000);
+//					}
+					
+					if (threadNum >= MAX_THREAD_NUM) {
+						continue;
 					}
 
 					if (dnsError > DNS_ERROR_LIMIT)
@@ -748,9 +752,9 @@ public class DNSServer implements WrapServer {
 				break;
 			} catch (IOException e) {
 				Log.e(TAG, e.getLocalizedMessage());
-			} catch (InterruptedException e) {
-				Log.e(TAG, "Interrupted", e);
-				break;
+//			} catch (InterruptedException e) {
+//				Log.e(TAG, "Interrupted", e);
+//				break;
 			}
 		}
 

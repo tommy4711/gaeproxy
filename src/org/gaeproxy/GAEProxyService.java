@@ -274,7 +274,7 @@ public class GAEProxyService extends Service {
 	public boolean handleConnection() {
 
 		try {
-			InetAddress addr = InetAddress.getByName("g.cn");
+			InetAddress addr = InetAddress.getByName("www.google.cn");
 			appHost = addr.getHostAddress();
 		} catch (Exception ignore) {
 			// Nothing
@@ -289,6 +289,7 @@ public class GAEProxyService extends Service {
 					URL aURL = new URL("http://myhosts.sinaapp.com/apphost");
 					HttpURLConnection conn = (HttpURLConnection) aURL
 							.openConnection();
+					conn.setConnectTimeout(5 * 1000);
 					conn.setReadTimeout(10 * 1000);
 					conn.connect();
 					InputStream is = conn.getInputStream();

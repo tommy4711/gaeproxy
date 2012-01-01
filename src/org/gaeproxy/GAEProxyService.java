@@ -54,6 +54,7 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Random;
 
+import com.github.droidfu.http.BetterHttp;
 import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 import android.app.Notification;
@@ -353,11 +354,15 @@ public class GAEProxyService extends Service {
 		// Add hosts here
 		// runRootCommand(BASE + "host.sh add " + appHost + " " + host);
 
+		// DNS Proxy Setup
+		// BetterHttp with HttpClient
 		dnsServer = new DNSServer("DNS Server", "8.8.8.8", 53, appHost,
 				isDNSBlocked);
 		dnsServer.setBasePath(BASE);
 		dnsPort = dnsServer.getServPort();
-
+		
+		// Random mirror for load balance
+		// only affect when appid equals proxyofmax
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
 			proxyType = "GoAgent";
 			String[] mirror_list = null;

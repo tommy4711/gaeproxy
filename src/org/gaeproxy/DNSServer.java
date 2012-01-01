@@ -156,7 +156,7 @@ public class DNSServer implements WrapServer {
 	protected String dnsHost;
 	protected int dnsPort;
 	final protected int DNS_PKG_HEADER_LEN = 12;
-	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0, 0, 0,
+	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0x80, 0, 0,
 			0 };
 	final private int[] DNS_PAYLOAD = { 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01,
 			0x00, 0x00, 0x00, 0x3c, 0x00, 0x04 };
@@ -279,9 +279,10 @@ public class DNSServer implements WrapServer {
 			start++;
 		}
 
-		System.arraycopy(quest, 0, response, 0, 2); /* 0:2 */
-		System.arraycopy(quest, 4, response, 4, 2); /* 4:6 -> 4:6 */
-		System.arraycopy(quest, 4, response, 6, 2); /* 4:6 -> 7:9 */
+		System.arraycopy(quest, 0, response, 0, 2); /* 0:2 | NAME */ 
+		System.arraycopy(quest, 4, response, 4, 2); /* 4:6 -> 4:6 | TYPE */
+		System.arraycopy(quest, 4, response, 6, 2); /* 4:6 -> 7:9 | CLASS */
+		/* 10:14 | TTL */
 		System.arraycopy(quest, DNS_PKG_HEADER_LEN, response, start,
 				quest.length - DNS_PKG_HEADER_LEN); /* 12:~ -> 15:~ */
 		start += quest.length - DNS_PKG_HEADER_LEN;

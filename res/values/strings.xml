@@ -15,7 +15,7 @@
 	</string>
     <string name="reconnect_fail">Cannot reconnect</string>
     <string name="ok_iknow">OK, I know</string>
-    <string name="proxy">Proxy</string>
+    <string name="proxy">Address</string>
     <string name="port">Local Port</string>
     <string name="sitekey">Site Key</string>
     <string name="auto_connect">Auto Connect</string>
@@ -123,7 +123,7 @@
     <!-- settings notification category -->
     <string name="notif_cat">Notification Settings</string>
     <string name="notif_ringtone_title">Ringtone</string>
-    <string name="notif_ringtone_summary">Select the notification's ringtone</string>
+    <string name="notif_ringtone_summary">Select the notification\'s ringtone</string>
     <string name="notif_vibrate_title">Vibrate</string>
     <string name="notif_vibrate_summary">Also vibrate when connection status changes
 	</string>

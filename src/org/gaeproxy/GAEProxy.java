@@ -322,7 +322,6 @@ public class GAEProxy extends PreferenceActivity implements
 					pd.dismiss();
 					pd = null;
 				}
-				Utils.isRoot();
 				break;
 			}
 			ed.commit();
@@ -549,6 +548,8 @@ public class GAEProxy extends PreferenceActivity implements
 				PendingIntent contentIntent = PendingIntent.getActivity(
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
+				
+				Utils.isRoot();
 
 				if (!Utils.isInitialized()
 						&& !GAEProxyService.isServiceStarted()) {

@@ -18,7 +18,7 @@
     <string name="proxy">Proxy</string>
     <string name="port">Local Port</string>
     <string name="sitekey">Site Key</string>
-    <string name="auto_connect">Connect at boot</string>
+    <string name="auto_connect">Auto Connect</string>
     <string name="auto_reconnect">Auto reconnect</string>
     <string name="auto_set_proxy">Global Proxy</string>
     <string name="disconnect">Disconnect</string>
@@ -68,7 +68,7 @@
 		googlecode. \n\n(gaeproxy.googlecode.com)
 	</string>
     <string name="about">About</string>
-    <string name="proxy_type">Choose your proxy type</string>
+    <string name="proxy_type">Proxy Type</string>
 
     <array name="proxy_type_entry">
         <item>GAppProxy</item>
@@ -121,8 +121,8 @@
 	</string>
 
     <!-- settings notification category -->
-    <string name="notif_cat">Notification settings</string>
-    <string name="notif_ringtone_title">Select ringtone</string>
+    <string name="notif_cat">Notification Settings</string>
+    <string name="notif_ringtone_title">Ringtone</string>
     <string name="notif_vibrate_title">Vibrate</string>
     <string name="notif_vibrate_summary">Also vibrate when connection status changes
 	</string>

@@ -63,7 +63,8 @@
 
     <!-- settings notification category -->
     <string name="notif_cat">通知设置</string>
-    <string name="notif_ringtone_title">选择铃声</string>
+    <string name="notif_ringtone_title">铃声</string>
+    <string name="notif_ringtone_summary">选择通知的铃声</string>
     <string name="notif_vibrate_title">震动</string>
     <string name="notif_vibrate_summary">在连接状态改变时震动</string>
     <string name="loading">正在加载应用列表...</string>

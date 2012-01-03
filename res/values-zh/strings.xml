@@ -74,7 +74,7 @@
     <string name="auto_set_gfwlist_summary">访问国内站点时忽略本地代理（实验性）</string>
     <string name="toast_start">GAE代理正在启动</string>
     <string name="toast_restart">GAE代理正在重新启动</string>
-    <string name="browser">启动GAE浏览器</string>
+    <string name="browser">内置浏览器</string>
     <string name="browser_summary">启动内置代理浏览器, 只针对没有ROOT权限或IPTABLES支持的用户</string>
     <string name="default_proxy_alert">您正在使用默认的代理地址，此地址每天只有10G的带宽配额，也就说您将随时无法正常使用本应用\n\n因此，请尽快部署自己的服务器端，具体步骤和说明见：http://code.google.com/p/goagent/
 	</string>

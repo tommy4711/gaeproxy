@@ -374,12 +374,13 @@ public class GAEProxyService extends Service {
 			} catch (IOException e) {
 			}
 
-			if (mirror_list != null)
+			if (mirror_list != null) {
 				mirror_num = mirror_list.length;
-			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(mirror_num);
-			proxy = "https://" + mirror_list[n] + ".appspot.com/fetch.py";
-			Log.d(TAG, "Balance Proxy: " + proxy);
+				Random random = new Random(System.currentTimeMillis());
+				int n = random.nextInt(mirror_num);
+				proxy = "https://" + mirror_list[n] + ".appspot.com/fetch.py";
+				Log.d(TAG, "Balance Proxy: " + proxy);
+			}
 		}
 
 		if (!preConnection())

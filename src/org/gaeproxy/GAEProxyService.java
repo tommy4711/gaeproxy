@@ -360,7 +360,7 @@ public class GAEProxyService extends Service {
 				isDNSBlocked);
 		dnsServer.setBasePath(BASE);
 		dnsPort = dnsServer.getServPort();
-		
+
 		// Random mirror for load balance
 		// only affect when appid equals proxyofmax
 		if (proxy.equals("https://proxyofmax.appspot.com/fetch.py")) {
@@ -377,12 +377,8 @@ public class GAEProxyService extends Service {
 			if (mirror_list != null)
 				mirror_num = mirror_list.length;
 			Random random = new Random(System.currentTimeMillis());
-			int n = random.nextInt(10 + mirror_num);
-			if (n > 0 && n < 10)
-				proxy = "https://proxyofmax" + n + ".appspot.com/fetch.py";
-			else if (n >= 10)
-				proxy = "https://" + mirror_list[n - 10]
-						+ ".appspot.com/fetch.py";
+			int n = random.nextInt(mirror_num);
+			proxy = "https://" + mirror_list[n] + ".appspot.com/fetch.py";
 			Log.d(TAG, "Balance Proxy: " + proxy);
 		}
 

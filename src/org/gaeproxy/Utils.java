@@ -396,7 +396,7 @@ public class Utils {
 
 		Log.d(TAG, command);
 
-		runScript(command, null, 10 * 1000, false);
+		runScript(command, null, timeout, false);
 
 		return true;
 	}

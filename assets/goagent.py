@@ -3,7 +3,7 @@
 # Based on GAppProxy 2.0.0 by Du XiaoGang <dugang@188.com>
 # Based on WallProxy 0.4.0 by hexieshe <www.ehust@gmail.com>
 
-__version__ = '1.7.7'
+__version__ = '1.7.8'
 __author__ = "{phus.lu,hewigovens}@gmail.com (Phus Lu and Hewig Xu)"
 
 import sys, os, re, time, errno, binascii, zlib
@@ -22,12 +22,14 @@ try:
 except ImportError:
     OpenSSL = None
 
+# GAEProxy Patch
 logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
 
 class Common(object):
     '''global config module'''
     def __init__(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
+		# GAEProxy Patch
         self.CONFIG = ConfigParser.ConfigParser()
         self.CONFIG.read('/data/data/org.gaeproxy/proxy.ini')
 
@@ -330,6 +332,7 @@ class CertUtil(object):
         cert = CertUtil.createCertificate(req, (cakey, cacrt), serial, (0, 60*60*24*7305))
         return (CertUtil.dumpPEM(pkey, 0), CertUtil.dumpPEM(cert, 2))
 
+    # GAEProxy Patch
     @staticmethod
     def getCertificate(host):
         basedir = '/data/data/org.gaeproxy'
@@ -520,7 +523,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         failed = 0
         logging.info('>>>>>>>>>>>>>>> Range Fetch started(%r)', self.headers.get('Host'))
         while start < end:
-            if failed > 5:
+            if failed > 16:
                 break
             self.headers['Range'] = 'bytes=%d-%d' % (start, min(start+common.AUTORANGE_MAXSIZE-1, end))
             retval, data = self.fetch(self.path, '', self.command, str(self.headers))
@@ -530,9 +533,15 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 logging.error('Range Fetch fail %d times, retry after %d secs!', failed, seconds)
                 time.sleep(seconds)
                 continue
-            m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', data['headers'].get('Content-Range',''))
-            if not m or int(m.group(1))!=start:
+            if 'Location' in data['headers']:
+                logging.info('Range Fetch got a redirect location:%r', data['headers']['Location'])
+                self.path = data['headers']['Location']
                 failed += 1
+                continue
+            m = re.search(r'bytes\s+(\d+)-(\d+)/(\d+)', data['headers'].get('Content-Range',''))
+            if not m:
+                failed += 1
+                logging.error('Range Fetch fail %d times, data[\'headers\']=%s', failed, data['headers'])
                 continue
             start = int(m.group(2)) + 1
             logging.info('>>>>>>>>>>>>>>> %s %d' % (data['headers']['Content-Range'], end+1))
@@ -615,7 +624,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                     ip = random.choice(common.HOSTS.get(host, host)[0])
                 data = '%s %s:%s %s\r\n' % (self.command, ip, port, self.protocol_version)
                 data += ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k != 'Host')
-                if common.PROXY_USERNAME and not common.PROXY_NTLM:
+                if common.PROXY_USERNAME:
                     data += '%s\r\n' % common.proxy_basic_auth_header()
                 data += '\r\n'
                 sock.sendall(data)
@@ -714,7 +723,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 data ='%s %s %s\r\n'  % (self.command, url, self.request_version)
                 data += ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k != 'Host')
                 data += 'Host: %s\r\n' % netloc
-                if common.PROXY_USERNAME and not common.PROXY_NTLM:
+                if common.PROXY_USERNAME:
                     data += '%s\r\n' % common.proxy_basic_auth_header()
                 data += 'Proxy-Connection: close\r\n'
                 data += '\r\n'
@@ -734,29 +743,32 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
                 pass
 
     def do_METHOD_Thunnel(self):
-        host = self.headers.get('Host') or urlparse.urlparse(self.path).netloc.partition(':')[0]
+        headers = self.headers
+        host = headers.get('Host') or urlparse.urlparse(self.path).netloc.partition(':')[0]
         if self.path[0] == '/':
             self.path = 'http://%s%s' % (host, self.path)
-        payload_len = int(self.headers.get('Content-Length', 0))
+        payload_len = int(headers.get('Content-Length', 0))
         if payload_len > 0:
             payload = self.rfile.read(payload_len)
         else:
             payload = ''
 
         if common.USERAGENT_ENABLE:
-            self.headers['User-Agent'] = common.USERAGENT_STRING
+            headers['User-Agent'] = common.USERAGENT_STRING
 
         if host.endswith(common.AUTORANGE_HOSTS_TAIL):
             for pattern in common.AUTORANGE_HOSTS:
                 if host.endswith(pattern) or fnmatch.fnmatch(host, pattern):
                     logging.debug('autorange pattern=%r match url=%r', pattern, self.path)
-                    self.headers['Range'] = 'bytes=0-%d' % (common.AUTORANGE_MAXSIZE-1)
+                    m = re.search('bytes=(\d+)-', headers.get('Range', ''))
+                    start = int(m.group(1) if m else 0)
+                    headers['Range'] = 'bytes=%d-%d' % (start, start+common.AUTORANGE_MAXSIZE-1)
                     break
 
         skip_headers = self.skip_headers
-        headers = ''.join('%s: %s\r\n' % (k, v) for k, v in self.headers.iteritems() if k not in skip_headers)
+        strheaders = ''.join('%s: %s\r\n' % (k, v) for k, v in headers.iteritems() if k not in skip_headers)
 
-        retval, data = self.fetch(self.path, payload, self.command, headers)
+        retval, data = self.fetch(self.path, payload, self.command, strheaders)
         try:
             if retval == -1:
                 return self.end_error(502, str(data))
@@ -773,6 +785,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             try:
                 self.connection.sendall(data['content'])
             except KeyError:
+                #logging.info('OOPS, KeyError! Content-Type=%r', headers.get('Content-Type'))
                 response = data['response']
                 while 1:
                     content = response.read(self.rangefetch_bufsize)
@@ -843,7 +856,8 @@ def try_show_love():
                 common.CONFIG.write(fp)
 
 def main():
-
+    
+    # GAEProxy Patch
     # do the UNIX double-fork magic, see Stevens' "Advanced   
     # Programming in the UNIX Environment" for details (ISBN 0201563177)  
     try:   
@@ -866,7 +880,7 @@ def main():
     except OSError, e:   
         print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)   
         sys.exit(1)
-
+        
     if ctypes and os.name == 'nt':
         ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % __version__)
         if not common.LOVE_TIMESTAMP.strip():
@@ -876,21 +890,24 @@ def main():
             ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 0)
     if common.GAE_DEBUGLEVEL:
         logging.root.setLevel(logging.DEBUG)
+        
+    # GAEProxy Patch
+    # CertUtil.checkCA()
     
     common.install_opener()
     sys.stdout.write(common.info())
     LocalProxyServer.address_family = (socket.AF_INET, socket.AF_INET6)[':' in common.LISTEN_IP]
 
-    if common.PHP_ENABLE:
-        httpd = LocalProxyServer((common.PHP_IP, common.PHP_PORT), PHPProxyHandler)
-        thread.start_new_thread(httpd.serve_forever, ())
-        
+    # GAEProxy Patch
     pid = str(os.getpid())
     f = open('/data/data/org.gaeproxy/python.pid','a')
     f.write(" ")
     f.write(pid)
     f.close()
-    
+
+    if common.PHP_ENABLE:
+        httpd = LocalProxyServer((common.PHP_IP, common.PHP_PORT), PHPProxyHandler)
+        thread.start_new_thread(httpd.serve_forever, ())
     httpd = LocalProxyServer((common.LISTEN_IP, common.LISTEN_PORT), LocalProxyHandler)
     httpd.serve_forever()
 

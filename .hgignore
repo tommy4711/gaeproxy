@@ -7,3 +7,5 @@ syntax: regexp
 ^obj$
 syntax: regexp
 ^NUL$
+syntax: regexp
+^gen$

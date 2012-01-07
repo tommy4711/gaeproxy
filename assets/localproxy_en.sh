@@ -2,10 +2,10 @@
 
 DIR=/data/data/org.gaeproxy
 
-PYTHONPATH=$DIR/python:$DIR/python/lib/python2.6/lib-dynload:$DIR/python/lib:$1/python-extras
-LD_LIBRARY_PATH=$DIR/python/lib:$DIR/python/lib/python2.6/lib-dynload:$LD_LIBRARY_PATH
-PYTHONHOME=/data/data/org.gaeproxy/python
-TEMP=$1/python-extras
+export PYTHONPATH=$DIR/python:$DIR/python/lib/python2.6/lib-dynload:$DIR/python/lib:$1/python-extras
+export LD_LIBRARY_PATH=$DIR/python/lib:$DIR/python/lib/python2.6/lib-dynload:$LD_LIBRARY_PATH
+export PYTHONHOME=/data/data/org.gaeproxy/python
+export TEMP=$1/python-extras
 
 case $2 in
 
@@ -73,13 +73,13 @@ www.253874.com = 76.73.90.170
 "> /data/data/org.gaeproxy/proxy.ini
  
  
-PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/goagent.py
+$DIR/python/bin/python $DIR/goagent.py
 
 ;;
 
  gappproxy)
  
-PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/gappproxy.py
+$DIR/python/bin/python $DIR/gappproxy.py
 
 ;;
 
@@ -123,7 +123,7 @@ def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf
  
- PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/wallproxy.py
+ $DIR/python/bin/python $DIR/wallproxy.py
  
  ;;
  

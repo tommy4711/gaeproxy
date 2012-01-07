@@ -1,9 +1,11 @@
 #!/system/bin/sh
 
-export PYTHONPATH=/data/data/org.gaeproxy/python:/data/data/org.gaeproxy/python/lib/python2.6/lib-dynload:/data/data/org.gaeproxy/python/lib:$1/python-extras
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PYTHONPATH:/system/lib
-export PYTHONHOME=/data/data/org.gaeproxy/python
-export TEMP=$1/python-extras
+DIR=/data/data/org.gaeproxy
+
+PYTHONPATH=$DIR/python:$DIR/python/lib/python2.6/lib-dynload:$DIR/python/lib:$1/python-extras
+LD_LIBRARY_PATH=$DIR/python/lib:$DIR/python/lib/python2.6/lib-dynload:$LD_LIBRARY_PATH
+PYTHONHOME=/data/data/org.gaeproxy/python
+TEMP=$1/python-extras
 
 case $2 in
 
@@ -71,13 +73,13 @@ www.253874.com = 76.73.90.170
 "> /data/data/org.gaeproxy/proxy.ini
  
  
-/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/goagent.py
+PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/goagent.py
 
 ;;
 
  gappproxy)
  
-/data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/gappproxy.py
+PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/gappproxy.py
 
 ;;
 
@@ -120,7 +122,8 @@ def find_sock_handler(reqtype, ip, port, cmd):
 def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf
- /data/data/org.gaeproxy/python/bin/python /data/data/org.gaeproxy/wallproxy.py
+ 
+ PYTHONPATH=$PYTHONPATH LD_LIBRARY_PATH=$LD_LIBRARY_PATH PYTHONHOME=$PYTHONHOME TEMP=$TEMP $DIR/python/bin/python $DIR/wallproxy.py
  
  ;;
  

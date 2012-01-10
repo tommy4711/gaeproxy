@@ -2,10 +2,12 @@
 
 DIR=/data/data/org.gaeproxy
 
-export PYTHONPATH=$DIR/python:$DIR/python/lib/python2.6/lib-dynload:$DIR/python/lib:$1/python-extras
-export LD_LIBRARY_PATH=$DIR/python/lib:$DIR/python/lib/python2.6/lib-dynload:$LD_LIBRARY_PATH
-export PYTHONHOME=/data/data/org.gaeproxy/python
-export TEMP=$1/python-extras
+PYTHONPATH=${1}/python-extras
+PYTHONPATH=${PYTHONPATH}:${DIR}/python/lib/python2.6/lib-dynload
+export PYTHONPATH
+export TEMP=${1}/python-extras
+export PYTHONHOME=${DIR}/python
+export LD_LIBRARY_PATH=${DIR}/python/lib
 
 case $2 in
 

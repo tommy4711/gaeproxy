@@ -93,6 +93,7 @@
     
     <string-array name="chn_list">
         <item>1.0.0.0/2</item>
+        <item>66.114.0.0/16</item> <!-- tricks for sina weibo -->
         <item>96.0.0.0/3</item>
         <item>128.0.0.0/4</item>
         <item>171.0.0.0/8</item>

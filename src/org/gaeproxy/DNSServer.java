@@ -360,7 +360,7 @@ public class DNSServer implements WrapServer {
 
 		DomainValidator dv = DomainValidator.getInstance();
 		/* Not support reverse domain name query */
-		if (domain.endsWith("in-addr.arpa") || !dv.isValid(domain)) {
+		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa") || !dv.isValid(domain)) {
 			return createDNSResponse(quest, parseIPString("127.0.0.1"));
 		}
 

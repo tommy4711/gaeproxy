@@ -301,10 +301,6 @@ public class GAEProxy extends PreferenceActivity implements
 				ed.putBoolean("isInstalling", false);
 				ed.putBoolean("isInstalled", true);
 				isInstalledCheck.setEnabled(true);
-
-				// prepare for python
-				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/python/bin/python");
-				
 				break;
 			case MSG_INSTALL_FAIL:
 				ed.putBoolean("isInstalling", false);
@@ -561,7 +557,7 @@ public class GAEProxy extends PreferenceActivity implements
 							+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
 							+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
 							+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n"
-							+ "chmod 755 /data/data/org.gaeproxy/python/bin/python\n");
+							+ "chmod 755 /data/data/org.gaeproxy/python-cl\n");
 
 					try {
 						URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
@@ -972,7 +968,8 @@ public class GAEProxy extends PreferenceActivity implements
 						+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
 						+ "chmod 755 /data/data/org.gaeproxy/proxy.sh\n"
 						+ "chmod 755 /data/data/org.gaeproxy/localproxy.sh\n"
-						+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n");
+						+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n"
+						+ "chmod 755 /data/data/org.gaeproxy/python-cl\n");
 
 				handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
 				h.sendEmptyMessage(0);

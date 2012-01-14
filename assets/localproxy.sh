@@ -75,13 +75,13 @@ www.253874.com = 76.73.90.170
 "> /data/data/org.gaeproxy/proxy.ini
  
  
-$DIR/python/bin/python $DIR/goagent.py
+$DIR/python-cl $DIR/goagent.py
 
 ;;
 
  gappproxy)
  
-$DIR/python/bin/python $DIR/gappproxy.py
+$DIR/python-cl $DIR/gappproxy.py
 
 ;;
 
@@ -124,7 +124,7 @@ def find_sock_handler(reqtype, ip, port, cmd):
 def check_client(ip, reqtype, args):
     return True
  " > /data/data/org.gaeproxy/proxy.conf
- $DIR/python/bin/python $DIR/wallproxy.py
+ $DIR/python-cl $DIR/wallproxy.py
  
  ;;
  

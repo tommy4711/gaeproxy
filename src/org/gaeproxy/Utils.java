@@ -440,6 +440,7 @@ public class Utils {
 				// Timed-out
 				runner.destroy();
 				runner.join(1000);
+				return TIME_OUT;
 			}
 		} catch (InterruptedException ex) {
 			return TIME_OUT;

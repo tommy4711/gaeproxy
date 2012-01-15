@@ -41,7 +41,6 @@
         </EditTextPreference>
 
         <EditTextPreference
-            android:password="true"
             android:defaultValue=""
             android:key="sitekey"
             android:summary="@string/sitekey_summary"

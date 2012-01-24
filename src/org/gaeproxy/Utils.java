@@ -9,6 +9,8 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
+import java.lang.NoClassDefFoundError;
+
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
@@ -115,8 +117,12 @@ public class Utils {
 		 */
 		@Override
 		public synchronized void destroy() {
-			Exec.hangupProcessGroup(mProcId);
-			Exec.close(mTermFd);
+            try {
+                Exec.hangupProcessGroup(mProcId);
+                Exec.close(mTermFd);
+            } catch (NoClassDefFoundError ignore) {
+                // Nothing
+            }
 		}
 
 		@Override

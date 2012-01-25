@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.gaeproxy.ProxySettings;
 import org.gaeproxy.R;
 import org.gaeproxy.zirco.controllers.Controller;
 import org.gaeproxy.zirco.events.EventConstants;
@@ -1239,17 +1238,6 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		super.onCreate(savedInstanceState);
 
 		INSTANCE = this;
-
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(this);
-
-		int port = 1984;
-		try {
-			port = Integer.valueOf(settings.getString("port", "1984"));
-		} catch (NumberFormatException ignore) {
-
-		}
-		ProxySettings.setProxy(this, "127.0.0.1", port);
 
 		Constants.initializeConstantsFromResources(this);
 

@@ -22,7 +22,11 @@ import org.gaeproxy.zirco.controllers.Controller;
 import org.gaeproxy.zirco.utils.ApplicationUtils;
 import org.gaeproxy.zirco.utils.Constants;
 
+import org.gaeproxy.ProxySettings;
+
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -178,11 +182,30 @@ public class CustomWebView extends WebView {
 		return mProgress;
 	}
 
+    private void initializeProxy() {
+
+		SharedPreferences settings = PreferenceManager
+				.getDefaultSharedPreferences(mContext);
+
+		int port = 1984;
+		try {
+			port = Integer.valueOf(settings.getString("port", "1984"));
+		} catch (NumberFormatException ignore) {
+
+		}
+
+		ProxySettings.setProxy(mContext, "127.0.0.1", port);
+
+    }
+
 	/**
 	 * Initialize the WebView with the options set by the user through
 	 * preferences.
 	 */
 	public void initializeOptions() {
+
+        initializeProxy();
+
 		WebSettings settings = getSettings();
 
 		// User settings

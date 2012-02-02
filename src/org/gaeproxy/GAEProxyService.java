@@ -528,28 +528,33 @@ public class GAEProxyService extends Service {
 				getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);
 
-		// Make sure the connection is closed, important here
-		onDisconnect();
+        new Thread() {
+            public void run() {
 
-		try {
-			if (httpOS != null) {
-				httpOS.close();
-				httpOS = null;
-			}
-			if (httpProcess != null) {
-				httpProcess.destroy();
-				httpProcess = null;
-			}
-		} catch (Exception e) {
-			Log.e(TAG, "HTTP Server close unexpected");
-		}
+                // Make sure the connection is closed, important here
+                onDisconnect();
 
-		try {
-			if (dnsServer != null)
-				dnsServer.close();
-		} catch (Exception e) {
-			Log.e(TAG, "DNS Server close unexpected");
-		}
+                try {
+                    if (httpOS != null) {
+                        httpOS.close();
+                        httpOS = null;
+                    }
+                    if (httpProcess != null) {
+                        httpProcess.destroy();
+                        httpProcess = null;
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "HTTP Server close unexpected");
+                }
+
+                try {
+                    if (dnsServer != null)
+                        dnsServer.close();
+                } catch (Exception e) {
+                    Log.e(TAG, "DNS Server close unexpected");
+                }
+            }
+        }.start();
 
 		// for widget, maybe exception here
 		try {

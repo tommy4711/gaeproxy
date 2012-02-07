@@ -358,7 +358,6 @@ public class GAEProxyService extends Service {
 		// BetterHttp with HttpClient
 		dnsServer = new DNSServer("DNS Server", "8.8.8.8", 53, appHost,
 				isDNSBlocked);
-		dnsServer.setBasePath(BASE);
 		dnsPort = dnsServer.getServPort();
 
 		// Random mirror for load balance

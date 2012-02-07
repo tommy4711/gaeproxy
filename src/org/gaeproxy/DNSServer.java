@@ -26,6 +26,8 @@ import java.net.URLEncoder;
 import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.net.ssl.HostnameVerifier;
@@ -35,91 +37,16 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.gaeproxy.db.DNSResponse;
+import org.gaeproxy.db.DatabaseHelper;
+
 import com.github.droidfu.http.BetterHttp;
 import com.github.droidfu.http.BetterHttpRequest;
 import com.github.droidfu.http.BetterHttpResponse;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.Dao;
 
 import android.util.Log;
-
-/**
- * 此类封装了一个Dns回应
- * 
- * @author biaji
- * 
- */
-class DnsResponse implements Serializable {
-
-	private static final long serialVersionUID = -6693216674221293274L;
-
-	private String request = null;
-	private long timestamp = System.currentTimeMillis();;
-	private int reqTimes = 0;
-	private byte[] dnsResponse = null;
-
-	public DnsResponse(String request) {
-		this.request = request;
-	}
-
-	/**
-	 * @return the dnsResponse
-	 */
-	public byte[] getDnsResponse() {
-		this.reqTimes++;
-		return dnsResponse;
-	}
-
-	/**
-	 * @return IP string
-	 */
-	public String getIPString() {
-		String ip = null;
-		int i;
-
-		if (dnsResponse == null) {
-			return null;
-		}
-
-		i = dnsResponse.length - 4;
-
-		if (i < 0) {
-			return null;
-		}
-
-		ip = "" + (dnsResponse[i] & 0xFF); /* Unsigned byte to int */
-
-		for (i++; i < dnsResponse.length; i++) {
-			ip += "." + (dnsResponse[i] & 0xFF);
-		}
-
-		return ip;
-	}
-
-	/**
-	 * @return the reqTimes
-	 */
-	public int getReqTimes() {
-		return reqTimes;
-	}
-
-	public String getRequest() {
-		return this.request;
-	}
-
-	/**
-	 * @return the timestamp
-	 */
-	public long getTimestamp() {
-		return timestamp;
-	}
-
-	/**
-	 * @param dnsResponse
-	 *            the dnsResponse to set
-	 */
-	public void setDnsResponse(byte[] dnsResponse) {
-		this.dnsResponse = dnsResponse;
-	}
-}
 
 /**
  * 此类实现了DNS代理
@@ -139,11 +66,7 @@ public class DNSServer implements WrapServer {
 		return targets;
 	}
 
-	private final String TAG = "CMWRAP->DNSServer";
-	private String homePath;
-	private final String CACHE_PATH = "cache/";
-
-	private final String CACHE_FILE = "dnscache";
+	private final String TAG = "GAEProxyDNSProxy";
 
 	private DatagramSocket srvSocket;
 
@@ -156,8 +79,8 @@ public class DNSServer implements WrapServer {
 	protected String dnsHost;
 	protected int dnsPort;
 	final protected int DNS_PKG_HEADER_LEN = 12;
-	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0x80, 0, 0,
-			0 };
+	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0x80, 0,
+			0, 0 };
 	final private int[] DNS_PAYLOAD = { 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01,
 			0x00, 0x00, 0x00, 0x3c, 0x00, 0x04 };
 
@@ -167,8 +90,6 @@ public class DNSServer implements WrapServer {
 	private boolean inService = false;
 	private boolean httpMode = false;
 	private volatile int dnsError = 0;
-
-	private Hashtable<String, DnsResponse> dnsCache = new Hashtable<String, DnsResponse>();
 
 	/**
 	 * 内建自定义缓存
@@ -182,6 +103,8 @@ public class DNSServer implements WrapServer {
 
 	private static final String CANT_RESOLVE = "Error";
 
+	private DatabaseHelper helper;
+
 	public DNSServer(String name, String dnsHost, int dnsPort, String appHost,
 			boolean httpMode) {
 
@@ -192,27 +115,17 @@ public class DNSServer implements WrapServer {
 
 		BetterHttp.setupHttpClient();
 		BetterHttp.setSocketTimeout(10 * 1000);
-		
+
 		domains = new HashSet<String>();
 
 		initOrgCache();
-		
-//		HttpsURLConnection.setDefaultHostnameVerifier(new HostnameVerifier() {
-//			@Override
-//			public boolean verify(String hostname, SSLSession session) {
-//				return true;
-//			}
-//		});
 
-		// upper dns server not reachable, so use http mode
-//		if (httpMode) {
-//			try {
-//				InetAddress addr = InetAddress.getByName("www.google.com");
-//				this.appHost = addr.getHostAddress();
-//			} catch (Exception ignore) {
-//				this.appHost = appHost;
-//			}
-//		}
+		OpenHelperManager.setOpenHelperClass(DatabaseHelper.class);
+
+		if (helper == null) {
+			helper = ((DatabaseHelper) OpenHelperManager.getHelper(
+					GAEProxyContext.getAppContext(), DatabaseHelper.class));
+		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
@@ -221,14 +134,14 @@ public class DNSServer implements WrapServer {
 			srvSocket = new DatagramSocket(0,
 					InetAddress.getByName("127.0.0.1"));
 			srvPort = srvSocket.getLocalPort();
-			Log.d(TAG, this.name + "启动于端口： " + srvPort);
+			Log.d(TAG, "start at port " + srvPort);
 
 			inService = true;
 
 		} catch (SocketException e) {
-			Log.e(TAG, "DNSServer初始化错误，端口号" + srvPort, e);
+			Log.e(TAG, "error to initilized at port " + srvPort, e);
 		} catch (UnknownHostException e) {
-			Log.e(TAG, "DNSServer初始化错误，端口号" + srvPort, e);
+			Log.e(TAG, "error to initilized at port " + srvPort, e);
 		}
 	}
 
@@ -241,18 +154,35 @@ public class DNSServer implements WrapServer {
 	 *            解析结果
 	 */
 	private synchronized void addToCache(String questDomainName, byte[] answer) {
-		DnsResponse response = new DnsResponse(questDomainName);
-		response.setDnsResponse(answer);
-		dnsCache.put(questDomainName, response);
-		saveCache();
+		DNSResponse response = new DNSResponse(questDomainName);
+		response.setDNSResponse(answer);
+		try {
+			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
+			dnsCacheDao.createOrUpdate(response);
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot open DAO", e);
+		}
+	}
+
+	private synchronized DNSResponse queryFromCache(String questDomainName) {
+		try {
+			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
+			return dnsCacheDao.queryForId(questDomainName);
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot open DAO", e);
+		}
+		return null;
 	}
 
 	@Override
 	public void close() throws IOException {
 		inService = false;
 		srvSocket.close();
-		saveCache();
-		Log.i(TAG, "DNS服务关闭");
+		if (helper != null) {
+			OpenHelperManager.releaseHelper();
+			helper = null;
+		}
+		Log.i(TAG, "DNS Proxy closed");
 	}
 
 	/*
@@ -279,7 +209,7 @@ public class DNSServer implements WrapServer {
 			start++;
 		}
 
-		System.arraycopy(quest, 0, response, 0, 2); /* 0:2 | NAME */ 
+		System.arraycopy(quest, 0, response, 0, 2); /* 0:2 | NAME */
 		System.arraycopy(quest, 4, response, 4, 2); /* 4:6 -> 4:6 | TYPE */
 		System.arraycopy(quest, 4, response, 6, 2); /* 4:6 -> 7:9 | CLASS */
 		/* 10:14 | TTL */
@@ -360,7 +290,8 @@ public class DNSServer implements WrapServer {
 
 		DomainValidator dv = DomainValidator.getInstance();
 		/* Not support reverse domain name query */
-		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa") || !dv.isValid(domain)) {
+		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa")
+				|| !dv.isValid(domain)) {
 			return createDNSResponse(quest, parseIPString("127.0.0.1"));
 		}
 
@@ -445,43 +376,18 @@ public class DNSServer implements WrapServer {
 	 * 由缓存载入域名解析缓存
 	 */
 	private void loadCache() {
-		ObjectInputStream ois = null;
-		File cache = new File(homePath + CACHE_PATH + CACHE_FILE);
 		try {
-			if (!cache.exists())
-				return;
-			ois = new ObjectInputStream(new FileInputStream(cache));
-			dnsCache = (Hashtable<String, DnsResponse>) ois.readObject();
-			ois.close();
-			ois = null;
-
-			Hashtable<String, DnsResponse> tmpCache = (Hashtable<String, DnsResponse>) dnsCache
-					.clone();
-			for (DnsResponse resp : dnsCache.values()) {
-				// 检查缓存时效(十天)
+			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
+			List<DNSResponse> list = dnsCacheDao.queryForAll();
+			for (DNSResponse resp : list) {
+				// expire after 10 days
 				if ((System.currentTimeMillis() - resp.getTimestamp()) > 864000000L) {
-					Log.d(TAG, "删除" + resp.getRequest() + "记录");
-					tmpCache.remove(resp.getRequest());
+					Log.d(TAG, "deleted: " + resp.getRequest());
+					dnsCacheDao.delete(resp);
 				}
 			}
-
-			dnsCache = tmpCache;
-			tmpCache = null;
-
-		} catch (ClassCastException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} catch (FileNotFoundException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} catch (IOException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} catch (ClassNotFoundException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} finally {
-			try {
-				if (ois != null)
-					ois.close();
-			} catch (IOException e) {
-			}
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot open DAO", e);
 		}
 	}
 
@@ -609,28 +515,10 @@ public class DNSServer implements WrapServer {
 
 		Log.d(TAG, "DNS Relay URL: " + url);
 
-//		try {
-//			// RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
-//			URL aURL = new URL(url);
-//			HttpURLConnection conn = (HttpURLConnection) aURL
-//					.openConnection();
-//			conn.setRequestProperty("Host", host);
-//			conn.setConnectTimeout(5 * 1000);
-//			conn.setReadTimeout(10 * 1000);
-//			conn.connect();
-//			is = conn.getInputStream();
-//			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-//			ip = br.readLine();
-//		} catch (SocketException e) {
-//			Log.e(TAG, "Failed to request URI: " + url, e);
-//		} catch (IOException e) {
-//			Log.e(TAG, "Failed to request URI: " + url, e);
-//		} catch (NullPointerException e) {
-//			Log.e(TAG, "Failed to request URI: " + url, e);
-//		}
-		
+		// RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
+
 		BetterHttpRequest conn = BetterHttp.get(url, host);
-		
+
 		try {
 			BetterHttpResponse resp = conn.send();
 			is = resp.getResponseBody();
@@ -660,21 +548,19 @@ public class DNSServer implements WrapServer {
 
 				srvSocket.receive(dnsq);
 
-				// 连接外部DNS进行解析。
-
+				// try to build dnsreq here
 				byte[] data = dnsq.getData();
 				int dnsqLength = dnsq.getLength();
 				final byte[] udpreq = new byte[dnsqLength];
 				System.arraycopy(data, 0, udpreq, 0, dnsqLength);
-				// 尝试从缓存读取域名解析
+
+				// begin to query from dns cache
 				final String questDomain = getRequestDomain(udpreq);
-
 				Log.d(TAG, "Resolving: " + questDomain);
+				DNSResponse resp = queryFromCache(questDomain);
+				if (resp != null) {
 
-				if (dnsCache.containsKey(questDomain)) {
-
-					sendDns(dnsCache.get(questDomain).getDnsResponse(), dnsq,
-							srvSocket);
+					sendDns(resp.getDNSResponse(), dnsq, srvSocket);
 
 					Log.d(TAG, "DNS cache hit");
 
@@ -699,10 +585,6 @@ public class DNSServer implements WrapServer {
 							domains.add(questDomain);
 					}
 
-//					while (threadNum >= MAX_THREAD_NUM) {
-//						Thread.sleep(5000);
-//					}
-					
 					if (threadNum >= MAX_THREAD_NUM) {
 						continue;
 					}
@@ -755,17 +637,6 @@ public class DNSServer implements WrapServer {
 
 				}
 
-				/* For test, validate dnsCache */
-				/*
-				 * if (dnsCache.size() > 0) { Log.d(TAG, "Domains in cache:");
-				 * 
-				 * Enumeration<String> enu = dnsCache.keys(); while
-				 * (enu.hasMoreElements()) { String domain = (String)
-				 * enu.nextElement(); DnsResponse resp = dnsCache.get(domain);
-				 * 
-				 * Log.d(TAG, domain + " : " + resp.getIPString()); } }
-				 */
-
 			} catch (SocketException e) {
 				Log.e(TAG, e.getLocalizedMessage());
 				break;
@@ -774,59 +645,20 @@ public class DNSServer implements WrapServer {
 				break;
 			} catch (IOException e) {
 				Log.e(TAG, e.getLocalizedMessage());
-//			} catch (InterruptedException e) {
-//				Log.e(TAG, "Interrupted", e);
-//				break;
 			}
 		}
 
 	}
 
-	/*
-	 * Implement with http based DNS.
-	 */
-
 	/**
-	 * 保存域名解析内容缓存
-	 */
-	private void saveCache() {
-		ObjectOutputStream oos = null;
-		File cache = new File(homePath + CACHE_PATH + CACHE_FILE);
-		try {
-			if (!cache.exists()) {
-				File cacheDir = new File(homePath + CACHE_PATH);
-				if (!cacheDir.exists()) { // android的createNewFile这个方法真够恶心的啊
-					cacheDir.mkdir();
-				}
-				cache.createNewFile();
-			}
-			oos = new ObjectOutputStream(new FileOutputStream(cache));
-			oos.writeObject(dnsCache);
-			oos.flush();
-			oos.close();
-			oos = null;
-		} catch (FileNotFoundException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} catch (IOException e) {
-			Log.e(TAG, e.getLocalizedMessage(), e);
-		} finally {
-			try {
-				if (oos != null)
-					oos.close();
-			} catch (IOException e) {
-			}
-		}
-	}
-
-	/**
-	 * 向来源发送dns应答
+	 * send response to the source
 	 * 
 	 * @param response
-	 *            应答包
+	 *            response
 	 * @param dnsq
-	 *            请求包
+	 *            request
 	 * @param srvSocket
-	 *            侦听Socket
+	 *            local socket
 	 */
 	private void sendDns(byte[] response, DatagramPacket dnsq,
 			DatagramSocket srvSocket) {
@@ -845,10 +677,6 @@ public class DNSServer implements WrapServer {
 		}
 	}
 
-	public void setBasePath(String path) {
-		this.homePath = path;
-	}
-
 	@Override
 	public void setProxyHost(String host) {
 		// TODO Auto-generated method stub
@@ -857,50 +685,6 @@ public class DNSServer implements WrapServer {
 
 	public void setTarget(String target) {
 		this.target = target;
-	}
-
-	/*
-	 * Switch char[n] and char[n+1] one by one, for Fucking GFW.
-	 * 
-	 * example: www.google.com ->ww.woggoelc.mo
-	 */
-	private String shake(String src) {
-		int i, n;
-		byte[] ret = null;
-		byte[] str = null;
-		String shaked = null;
-
-		if (src.length() == 0) {
-			return null;
-		}
-
-		str = src.getBytes();
-		ret = new byte[str.length];
-
-		i = n = 0;
-		while (n < str.length / 2) {
-			ret[i] = str[i + 1];
-			ret[i + 1] = str[i];
-			i += 2;
-			n++;
-		}
-
-		if (str.length % 2 == 1) {
-			ret[str.length - 1] = str[str.length - 1];
-		}
-
-		shaked = new String(ret);
-		Log.d(TAG, "Shaked domain name: " + shaked);
-
-		return shaked;
-	}
-
-	public boolean test(String domain, String ip) {
-		boolean ret = true;
-
-		// TODO: Implement test case
-
-		return ret;
 	}
 
 }

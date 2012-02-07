@@ -46,6 +46,7 @@ import com.github.droidfu.http.BetterHttpResponse;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
 
+import android.content.Context;
 import android.util.Log;
 
 /**
@@ -75,7 +76,6 @@ public class DNSServer implements WrapServer {
 	public HashSet<String> domains;
 
 	private int srvPort = 8153;
-	private String name;
 	protected String dnsHost;
 	protected int dnsPort;
 	final protected int DNS_PKG_HEADER_LEN = 12;
@@ -105,10 +105,9 @@ public class DNSServer implements WrapServer {
 
 	private DatabaseHelper helper;
 
-	public DNSServer(String name, String dnsHost, int dnsPort, String appHost,
+	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost,
 			boolean httpMode) {
 
-		this.name = name;
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.httpMode = httpMode;
@@ -123,8 +122,8 @@ public class DNSServer implements WrapServer {
 		OpenHelperManager.setOpenHelperClass(DatabaseHelper.class);
 
 		if (helper == null) {
-			helper = ((DatabaseHelper) OpenHelperManager.getHelper(
-					GAEProxyContext.getAppContext(), DatabaseHelper.class));
+			helper = ((DatabaseHelper) OpenHelperManager.getHelper(ctx,
+					DatabaseHelper.class));
 		}
 
 		if (dnsHost != null && !dnsHost.equals(""))

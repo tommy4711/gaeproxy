@@ -356,7 +356,7 @@ public class GAEProxyService extends Service {
 
 		// DNS Proxy Setup
 		// BetterHttp with HttpClient
-		dnsServer = new DNSServer("DNS Server", "8.8.8.8", 53, appHost,
+		dnsServer = new DNSServer(this, "8.8.8.8", 53, appHost,
 				isDNSBlocked);
 		dnsPort = dnsServer.getServPort();
 

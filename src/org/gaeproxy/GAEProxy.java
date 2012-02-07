@@ -48,8 +48,12 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.gaeproxy.db.DNSResponse;
+import org.gaeproxy.db.DatabaseHelper;
 
 import android.app.AlertDialog;
 import android.app.Notification;
@@ -93,6 +97,8 @@ import com.flurry.android.FlurryAgent;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
+import com.j256.ormlite.dao.Dao;
 
 public class GAEProxy extends PreferenceActivity implements
 		OnSharedPreferenceChangeListener {
@@ -958,9 +964,18 @@ public class GAEProxy extends PreferenceActivity implements
 
 				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
-				File cache = new File(GAEProxyService.BASE + "cache/dnscache");
-				if (cache.exists())
-					cache.delete();
+				try {
+					DatabaseHelper helper = ((DatabaseHelper) OpenHelperManager
+							.getHelper(GAEProxy.this, DatabaseHelper.class));
+					Dao<DNSResponse, String> dnsCacheDao = helper
+							.getDNSCacheDao();
+					List<DNSResponse> list = dnsCacheDao.queryForAll();
+					for (DNSResponse resp : list) {
+						dnsCacheDao.delete(resp);
+					}
+				} catch (Exception ignore) {
+					// Nothing
+				}
 
 				CopyAssets("");
 

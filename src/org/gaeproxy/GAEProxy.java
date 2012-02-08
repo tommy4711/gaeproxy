@@ -406,6 +406,16 @@ public class GAEProxy extends PreferenceActivity implements
 		}
 	}
 
+	private void crash_recovery() {
+
+		Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
+
+		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
+
+		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
+
+	}
+
 	private void dirChecker(String dir) {
 		File f = new File(dir);
 
@@ -550,7 +560,7 @@ public class GAEProxy extends PreferenceActivity implements
 				PendingIntent contentIntent = PendingIntent.getActivity(
 						GAEProxy.this, 0, notificationIntent, 0);
 				notification.contentIntent = contentIntent;
-				
+
 				Utils.isRoot();
 
 				if (!Utils.isInitialized()
@@ -925,16 +935,6 @@ public class GAEProxy extends PreferenceActivity implements
 		FlurryAgent.onEndSession(this);
 	}
 
-	private void crash_recovery() {
-
-		Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
-
-		Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
-
-		handler.sendEmptyMessage(MSG_INSTALL_SUCCESS);
-
-	}
-
 	private void recovery() {
 
 		if (pd == null)
@@ -965,8 +965,8 @@ public class GAEProxy extends PreferenceActivity implements
 				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
 				try {
-					DatabaseHelper helper = ((DatabaseHelper) OpenHelperManager
-							.getHelper(GAEProxy.this, DatabaseHelper.class));
+					DatabaseHelper helper = OpenHelperManager
+							.getHelper(GAEProxy.this, DatabaseHelper.class);
 					Dao<DNSResponse, String> dnsCacheDao = helper
 							.getDNSCacheDao();
 					List<DNSResponse> list = dnsCacheDao.queryForAll();

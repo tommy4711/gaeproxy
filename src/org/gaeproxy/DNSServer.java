@@ -6,14 +6,9 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.ConnectException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -27,27 +22,19 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.gaeproxy.db.DNSResponse;
 import org.gaeproxy.db.DatabaseHelper;
+
+import android.content.Context;
+import android.util.Log;
 
 import com.github.droidfu.http.BetterHttp;
 import com.github.droidfu.http.BetterHttpRequest;
 import com.github.droidfu.http.BetterHttpResponse;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
-
-import android.content.Context;
-import android.util.Log;
 
 /**
  * 此类实现了DNS代理
@@ -122,8 +109,8 @@ public class DNSServer implements WrapServer {
 		OpenHelperManager.setOpenHelperClass(DatabaseHelper.class);
 
 		if (helper == null) {
-			helper = ((DatabaseHelper) OpenHelperManager.getHelper(ctx,
-					DatabaseHelper.class));
+			helper = OpenHelperManager.getHelper(ctx,
+					DatabaseHelper.class);
 		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
@@ -161,16 +148,6 @@ public class DNSServer implements WrapServer {
 		} catch (Exception e) {
 			Log.e(TAG, "Cannot open DAO", e);
 		}
-	}
-
-	private synchronized DNSResponse queryFromCache(String questDomainName) {
-		try {
-			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
-			return dnsCacheDao.queryForId(questDomainName);
-		} catch (Exception e) {
-			Log.e(TAG, "Cannot open DAO", e);
-		}
-		return null;
 	}
 
 	@Override
@@ -482,6 +459,16 @@ public class DNSServer implements WrapServer {
 		}
 
 		return result;
+	}
+
+	private synchronized DNSResponse queryFromCache(String questDomainName) {
+		try {
+			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
+			return dnsCacheDao.queryForId(questDomainName);
+		} catch (Exception e) {
+			Log.e(TAG, "Cannot open DAO", e);
+		}
+		return null;
 	}
 
 	/*

@@ -14,9 +14,9 @@ public class DNSResponse {
 	private long timestamp = System.currentTimeMillis();
 	@DatabaseField(columnName = "reqtimes")
 	private int reqTimes = 0;
-	@DatabaseField(columnName = "dnsresponse", dataType=DataType.BYTE_ARRAY)
+	@DatabaseField(columnName = "dnsresponse", dataType = DataType.BYTE_ARRAY)
 	private byte[] dnsResponse = null;
-	
+
 	public DNSResponse() {
 		this.request = String.valueOf(System.currentTimeMillis());
 	}
@@ -94,6 +94,5 @@ public class DNSResponse {
 		sb.append(", ").append("dnsResponse=").append(dnsResponse);
 		return sb.toString();
 	}
-	
-	
+
 }

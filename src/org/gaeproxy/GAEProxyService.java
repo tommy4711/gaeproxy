@@ -54,9 +54,6 @@ import java.net.URL;
 import java.util.HashSet;
 import java.util.Random;
 
-import com.github.droidfu.http.BetterHttp;
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
-
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -79,6 +76,8 @@ import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
+
+import com.google.android.apps.analytics.GoogleAnalyticsTracker;
 
 public class GAEProxyService extends Service {
 
@@ -271,6 +270,119 @@ public class GAEProxyService extends Service {
 		return true;
 	}
 
+	private String getVersionName() {
+		String version;
+		try {
+			PackageInfo pi = getPackageManager().getPackageInfo(
+					getPackageName(), 0);
+			version = pi.versionName;
+		} catch (PackageManager.NameNotFoundException e) {
+			version = "Package name not found";
+		}
+		return version;
+	}
+
+	public void handleCommand(Intent intent) {
+
+		Log.d(TAG, "Service Start");
+
+		if (intent == null) {
+			stopSelf();
+			return;
+		}
+
+		Bundle bundle = intent.getExtras();
+
+		if (bundle == null) {
+			stopSelf();
+			return;
+		}
+
+		proxy = bundle.getString("proxy");
+		proxyType = bundle.getString("proxyType");
+		port = bundle.getInt("port");
+		sitekey = bundle.getString("sitekey");
+		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
+		isHTTPSProxy = bundle.getBoolean("isHTTPSProxy");
+		isGFWList = bundle.getBoolean("isGFWList");
+
+		Log.e(TAG, "GAE Proxy: " + proxy);
+		Log.e(TAG, "Local Port: " + port);
+
+		// APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+
+				handler.sendEmptyMessage(MSG_CONNECT_START);
+
+				try {
+					URL url = new URL("http://gae-ip-country.appspot.com/");
+					HttpURLConnection conn = (HttpURLConnection) url
+							.openConnection();
+					conn.setConnectTimeout(5000);
+					conn.setReadTimeout(8000);
+					conn.connect();
+					InputStream is = conn.getInputStream();
+					BufferedReader input = new BufferedReader(
+							new InputStreamReader(is));
+					String code = input.readLine();
+					if (code != null && code.length() > 0 && code.length() < 5) {
+						Log.d(TAG, "Location: " + code);
+						if (!code.contains("CN") && !code.contains("ZZ"))
+							isDNSBlocked = false;
+					}
+				} catch (Exception e) {
+					isDNSBlocked = true;
+					Log.d(TAG, "Cannot get country info", e);
+					// Nothing
+				}
+
+				Log.d(TAG, "IPTABLES: " + Utils.getIptables());
+
+				// Test for Redirect Support
+				hasRedirectSupport = Utils.getHasRedirectSupport();
+
+				if (handleConnection()) {
+					// Connection and forward successful
+					notifyAlert(getString(R.string.forward_success),
+							getString(R.string.service_running));
+
+					handler.sendEmptyMessageDelayed(MSG_CONNECT_SUCCESS, 500);
+
+					// for widget, maybe exception here
+					try {
+						RemoteViews views = new RemoteViews(getPackageName(),
+								R.layout.gaeproxy_appwidget);
+						views.setImageViewResource(R.id.serviceToggle,
+								R.drawable.on);
+						AppWidgetManager awm = AppWidgetManager
+								.getInstance(GAEProxyService.this);
+						awm.updateAppWidget(awm
+								.getAppWidgetIds(new ComponentName(
+										GAEProxyService.this,
+										GAEProxyWidgetProvider.class)), views);
+					} catch (Exception ignore) {
+						// Nothing
+					}
+
+				} else {
+					// Connection or forward unsuccessful
+					notifyAlert(getString(R.string.forward_fail),
+							getString(R.string.service_failed));
+
+					stopSelf();
+					handler.sendEmptyMessageDelayed(MSG_CONNECT_FAIL, 500);
+				}
+
+				handler.sendEmptyMessageDelayed(MSG_CONNECT_FINISH, 500);
+
+			}
+		}).start();
+		markServiceStarted();
+	}
+
 	/** Called when the activity is first created. */
 	public boolean handleConnection() {
 
@@ -356,8 +468,7 @@ public class GAEProxyService extends Service {
 
 		// DNS Proxy Setup
 		// BetterHttp with HttpClient
-		dnsServer = new DNSServer(this, "8.8.8.8", 53, appHost,
-				isDNSBlocked);
+		dnsServer = new DNSServer(this, "8.8.8.8", 53, appHost, isDNSBlocked);
 		dnsPort = dnsServer.getServPort();
 
 		// Random mirror for load balance
@@ -460,18 +571,6 @@ public class GAEProxyService extends Service {
 		return null;
 	}
 
-	private String getVersionName() {
-		String version;
-		try {
-			PackageInfo pi = getPackageManager().getPackageInfo(
-					getPackageName(), 0);
-			version = pi.versionName;
-		} catch (PackageManager.NameNotFoundException e) {
-			version = "Package name not found";
-		}
-		return version;
-	}
-
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -527,33 +626,34 @@ public class GAEProxyService extends Service {
 				getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);
 
-        new Thread() {
-            public void run() {
+		new Thread() {
+			@Override
+			public void run() {
 
-                // Make sure the connection is closed, important here
-                onDisconnect();
+				// Make sure the connection is closed, important here
+				onDisconnect();
 
-                try {
-                    if (httpOS != null) {
-                        httpOS.close();
-                        httpOS = null;
-                    }
-                    if (httpProcess != null) {
-                        httpProcess.destroy();
-                        httpProcess = null;
-                    }
-                } catch (Exception e) {
-                    Log.e(TAG, "HTTP Server close unexpected");
-                }
+				try {
+					if (httpOS != null) {
+						httpOS.close();
+						httpOS = null;
+					}
+					if (httpProcess != null) {
+						httpProcess.destroy();
+						httpProcess = null;
+					}
+				} catch (Exception e) {
+					Log.e(TAG, "HTTP Server close unexpected");
+				}
 
-                try {
-                    if (dnsServer != null)
-                        dnsServer.close();
-                } catch (Exception e) {
-                    Log.e(TAG, "DNS Server close unexpected");
-                }
-            }
-        }.start();
+				try {
+					if (dnsServer != null)
+						dnsServer.close();
+				} catch (Exception e) {
+					Log.e(TAG, "DNS Server close unexpected");
+				}
+			}
+		}.start();
 
 		// for widget, maybe exception here
 		try {
@@ -617,107 +717,6 @@ public class GAEProxyService extends Service {
 		// We want this service to continue running until it is explicitly
 		// stopped, so return sticky.
 		return START_STICKY;
-	}
-
-	public void handleCommand(Intent intent) {
-
-		Log.d(TAG, "Service Start");
-
-		if (intent == null) {
-			stopSelf();
-			return;
-		}
-
-		Bundle bundle = intent.getExtras();
-
-		if (bundle == null) {
-			stopSelf();
-			return;
-		}
-
-		proxy = bundle.getString("proxy");
-		proxyType = bundle.getString("proxyType");
-		port = bundle.getInt("port");
-		sitekey = bundle.getString("sitekey");
-		isGlobalProxy = bundle.getBoolean("isGlobalProxy");
-		isHTTPSProxy = bundle.getBoolean("isHTTPSProxy");
-		isGFWList = bundle.getBoolean("isGFWList");
-
-		Log.e(TAG, "GAE Proxy: " + proxy);
-		Log.e(TAG, "Local Port: " + port);
-
-		// APNManager.setAPNProxy("127.0.0.1", Integer.toString(port), this);
-
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-
-				handler.sendEmptyMessage(MSG_CONNECT_START);
-
-				try {
-					URL url = new URL("http://gae-ip-country.appspot.com/");
-					HttpURLConnection conn = (HttpURLConnection) url
-							.openConnection();
-					conn.setConnectTimeout(5000);
-					conn.setReadTimeout(8000);
-					conn.connect();
-					InputStream is = conn.getInputStream();
-					BufferedReader input = new BufferedReader(
-							new InputStreamReader(is));
-					String code = input.readLine();
-					if (code != null && code.length() > 0 && code.length() < 5) {
-						Log.d(TAG, "Location: " + code);
-						if (!code.contains("CN") && !code.contains("ZZ"))
-							isDNSBlocked = false;
-					}
-				} catch (Exception e) {
-					isDNSBlocked = true;
-					Log.d(TAG, "Cannot get country info", e);
-					// Nothing
-				}
-
-				Log.d(TAG, "IPTABLES: " + Utils.getIptables());
-
-				// Test for Redirect Support
-				hasRedirectSupport = Utils.getHasRedirectSupport();
-
-				if (handleConnection()) {
-					// Connection and forward successful
-					notifyAlert(getString(R.string.forward_success),
-							getString(R.string.service_running));
-
-					handler.sendEmptyMessageDelayed(MSG_CONNECT_SUCCESS, 500);
-
-					// for widget, maybe exception here
-					try {
-						RemoteViews views = new RemoteViews(getPackageName(),
-								R.layout.gaeproxy_appwidget);
-						views.setImageViewResource(R.id.serviceToggle,
-								R.drawable.on);
-						AppWidgetManager awm = AppWidgetManager
-								.getInstance(GAEProxyService.this);
-						awm.updateAppWidget(awm
-								.getAppWidgetIds(new ComponentName(
-										GAEProxyService.this,
-										GAEProxyWidgetProvider.class)), views);
-					} catch (Exception ignore) {
-						// Nothing
-					}
-
-				} else {
-					// Connection or forward unsuccessful
-					notifyAlert(getString(R.string.forward_fail),
-							getString(R.string.service_failed));
-
-					stopSelf();
-					handler.sendEmptyMessageDelayed(MSG_CONNECT_FAIL, 500);
-				}
-
-				handler.sendEmptyMessageDelayed(MSG_CONNECT_FINISH, 500);
-
-			}
-		}).start();
-		markServiceStarted();
 	}
 
 	/**

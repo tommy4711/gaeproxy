@@ -15,7 +15,7 @@ import android.util.Log;
 public class ProxySettings {
 
 	private static final String TAG = "GAEProxy.ProxySettings";
-	
+
 	private static Object getDeclaredField(Object obj, String name)
 			throws SecurityException, NoSuchFieldException,
 			IllegalArgumentException, IllegalAccessException {
@@ -99,12 +99,12 @@ public class ProxySettings {
 
 	private static void setSystemProperties(String host, int port) {
 
-        System.getProperties().put("proxySet", "true");
-        System.getProperties().put("proxyHost", host);
-        System.getProperties().put("proxyPort", port);
-        
-        System.setProperty("http.proxyHost", host);
-        System.setProperty("http.proxyPort", port + "");
+		System.getProperties().put("proxySet", "true");
+		System.getProperties().put("proxyHost", host);
+		System.getProperties().put("proxyPort", port);
+
+		System.setProperty("http.proxyHost", host);
+		System.setProperty("http.proxyPort", port + "");
 
 	}
 }

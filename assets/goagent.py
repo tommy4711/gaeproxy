@@ -341,8 +341,8 @@ class CertUtil(object):
         if os.path.exists(keyFile):
             return (keyFile, crtFile)
         if OpenSSL is None:
-            keyFile = os.path.join(basedir, 'LocalProxyServer.key')
-            crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+            keyFile = os.path.join(basedir, 'CA.key')
+            crtFile = os.path.join(basedir, 'CA.crt')
             return (keyFile, crtFile)
         if not os.path.isfile(keyFile):
             with CertUtil.CALock:
@@ -358,16 +358,16 @@ class CertUtil(object):
                         except Exception:
                             logging.exception('CertUtil.makeCert failed: host=%r, serial=%r', host, serial)
                     else:
-                        keyFile = os.path.join(basedir, 'LocalProxyServer.key')
-                        crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+                        keyFile = os.path.join(basedir, 'CA.key')
+                        crtFile = os.path.join(basedir, 'CA.crt')
         return (keyFile, crtFile)
 
     @staticmethod
     def checkCA():
         #Check CA exists
         basedir = '/data/data/org.gaeproxy'
-        keyFile = os.path.join(basedir, 'LocalProxyServer.key')
-        crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+        keyFile = os.path.join(basedir, 'CA.key')
+        crtFile = os.path.join(basedir, 'CA.crt')
         if not os.path.exists(keyFile):
             if not OpenSSL:
                 logging.critical('CA.crt is not exist and OpenSSL is disabled, ABORT!')
@@ -377,8 +377,8 @@ class CertUtil(object):
             CertUtil.writeFile(crtFile, crt)
             [os.remove(os.path.join('certs', x)) for x in os.listdir('certs')]
         if OpenSSL:
-            keyFile = os.path.join(basedir, 'LocalProxyServer.key')
-            crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+            keyFile = os.path.join(basedir, 'CA.key')
+            crtFile = os.path.join(basedir, 'CA.crt')
             cakey = CertUtil.readFile(keyFile)
             cacrt = CertUtil.readFile(crtFile)
             CertUtil.CA = (CertUtil.loadPEM(cakey, 0), CertUtil.loadPEM(cacrt, 2))

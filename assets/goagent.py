@@ -23,7 +23,7 @@ except ImportError:
     OpenSSL = None
 
 # GAEProxy Patch
-logging.basicConfig(level=logging.INFO, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
+logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
 
 class Common(object):
     '''global config module'''
@@ -692,8 +692,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self._realrfile = self.rfile
             self._realwfile = self.wfile
             self._realconnection = self.connection
-            self.connection = ssl.wrap_socket(self.connection, keyFile, crtFile,
-                    True, ssl_version=ssl.PROTOCOL_TLSv1)
+            self.connection = ssl.wrap_socket(self.connection, keyFile, crtFile, True)
             self.rfile = self.connection.makefile('rb', self.rbufsize)
             self.wfile = self.connection.makefile('wb', self.wbufsize)
             self.raw_requestline = self.rfile.readline(8192)

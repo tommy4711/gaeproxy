@@ -478,14 +478,14 @@ public class GAEProxy extends PreferenceActivity implements
 		if (countryCode.toLowerCase().equals("cn") || num.equals("31026")) {
 
 			progress = new DownloadFileRunnable(
-					"http://myhosts.sinaapp.com/python_r3.zip", data_path
+					"http://myhosts.sinaapp.com/python_r4.zip", data_path
 							+ "/python.zip", "/data/data/org.gaeproxy/",
 					"http://myhosts.sinaapp.com/python-extras_r2.zip",
 					data_path + "/python-extras.zip", data_path + "/");
 		} else {
 			progress = new DownloadFileRunnable(
 
-					"http://gaeproxy.googlecode.com/files/python_r3.zip",
+					"http://gaeproxy.googlecode.com/files/python_r4.zip",
 					data_path + "/python.zip",
 					"/data/data/org.gaeproxy/",
 					"http://gaeproxy.googlecode.com/files/python-extras_r2.zip",

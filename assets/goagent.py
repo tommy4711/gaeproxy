@@ -23,13 +23,13 @@ except ImportError:
     OpenSSL = None
 
 # GAEProxy Patch
-logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
+logging.basicConfig(level=logging.INFO, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
 
 class Common(object):
     '''global config module'''
     def __init__(self):
         ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
-		# GAEProxy Patch
+        # GAEProxy Patch
         self.CONFIG = ConfigParser.ConfigParser()
         self.CONFIG.read('/data/data/org.gaeproxy/proxy.ini')
 
@@ -336,9 +336,52 @@ class CertUtil(object):
     @staticmethod
     def getCertificate(host):
         basedir = '/data/data/org.gaeproxy'
+        keyFile = os.path.join(basedir, 'certs/%s.key' % host)
+        crtFile = os.path.join(basedir, 'certs/%s.crt' % host)
+        if os.path.exists(keyFile):
+            return (keyFile, crtFile)
+        if OpenSSL is None:
+            keyFile = os.path.join(basedir, 'LocalProxyServer.key')
+            crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+            return (keyFile, crtFile)
+        if not os.path.isfile(keyFile):
+            with CertUtil.CALock:
+                if not os.path.isfile(keyFile):
+                    logging.info('CertUtil getCertificate for %r', host)
+                    # FIXME: howto generate a suitable serial number?
+                    for serial in (int(hashlib.md5(host).hexdigest(), 16), int(time.time()*100)):
+                        try:
+                            key, crt = CertUtil.makeCert(host, CertUtil.CA, serial)
+                            CertUtil.writeFile(crtFile, crt)
+                            CertUtil.writeFile(keyFile, key)
+                            break
+                        except Exception:
+                            logging.exception('CertUtil.makeCert failed: host=%r, serial=%r', host, serial)
+                    else:
+                        keyFile = os.path.join(basedir, 'LocalProxyServer.key')
+                        crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+        return (keyFile, crtFile)
+
+    @staticmethod
+    def checkCA():
+        #Check CA exists
+        basedir = '/data/data/org.gaeproxy'
         keyFile = os.path.join(basedir, 'LocalProxyServer.key')
         crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
-        return (keyFile, crtFile)
+        if not os.path.exists(keyFile):
+            if not OpenSSL:
+                logging.critical('CA.crt is not exist and OpenSSL is disabled, ABORT!')
+                sys.exit(-1)
+            key, crt = CertUtil.makeCA()
+            CertUtil.writeFile(keyFile, key)
+            CertUtil.writeFile(crtFile, crt)
+            [os.remove(os.path.join('certs', x)) for x in os.listdir('certs')]
+        if OpenSSL:
+            keyFile = os.path.join(basedir, 'LocalProxyServer.key')
+            crtFile = os.path.join(basedir, 'LocalProxyServer.cert')
+            cakey = CertUtil.readFile(keyFile)
+            cacrt = CertUtil.readFile(crtFile)
+            CertUtil.CA = (CertUtil.loadPEM(cakey, 0), CertUtil.loadPEM(cacrt, 2))
 
 def urlfetch(url, payload, method, headers, fetchhost, fetchserver, dns=None, on_error=None):
     errors = []
@@ -649,7 +692,8 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self._realrfile = self.rfile
             self._realwfile = self.wfile
             self._realconnection = self.connection
-            self.connection = ssl.wrap_socket(self.connection, keyFile, crtFile, True)
+            self.connection = ssl.wrap_socket(self.connection, keyFile, crtFile,
+                    True, ssl_version=ssl.PROTOCOL_TLSv1)
             self.rfile = self.connection.makefile('rb', self.rbufsize)
             self.wfile = self.connection.makefile('wb', self.wbufsize)
             self.raw_requestline = self.rfile.readline(8192)
@@ -880,7 +924,9 @@ def main():
     except OSError, e:   
         print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)   
         sys.exit(1)
-        
+
+    CertUtil.checkCA()
+
     if ctypes and os.name == 'nt':
         ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % __version__)
         if not common.LOVE_TIMESTAMP.strip():

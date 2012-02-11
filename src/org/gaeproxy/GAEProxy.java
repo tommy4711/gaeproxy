@@ -565,6 +565,12 @@ public class GAEProxy extends PreferenceActivity implements
 
 				if (!Utils.isInitialized()
 						&& !GAEProxyService.isServiceStarted()) {
+					
+					File f = new File("/data/data/org.gaeproxy/certs");
+					if (f.exists() && f.isFile())
+						f.delete();
+					if (!f.exists())
+						f.mkdir();
 
 					CopyAssets("");
 
@@ -960,6 +966,7 @@ public class GAEProxy extends PreferenceActivity implements
 		new Thread() {
 			@Override
 			public void run() {
+			
 				Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
@@ -976,6 +983,12 @@ public class GAEProxy extends PreferenceActivity implements
 				} catch (Exception ignore) {
 					// Nothing
 				}
+				
+				File f = new File("/data/data/org.gaeproxy/certs");
+				if (f.exists() && f.isFile())
+					f.delete();
+				if (!f.exists())
+					f.mkdir();
 
 				CopyAssets("");
 

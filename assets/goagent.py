@@ -701,7 +701,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.parse_request()
             if self.path[0] == '/':
                 if (self.headers.get('Host')):
-                    self.path = 'https://%s:%s%s' % (self.headers['Host'], port, self.path)
+                    self.path = 'https://%s:%s%s' % (self.headers['Host'], port or '443', self.path)
                 else:
                     self.path = 'https://%s%s' % (self._realpath, self.path)
                 self.requestline = '%s %s %s' % (self.command, self.path, self.protocol_version)

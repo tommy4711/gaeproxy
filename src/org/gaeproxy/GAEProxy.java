@@ -565,7 +565,7 @@ public class GAEProxy extends PreferenceActivity implements
 
 				if (!Utils.isInitialized()
 						&& !GAEProxyService.isServiceStarted()) {
-					
+
 					File f = new File("/data/data/org.gaeproxy/certs");
 					if (f.exists() && f.isFile())
 						f.delete();
@@ -966,14 +966,14 @@ public class GAEProxy extends PreferenceActivity implements
 		new Thread() {
 			@Override
 			public void run() {
-			
+
 				Utils.runRootCommand(Utils.getIptables() + " -t nat -F OUTPUT");
 
 				Utils.runCommand(GAEProxyService.BASE + "proxy.sh stop");
 
 				try {
-					DatabaseHelper helper = OpenHelperManager
-							.getHelper(GAEProxy.this, DatabaseHelper.class);
+					DatabaseHelper helper = OpenHelperManager.getHelper(
+							GAEProxy.this, DatabaseHelper.class);
 					Dao<DNSResponse, String> dnsCacheDao = helper
 							.getDNSCacheDao();
 					List<DNSResponse> list = dnsCacheDao.queryForAll();
@@ -983,10 +983,19 @@ public class GAEProxy extends PreferenceActivity implements
 				} catch (Exception ignore) {
 					// Nothing
 				}
-				
+
 				File f = new File("/data/data/org.gaeproxy/certs");
 				if (f.exists() && f.isFile())
 					f.delete();
+				
+				if (f.exists() && f.isDirectory()) {
+					File[] files = f.listFiles();
+					for (int i = 0; i < files.length; i++)
+						if (!files[i].isDirectory())
+							files[i].delete();
+					f.delete();
+				}
+				
 				if (!f.exists())
 					f.mkdir();
 

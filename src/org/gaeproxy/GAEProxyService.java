@@ -834,10 +834,9 @@ public class GAEProxyService extends Service {
 			http_sb.append(hasRedirectSupport ? Utils.getIptables()
 					+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 					+ CMD_IPTABLES_DNAT_ADD_HTTP);
-			if (isHTTPSProxy)
-				https_sb.append(hasRedirectSupport ? Utils.getIptables()
-						+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
-						+ CMD_IPTABLES_DNAT_ADD_HTTPS);
+			https_sb.append(hasRedirectSupport ? Utils.getIptables()
+					+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
+					+ CMD_IPTABLES_DNAT_ADD_HTTPS);
 		} else {
 			// for proxy specified apps
 			if (apps == null || apps.length <= 0)
@@ -854,12 +853,10 @@ public class GAEProxyService extends Service {
 						+ CMD_IPTABLES_REDIRECT_ADD_HTTP : Utils.getIptables()
 						+ CMD_IPTABLES_DNAT_ADD_HTTP).replace("-t nat",
 						"-t nat -m owner --uid-owner " + uid));
-				if (isHTTPSProxy)
-					https_sb.append((hasRedirectSupport ? Utils.getIptables()
-							+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils
-							.getIptables() + CMD_IPTABLES_DNAT_ADD_HTTPS)
-							.replace("-t nat", "-t nat -m owner --uid-owner "
-									+ uid));
+				https_sb.append((hasRedirectSupport ? Utils.getIptables()
+						+ CMD_IPTABLES_REDIRECT_ADD_HTTPS : Utils.getIptables()
+						+ CMD_IPTABLES_DNAT_ADD_HTTPS).replace("-t nat",
+						"-t nat -m owner --uid-owner " + uid));
 			}
 		}
 
@@ -868,9 +865,7 @@ public class GAEProxyService extends Service {
 
 		String redt_rules = http_sb.toString();
 
-		if (isHTTPSProxy) {
-			redt_rules += https_sb.toString();
-		}
+		redt_rules += https_sb.toString();
 
 		Utils.runRootCommand(redt_rules);
 

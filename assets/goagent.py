@@ -21,6 +21,10 @@ try:
     import OpenSSL
 except ImportError:
     OpenSSL = None
+try:
+    import sqlite3
+except ImportError:
+    sqlite3 = None
 
 # GAEProxy Patch
 logging.basicConfig(level=logging.ERROR, format='%(levelname)s - - %(asctime)s %(message)s', datefmt='[%d/%b/%Y %H:%M:%S]')
@@ -254,6 +258,42 @@ def httplib_HTTPConnection_putrequest(self, method, url, skip_host=0, skip_accep
     return _httplib_HTTPConnection_putrequest(self, method, url, skip_host, skip_accept_encoding)
 httplib.HTTPConnection.putrequest = httplib_HTTPConnection_putrequest
 
+class DNSCacheUtil(object):
+    '''DNSCache module, integrated with GAEProxy'''
+
+    cache = {"127.0.0.1": 'localhost'}
+
+    @staticmethod
+    def getHost(address):
+
+        if DNSCacheUtil.cache.has_key(address):
+            return DNSCacheUtil.cache[address]
+
+        host = "www.google.com"
+
+        if sqlite3 is not None:
+            try:
+                conn = sqlite3.connect('/data/data/org.gaeproxy/databases/dnscache.db')
+            except Exception:
+                logging.exception('DNSCacheUtil.initConn failed')
+                conn = None
+
+        if conn is not None:
+            try:
+                c = conn.cursor()
+                c.execute("select request from dnsresponse where address = '%s'"
+                        % address)
+                row = c.fetchone()
+                if row is not None:
+                    host = row[0]
+                    DNSCacheUtil.cache[address] = host
+                c.close()
+                conn.close()
+            except Exception:
+                logging.exception('DNSCacheUtil.getHost failed: %s', address)
+
+        return host
+
 class CertUtil(object):
     '''CertUtil module, based on WallProxy 0.4.0'''
 
@@ -267,6 +307,7 @@ class CertUtil(object):
             DNS: *.appspot.com, DNS: *.google.com, \
             DNS: *.youtube.com, DNS: *.googleusercontent.com, \
             DNS: *.gstatic.com, DNS: *.live.com, \
+            DNS: *.ak.fbcdn.net, DNS: *.ak.facebook.com, \
             DNS: *.android.com, DNS: *.fbcdn.net'
 
     @staticmethod
@@ -630,6 +671,7 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
             self.connection.sendall(data)
 
     def setup(self):
+        # GAEProxy Patch
         if not common.GAE_ENABLE:
             LocalProxyHandler.do_CONNECT = LocalProxyHandler.do_CONNECT_Direct
             LocalProxyHandler.do_METHOD  = LocalProxyHandler.do_METHOD_Direct
@@ -696,6 +738,9 @@ class LocalProxyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
     def do_CONNECT_Thunnel(self):
         # for ssl proxy
         host, _, port = self.path.rpartition(':')
+        p = "(?:\d{1,3}\.){3}\d{1,3}"
+        if re.match(p, host) is not None:
+            host = DNSCacheUtil.getHost(host)
         keyFile, crtFile = CertUtil.getCertificate(host)
         self.log_request(200)
         self.connection.sendall('%s 200 OK\r\n\r\n' % self.protocol_version)
@@ -939,8 +984,6 @@ def main():
         print >>sys.stderr, "fork #2 failed: %d (%s)" % (e.errno, e.strerror)   
         sys.exit(1)
 
-    CertUtil.checkCA()
-
     if ctypes and os.name == 'nt':
         ctypes.windll.kernel32.SetConsoleTitleW(u'GoAgent v%s' % __version__)
         if not common.LOVE_TIMESTAMP.strip():
@@ -952,7 +995,7 @@ def main():
         logging.root.setLevel(logging.DEBUG)
         
     # GAEProxy Patch
-    # CertUtil.checkCA()
+    CertUtil.checkCA()
     
     common.install_opener()
     sys.stdout.write(common.info())

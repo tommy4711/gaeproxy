@@ -16,6 +16,8 @@ public class DNSResponse {
 	private int reqTimes = 0;
 	@DatabaseField(columnName = "dnsresponse", dataType = DataType.BYTE_ARRAY)
 	private byte[] dnsResponse = null;
+	@DatabaseField(columnName = "address")
+	private String address;
 
 	public DNSResponse() {
 		this.request = String.valueOf(System.currentTimeMillis());
@@ -93,6 +95,14 @@ public class DNSResponse {
 		sb.append(", ").append("reqTimes=").append(reqTimes);
 		sb.append(", ").append("dnsResponse=").append(dnsResponse);
 		return sb.toString();
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
 	}
 
 }

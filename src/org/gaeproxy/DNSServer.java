@@ -142,6 +142,7 @@ public class DNSServer implements WrapServer {
 	private synchronized void addToCache(String questDomainName, byte[] answer) {
 		DNSResponse response = new DNSResponse(questDomainName);
 		response.setDNSResponse(answer);
+		response.setAddress(response.getIPString());
 		try {
 			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
 			dnsCacheDao.createOrUpdate(response);

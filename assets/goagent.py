@@ -341,7 +341,8 @@ class CertUtil(object):
         return req
 
     @staticmethod
-    def createCertificate(req, (issuerKey, issuerCert), serial, (notBefore, notAfter), digest='sha1'):
+    def createCertificate(req, (issuerKey, issuerCert), serial, (notBefore,
+        notAfter), digest='sha1', host=None):
         cert = OpenSSL.crypto.X509()
         cert.set_version(3)
         cert.set_serial_number(serial)
@@ -350,8 +351,11 @@ class CertUtil(object):
         cert.set_issuer(issuerCert.get_subject())
         cert.set_subject(req.get_subject())
         cert.set_pubkey(req.get_pubkey())
+        alts = CertUtil.subj_alts
+        if host is not None:
+            alts += ", DNS: %s" % host
         cert.add_extensions([OpenSSL.crypto.X509Extension("subjectAltName",
-            True, CertUtil.subj_alts)])
+            True, alts)])
         cert.sign(issuerKey, digest)
         return cert
 
@@ -382,7 +386,8 @@ class CertUtil(object):
                 'localityName': 'Cernet', 'organizationName': host,
                 'organizationalUnitName': 'GoAgent Branch', 'commonName': host}
         req = CertUtil.createCertRequest(pkey, **subj)
-        cert = CertUtil.createCertificate(req, (cakey, cacrt), serial, (0, 60*60*24*7305))
+        cert = CertUtil.createCertificate(req, (cakey, cacrt), serial, (0,
+            60*60*24*7305), host=host)
         return (CertUtil.dumpPEM(pkey, 0), CertUtil.dumpPEM(cert, 2))
 
     # GAEProxy Patch

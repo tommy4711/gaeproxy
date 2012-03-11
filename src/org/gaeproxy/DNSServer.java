@@ -98,6 +98,7 @@ public class DNSServer implements WrapServer {
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
 		this.httpMode = httpMode;
+		this.appHost = appHost;
 
 		BetterHttp.setupHttpClient();
 		BetterHttp.setSocketTimeout(10 * 1000);

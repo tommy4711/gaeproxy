@@ -74,5 +74,5 @@ public interface BetterHttpRequest {
 	 *            the timeout in milliseconds
 	 * @return this request
 	 */
-	public BetterHttpRequest withTimeout(int timeout);
+	public BetterHttpRequest withTimeout(int soTimeout, int coTimeout);
 }

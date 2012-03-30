@@ -35,7 +35,7 @@ import android.util.Log;
 public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 		ResponseHandler<BetterHttpResponse> {
 
-	private static final int MAX_RETRIES = 5;
+	private static final int MAX_RETRIES = 3;
 
 	protected static final String HTTP_CONTENT_TYPE_HEADER = "Content-Type";
 
@@ -47,8 +47,13 @@ public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 
 	protected int maxRetries = MAX_RETRIES;
 
-	private int oldTimeout; // used to cache the global timeout when changing it
-							// for one request
+	private int oldSoTimeout; // used to cache the global timeout when changing
+								// it
+								// for one request
+
+	private int oldCoTimeout; // used to cache the global timeout when changing
+								// it
+	// for one request
 
 	private int executionCount;
 
@@ -68,13 +73,11 @@ public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 	}
 
 	@Override
-	public BetterHttpResponse handleResponse(HttpResponse response)
-			throws IOException {
+	public BetterHttpResponse handleResponse(HttpResponse response) throws IOException {
 		int status = response.getStatusLine().getStatusCode();
 		if (expectedStatusCodes != null && !expectedStatusCodes.isEmpty()
 				&& !expectedStatusCodes.contains(status)) {
-			throw new HttpResponseException(status, "Unexpected status code: "
-					+ status);
+			throw new HttpResponseException(status, "Unexpected status code: " + status);
 		}
 
 		BetterHttpResponse bhttpr = new BetterHttpResponseImpl(response);
@@ -94,20 +97,17 @@ public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 		return this;
 	}
 
-	private boolean retryRequest(BetterHttpRequestRetryHandler retryHandler,
-			IOException cause, HttpContext context) {
-		Log.e(BetterHttp.LOG_TAG,
-				"Intercepting exception that wasn't handled by HttpClient");
-		executionCount = Math.max(executionCount,
-				retryHandler.getTimesRetried());
+	private boolean retryRequest(BetterHttpRequestRetryHandler retryHandler, IOException cause,
+			HttpContext context) {
+		Log.e(BetterHttp.LOG_TAG, "Intercepting exception that wasn't handled by HttpClient");
+		executionCount = Math.max(executionCount, retryHandler.getTimesRetried());
 		return retryHandler.retryRequest(cause, ++executionCount, context);
 	}
 
 	@Override
 	public BetterHttpResponse send() throws ConnectException {
 
-		BetterHttpRequestRetryHandler retryHandler = new BetterHttpRequestRetryHandler(
-				maxRetries);
+		BetterHttpRequestRetryHandler retryHandler = new BetterHttpRequestRetryHandler(maxRetries);
 
 		// tell HttpClient to user our own retry handler
 		httpClient.setHttpRequestRetryHandler(retryHandler);
@@ -143,8 +143,9 @@ public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 			} finally {
 				// if timeout was changed with this request using withTimeout(),
 				// reset it
-				if (oldTimeout != BetterHttp.getSocketTimeout()) {
-					BetterHttp.setSocketTimeout(oldTimeout);
+				if (oldSoTimeout != BetterHttp.getSocketTimeout()
+						|| oldCoTimeout != BetterHttp.getConnTimeout()) {
+					BetterHttp.setTimeout(oldSoTimeout, oldCoTimeout);
 				}
 			}
 		}
@@ -161,11 +162,12 @@ public abstract class BetterHttpRequestBase implements BetterHttpRequest,
 	}
 
 	@Override
-	public BetterHttpRequest withTimeout(int timeout) {
-		oldTimeout = httpClient.getParams().getIntParameter(
-				CoreConnectionPNames.SO_TIMEOUT,
+	public BetterHttpRequest withTimeout(int soTimeout, int coTimeout) {
+		oldSoTimeout = httpClient.getParams().getIntParameter(CoreConnectionPNames.SO_TIMEOUT,
 				BetterHttp.DEFAULT_SOCKET_TIMEOUT);
-		BetterHttp.setSocketTimeout(timeout);
+		oldCoTimeout = httpClient.getParams().getIntParameter(
+				CoreConnectionPNames.CONNECTION_TIMEOUT, BetterHttp.DEFAULT_CONN_TIMEOUT);
+		BetterHttp.setTimeout(soTimeout, coTimeout);
 		return this;
 	}
 }

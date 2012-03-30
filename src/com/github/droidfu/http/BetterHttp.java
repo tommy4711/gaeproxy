@@ -50,22 +50,21 @@ public class BetterHttp {
 	 */
 	static class GZIPHttpResponseInterceptor implements HttpResponseInterceptor {
 		@Override
-		public void process(final HttpResponse response,
-				final HttpContext context) {
+		public void process(final HttpResponse response, final HttpContext context) {
 			// Inflate any responses compressed with gzip
 			final HttpEntity entity = response.getEntity();
 			final Header encoding = entity.getContentEncoding();
 			if (encoding != null) {
 				for (HeaderElement element : encoding.getElements()) {
 					if (element.getName().equalsIgnoreCase(ENCODING_GZIP)) {
-						response.setEntity(new GZIPInflatingEntity(response
-								.getEntity()));
+						response.setEntity(new GZIPInflatingEntity(response.getEntity()));
 						break;
 					}
 				}
 			}
 		}
 	}
+
 	/**
 	 * Simple {@link HttpEntityWrapper} that inflates the wrapped
 	 * {@link HttpEntity} by passing it through {@link GZIPInputStream}.
@@ -85,9 +84,11 @@ public class BetterHttp {
 			return -1;
 		}
 	}
+
 	static final String LOG_TAG = "BetterHttp";
 	public static final int DEFAULT_MAX_CONNECTIONS = 4;
-	public static final int DEFAULT_SOCKET_TIMEOUT = 30 * 1000;
+	public static final int DEFAULT_SOCKET_TIMEOUT = 6 * 1000;
+	public static final int DEFAULT_CONN_TIMEOUT = 12 * 1000;
 
 	public static final String DEFAULT_HTTP_USER_AGENT = "Android/DroidFu";
 	private static final String HEADER_ACCEPT_ENCODING = "Accept-Encoding";
@@ -95,6 +96,7 @@ public class BetterHttp {
 
 	private static int maxConnections = DEFAULT_MAX_CONNECTIONS;
 	private static int socketTimeout = DEFAULT_SOCKET_TIMEOUT;
+	private static int connectionTimeout = DEFAULT_CONN_TIMEOUT;
 
 	private static String httpUserAgent = DEFAULT_HTTP_USER_AGENT;
 
@@ -132,6 +134,10 @@ public class BetterHttp {
 	public static int getSocketTimeout() {
 		return socketTimeout;
 	}
+	
+	public static int getConnTimeout() {
+		return connectionTimeout;
+	}
 
 	public static BetterHttpRequest post(String url) {
 		return new HttpPost(httpClient, url, defaultHeaders);
@@ -162,8 +168,7 @@ public class BetterHttp {
 	}
 
 	public static void setPortForScheme(String scheme, int port) {
-		Scheme _scheme = new Scheme(scheme,
-				PlainSocketFactory.getSocketFactory(), port);
+		Scheme _scheme = new Scheme(scheme, PlainSocketFactory.getSocketFactory(), port);
 		httpClient.getConnectionManager().getSchemeRegistry().register(_scheme);
 	}
 
@@ -173,11 +178,15 @@ public class BetterHttp {
 	 * 
 	 * @param socketTimeout
 	 *            the timeout in milliseconds
+	 * @param connTimeout
+	 *            the timeout in milliseconds
 	 */
-	public static void setSocketTimeout(int socketTimeout) {
+	public static void setTimeout(int socketTimeout, int connTimeout) {
 		BetterHttp.socketTimeout = socketTimeout;
-		HttpConnectionParams
-				.setSoTimeout(httpClient.getParams(), socketTimeout);
+		BetterHttp.connectionTimeout = connTimeout;
+		HttpConnectionParams.setSoTimeout(httpClient.getParams(), socketTimeout);
+		HttpConnectionParams.setConnectionTimeout(httpClient.getParams(), connTimeout);
+
 	}
 
 	public static void setupHttpClient() {
@@ -186,21 +195,17 @@ public class BetterHttp {
 		ConnManagerParams.setTimeout(httpParams, socketTimeout);
 		ConnManagerParams.setMaxConnectionsPerRoute(httpParams,
 				new ConnPerRouteBean(maxConnections));
-		ConnManagerParams.setMaxTotalConnections(httpParams,
-				DEFAULT_MAX_CONNECTIONS);
+		ConnManagerParams.setMaxTotalConnections(httpParams, DEFAULT_MAX_CONNECTIONS);
 		HttpConnectionParams.setSoTimeout(httpParams, socketTimeout);
 		HttpConnectionParams.setTcpNoDelay(httpParams, true);
 		HttpProtocolParams.setVersion(httpParams, HttpVersion.HTTP_1_1);
 		HttpProtocolParams.setUserAgent(httpParams, httpUserAgent);
 
 		SchemeRegistry schemeRegistry = new SchemeRegistry();
-		schemeRegistry.register(new Scheme("http", PlainSocketFactory
-				.getSocketFactory(), 80));
-		schemeRegistry.register(new Scheme("https", SSLSocketFactory
-				.getSocketFactory(), 443));
+		schemeRegistry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
+		schemeRegistry.register(new Scheme("https", SSLSocketFactory.getSocketFactory(), 443));
 
-		ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(
-				httpParams, schemeRegistry);
+		ThreadSafeClientConnManager cm = new ThreadSafeClientConnManager(httpParams, schemeRegistry);
 		httpClient = new DefaultHttpClient(cm, httpParams);
 	}
 

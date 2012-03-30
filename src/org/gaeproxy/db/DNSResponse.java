@@ -14,8 +14,6 @@ public class DNSResponse {
 	private long timestamp = System.currentTimeMillis();
 	@DatabaseField(columnName = "reqtimes")
 	private int reqTimes = 0;
-	@DatabaseField(columnName = "dnsresponse", dataType = DataType.BYTE_ARRAY)
-	private byte[] dnsResponse = null;
 	@DatabaseField(columnName = "address")
 	private String address;
 
@@ -28,34 +26,26 @@ public class DNSResponse {
 	}
 
 	/**
-	 * @return the dnsResponse
-	 */
-	public byte[] getDNSResponse() {
-		this.reqTimes++;
-		return dnsResponse;
-	}
-
-	/**
 	 * @return IP string
 	 */
-	public String getIPString() {
+	public static String getIPString(byte[] answer) {
 		String ip = null;
 		int i;
 
-		if (dnsResponse == null) {
+		if (answer == null) {
 			return null;
 		}
 
-		i = dnsResponse.length - 4;
+		i = answer.length - 4;
 
 		if (i < 0) {
 			return null;
 		}
 
-		ip = "" + (dnsResponse[i] & 0xFF); /* Unsigned byte to int */
+		ip = "" + (answer[i] & 0xFF); /* Unsigned byte to int */
 
-		for (i++; i < dnsResponse.length; i++) {
-			ip += "." + (dnsResponse[i] & 0xFF);
+		for (i++; i < answer.length; i++) {
+			ip += "." + (answer[i] & 0xFF);
 		}
 
 		return ip;
@@ -79,25 +69,17 @@ public class DNSResponse {
 		return timestamp;
 	}
 
-	/**
-	 * @param dnsResponse
-	 *            the dnsResponse to set
-	 */
-	public void setDNSResponse(byte[] dnsResponse) {
-		this.dnsResponse = dnsResponse;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("request=").append(request);
 		sb.append(", ").append("timestamp=").append(timestamp);
 		sb.append(", ").append("reqTimes=").append(reqTimes);
-		sb.append(", ").append("dnsResponse=").append(dnsResponse);
 		return sb.toString();
 	}
 
 	public String getAddress() {
+		this.reqTimes++;
 		return address;
 	}
 

@@ -66,10 +66,9 @@ public class DNSServer implements WrapServer {
 	protected String dnsHost;
 	protected int dnsPort;
 	final protected int DNS_PKG_HEADER_LEN = 12;
-	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0x80, 0,
-			0, 0 };
-	final private int[] DNS_PAYLOAD = { 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01,
-			0x00, 0x00, 0x00, 0x3c, 0x00, 0x04 };
+	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0, 0, 0, 0 };
+	final private int[] DNS_PAYLOAD = { 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x3c,
+			0x00, 0x04 };
 
 	final private int IP_SECTION_LEN = 4;
 	final private int DNS_ERROR_LIMIT = 20;
@@ -92,8 +91,7 @@ public class DNSServer implements WrapServer {
 
 	private DatabaseHelper helper;
 
-	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost,
-			boolean httpMode) {
+	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost, boolean httpMode) {
 
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
@@ -110,16 +108,14 @@ public class DNSServer implements WrapServer {
 		OpenHelperManager.setOpenHelperClass(DatabaseHelper.class);
 
 		if (helper == null) {
-			helper = OpenHelperManager.getHelper(ctx,
-					DatabaseHelper.class);
+			helper = OpenHelperManager.getHelper(ctx, DatabaseHelper.class);
 		}
 
 		if (dnsHost != null && !dnsHost.equals(""))
 			target = dnsHost + ":" + dnsPort;
 
 		try {
-			srvSocket = new DatagramSocket(0,
-					InetAddress.getByName("127.0.0.1"));
+			srvSocket = new DatagramSocket(0, InetAddress.getByName("127.0.0.1"));
 			srvPort = srvSocket.getLocalPort();
 			Log.d(TAG, "start at port " + srvPort);
 
@@ -142,8 +138,7 @@ public class DNSServer implements WrapServer {
 	 */
 	private synchronized void addToCache(String questDomainName, byte[] answer) {
 		DNSResponse response = new DNSResponse(questDomainName);
-		response.setDNSResponse(answer);
-		response.setAddress(response.getIPString());
+		response.setAddress(DNSResponse.getIPString(answer));
 		try {
 			Dao<DNSResponse, String> dnsCacheDao = helper.getDNSCacheDao();
 			dnsCacheDao.createOrUpdate(response);
@@ -191,8 +186,8 @@ public class DNSServer implements WrapServer {
 		System.arraycopy(quest, 4, response, 4, 2); /* 4:6 -> 4:6 | TYPE */
 		System.arraycopy(quest, 4, response, 6, 2); /* 4:6 -> 7:9 | CLASS */
 		/* 10:14 | TTL */
-		System.arraycopy(quest, DNS_PKG_HEADER_LEN, response, start,
-				quest.length - DNS_PKG_HEADER_LEN); /* 12:~ -> 15:~ */
+		System.arraycopy(quest, DNS_PKG_HEADER_LEN, response, start, quest.length
+				- DNS_PKG_HEADER_LEN); /* 12:~ -> 15:~ */
 		start += quest.length - DNS_PKG_HEADER_LEN;
 
 		for (int val : DNS_PAYLOAD) {
@@ -222,8 +217,7 @@ public class DNSServer implements WrapServer {
 	 */
 	protected byte[] fetchAnswer(byte[] quest) {
 
-		Socket innerSocket = new InnerSocketBuilder(dnsHost, dnsPort, target)
-				.getSocket();
+		Socket innerSocket = new InnerSocketBuilder(dnsHost, dnsPort, target).getSocket();
 		DataInputStream in;
 		DataOutputStream out;
 		byte[] result = null;
@@ -268,8 +262,7 @@ public class DNSServer implements WrapServer {
 
 		DomainValidator dv = DomainValidator.getInstance();
 		/* Not support reverse domain name query */
-		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa")
-				|| !dv.isValid(domain)) {
+		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa") || !dv.isValid(domain)) {
 			return createDNSResponse(quest, parseIPString("127.0.0.1"));
 		}
 
@@ -307,8 +300,7 @@ public class DNSServer implements WrapServer {
 			System.arraycopy(request, 12, question, 0, reqLength - 12);
 			requestDomain = parseDomain(question);
 			if (requestDomain.length() > 1)
-				requestDomain = requestDomain.substring(0,
-						requestDomain.length() - 1);
+				requestDomain = requestDomain.substring(0, requestDomain.length() - 1);
 		}
 		return requestDomain;
 	}
@@ -324,8 +316,7 @@ public class DNSServer implements WrapServer {
 			File f = new File("/data/data/org.gaeproxy/hosts");
 			if (!f.exists()) {
 				URL aURL = new URL("http://myhosts.sinaapp.com/hosts");
-				HttpURLConnection conn = (HttpURLConnection) aURL
-						.openConnection();
+				HttpURLConnection conn = (HttpURLConnection) aURL.openConnection();
 				conn.setConnectTimeout(5000);
 				conn.setReadTimeout(10000);
 				conn.connect();
@@ -408,8 +399,7 @@ public class DNSServer implements WrapServer {
 			return result;
 		try {
 			byte[] left = new byte[length - partLength - 1];
-			System.arraycopy(request, partLength + 1, left, 0, length
-					- partLength - 1);
+			System.arraycopy(request, partLength + 1, left, 0, length - partLength - 1);
 			result = new String(request, 1, partLength) + ".";
 			result += parseDomain(left);
 		} catch (Exception e) {
@@ -436,8 +426,7 @@ public class DNSServer implements WrapServer {
 		Log.d(TAG, "Start parse ip string: " + ip + ", Sectons: " + ips.length);
 
 		if (ips.length != IP_SECTION_LEN) {
-			Log.e(TAG, "Malformed IP string number of sections is: "
-					+ ips.length);
+			Log.e(TAG, "Malformed IP string number of sections is: " + ips.length);
 			return null;
 		}
 
@@ -486,18 +475,22 @@ public class DNSServer implements WrapServer {
 
 		InputStream is;
 
-		String encode_host = URLEncoder.encode(Base64.encodeBytes(Base64
-				.encodeBytesToBytes(domain.getBytes())));
+		String encode_host = URLEncoder.encode(Base64.encodeBytes(Base64.encodeBytesToBytes(domain
+				.getBytes())));
 
-		String url = "http://gaednsproxy.appspot.com/?d=" + encode_host;
-		String host = "gaednsproxy.appspot.com";
+		String url = "http://gaednsproxy1.appspot.com/?d=" + encode_host;
+		String host = "gaednsproxy1.appspot.com";
 		url = url.replace(host, appHost);
 
 		Random random = new Random(System.currentTimeMillis());
 		int n = random.nextInt(2);
-		if (n == 1) {
+		if (n == 0) {
 			url = "http://gaednsproxy2.appspot.com/?d=" + encode_host;
 			host = "gaednsproxy2.appspot.com";
+			url = url.replace(host, appHost);
+		} else if (n == 1) {
+			url = "http://gaednsproxy3.appspot.com/?d=" + encode_host;
+			host = "gaednsproxy3.appspot.com";
 			url = url.replace(host, appHost);
 		}
 
@@ -531,8 +524,7 @@ public class DNSServer implements WrapServer {
 
 		while (true) {
 			try {
-				final DatagramPacket dnsq = new DatagramPacket(qbuffer,
-						qbuffer.length);
+				final DatagramPacket dnsq = new DatagramPacket(qbuffer, qbuffer.length);
 
 				srvSocket.receive(dnsq);
 
@@ -547,11 +539,9 @@ public class DNSServer implements WrapServer {
 				Log.d(TAG, "Resolving: " + questDomain);
 				DNSResponse resp = queryFromCache(questDomain);
 				if (resp != null) {
-
-					sendDns(resp.getDNSResponse(), dnsq, srvSocket);
-
+					sendDns(createDNSResponse(udpreq, parseIPString(resp.getAddress())), dnsq,
+							srvSocket);
 					Log.d(TAG, "DNS cache hit");
-
 				} else if (orgCache.containsKey(questDomain)) { // 如果为自定义域名解析
 					byte[] ips = parseIPString(orgCache.get(questDomain));
 					byte[] answer = createDNSResponse(udpreq, ips);
@@ -599,15 +589,12 @@ public class DNSServer implements WrapServer {
 									addToCache(questDomain, answer);
 									sendDns(answer, dnsq, srvSocket);
 									Log.d(TAG,
-											"Success to get DNS response，length:"
-													+ answer.length
+											"Success to get DNS response，length:" + answer.length
 													+ "  cost："
-													+ (System
-															.currentTimeMillis() - startTime)
+													+ (System.currentTimeMillis() - startTime)
 													/ 1000 + "s");
 								} else {
-									Log.e(TAG,
-											"The size of DNS packet returned is 0");
+									Log.e(TAG, "The size of DNS packet returned is 0");
 									if (httpMode)
 										dnsError++;
 								}
@@ -648,8 +635,7 @@ public class DNSServer implements WrapServer {
 	 * @param srvSocket
 	 *            local socket
 	 */
-	private void sendDns(byte[] response, DatagramPacket dnsq,
-			DatagramSocket srvSocket) {
+	private void sendDns(byte[] response, DatagramPacket dnsq, DatagramSocket srvSocket) {
 
 		// 同步identifier
 		System.arraycopy(dnsq.getData(), 0, response, 0, 2);
@@ -657,7 +643,6 @@ public class DNSServer implements WrapServer {
 		DatagramPacket resp = new DatagramPacket(response, 0, response.length);
 		resp.setPort(dnsq.getPort());
 		resp.setAddress(dnsq.getAddress());
-
 		try {
 			srvSocket.send(resp);
 		} catch (IOException e) {

@@ -9,3 +9,5 @@ syntax: regexp
 ^NUL$
 syntax: regexp
 ^gen$
+syntax: regexp
+^proguard$

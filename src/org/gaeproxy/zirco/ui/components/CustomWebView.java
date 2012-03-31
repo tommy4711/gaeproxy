@@ -180,6 +180,21 @@ public class CustomWebView extends WebView {
 	public int getProgress() {
 		return mProgress;
 	}
+	
+	private void initializeProxy() {
+
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(mContext);
+
+		int port = 1984;
+		try {
+			port = Integer.valueOf(settings.getString("port", "1984"));
+		} catch (NumberFormatException ignore) {
+
+		}
+
+		ProxySettings.setProxy(mContext, "127.0.0.1", port);
+
+	}
 
 	/**
 	 * Initialize the WebView with the options set by the user through
@@ -188,7 +203,7 @@ public class CustomWebView extends WebView {
 	public void initializeOptions() {
 
 		initializeProxy();
-
+		
 		WebSettings settings = getSettings();
 
 		// User settings
@@ -266,22 +281,6 @@ public class CustomWebView extends WebView {
 		settings.setAppCacheEnabled(true);
 		settings.setDatabaseEnabled(true);
 		settings.setDomStorageEnabled(true);
-	}
-
-	private void initializeProxy() {
-
-		SharedPreferences settings = PreferenceManager
-				.getDefaultSharedPreferences(mContext);
-
-		int port = 1984;
-		try {
-			port = Integer.valueOf(settings.getString("port", "1984"));
-		} catch (NumberFormatException ignore) {
-
-		}
-
-		ProxySettings.setProxy(mContext, "127.0.0.1", port);
-
 	}
 
 	/**

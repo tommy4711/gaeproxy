@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.gaeproxy.ProxySettings;
 import org.gaeproxy.R;
 import org.gaeproxy.zirco.controllers.Controller;
 import org.gaeproxy.zirco.events.EventConstants;
@@ -49,6 +50,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.res.Configuration;
 import android.database.Cursor;
@@ -103,14 +105,13 @@ import android.widget.ViewFlipper;
 /**
  * The application main activity.
  */
-public class MainActivity extends Activity implements IToolbarsContainer,
-		OnTouchListener, IDownloadEventsListener {
+public class MainActivity extends Activity implements IToolbarsContainer, OnTouchListener,
+		IDownloadEventsListener {
 
 	/**
 	 * Gesture listener implementation.
 	 */
-	private class GestureListener extends
-			GestureDetector.SimpleOnGestureListener {
+	private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
 		@Override
 		public boolean onDoubleTap(MotionEvent e) {
@@ -119,8 +120,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		}
 
 		@Override
-		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-				float velocityY) {
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
 			if (isSwitchTabsByFlingEnabled()) {
 				if (e2.getEventTime() - e1.getEventTime() <= FLIP_TIME_THRESHOLD) {
 					if (e2.getX() > (e1.getX() + FLIP_PIXEL_THRESHOLD)) {
@@ -248,8 +248,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			closeFindDialog();
 		}
 
-		RelativeLayout view = (RelativeLayout) mInflater.inflate(
-				R.layout.webview, mViewFlipper, false);
+		RelativeLayout view = (RelativeLayout) mInflater.inflate(R.layout.webview, mViewFlipper,
+				false);
 
 		mCurrentWebView = (CustomWebView) view.findViewById(R.id.webview);
 
@@ -296,69 +296,60 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	private void buildComponents() {
 
 		mToolsActionGrid = new QuickActionGrid(this);
-		mToolsActionGrid.addQuickAction(new QuickAction(this,
-				R.drawable.ic_btn_home, R.string.QuickAction_Home));
-		mToolsActionGrid.addQuickAction(new QuickAction(this,
-				R.drawable.ic_btn_share, R.string.QuickAction_Share));
-		mToolsActionGrid.addQuickAction(new QuickAction(this,
-				R.drawable.ic_btn_find, R.string.QuickAction_Find));
-		mToolsActionGrid.addQuickAction(new QuickAction(this,
-				R.drawable.ic_btn_select, R.string.QuickAction_SelectText));
-		mToolsActionGrid
-				.addQuickAction(new QuickAction(this,
-						R.drawable.ic_btn_mobile_view,
-						R.string.QuickAction_MobileView));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_home,
+				R.string.QuickAction_Home));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_share,
+				R.string.QuickAction_Share));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_find,
+				R.string.QuickAction_Find));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_select,
+				R.string.QuickAction_SelectText));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_mobile_view,
+				R.string.QuickAction_MobileView));
 
-		mToolsActionGrid
-				.setOnQuickActionClickListener(new OnQuickActionClickListener() {
-					@Override
-					public void onQuickActionClicked(QuickActionWidget widget,
-							int position) {
-						switch (position) {
-						case 0:
-							navigateToHome();
-							break;
-						case 1:
-							ApplicationUtils.sharePage(MainActivity.this,
-									mCurrentWebView.getTitle(),
-									mCurrentWebView.getUrl());
-							break;
-						case 2:
-							// Somewhat dirty hack: when the find dialog was
-							// shown from a QuickAction,
-							// the soft keyboard did not show... Hack is to wait
-							// a little before showing
-							// the file dialog through a thread.
-							startShowFindDialogRunnable();
-							break;
-						case 3:
-							swithToSelectAndCopyTextMode();
-							break;
-						case 4:
-							String currentUrl = mUrlEditText.getText()
-									.toString();
+		mToolsActionGrid.setOnQuickActionClickListener(new OnQuickActionClickListener() {
+			@Override
+			public void onQuickActionClicked(QuickActionWidget widget, int position) {
+				switch (position) {
+				case 0:
+					navigateToHome();
+					break;
+				case 1:
+					ApplicationUtils.sharePage(MainActivity.this, mCurrentWebView.getTitle(),
+							mCurrentWebView.getUrl());
+					break;
+				case 2:
+					// Somewhat dirty hack: when the find dialog was
+					// shown from a QuickAction,
+					// the soft keyboard did not show... Hack is to wait
+					// a little before showing
+					// the file dialog through a thread.
+					startShowFindDialogRunnable();
+					break;
+				case 3:
+					swithToSelectAndCopyTextMode();
+					break;
+				case 4:
+					String currentUrl = mUrlEditText.getText().toString();
 
-							// Do not reload mobile view if already on it.
-							if (!currentUrl
-									.startsWith(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT)) {
-								String url = String.format(
-										Constants.URL_GOOGLE_MOBILE_VIEW,
-										mUrlEditText.getText().toString());
-								navigateToUrl(url);
-							}
-							break;
-						}
+					// Do not reload mobile view if already on it.
+					if (!currentUrl.startsWith(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT)) {
+						String url = String.format(Constants.URL_GOOGLE_MOBILE_VIEW, mUrlEditText
+								.getText().toString());
+						navigateToUrl(url);
 					}
-				});
+					break;
+				}
+			}
+		});
 
-		mToolsActionGrid
-				.setOnDismissListener(new PopupWindow.OnDismissListener() {
-					@Override
-					public void onDismiss() {
-						mToolsActionGridVisible = false;
-						startToolbarsHideRunnable();
-					}
-				});
+		mToolsActionGrid.setOnDismissListener(new PopupWindow.OnDismissListener() {
+			@Override
+			public void onDismiss() {
+				mToolsActionGridVisible = false;
+				startToolbarsHideRunnable();
+			}
+		});
 
 		mGestureDetector = new GestureDetector(this, new GestureListener());
 
@@ -426,13 +417,12 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		});
 		mNextTabView.setVisibility(View.GONE);
 
-		String[] from = new String[] {
-				UrlSuggestionCursorAdapter.URL_SUGGESTION_TITLE,
+		String[] from = new String[] { UrlSuggestionCursorAdapter.URL_SUGGESTION_TITLE,
 				UrlSuggestionCursorAdapter.URL_SUGGESTION_URL };
 		int[] to = new int[] { R.id.AutocompleteTitle, R.id.AutocompleteUrl };
 
-		UrlSuggestionCursorAdapter adapter = new UrlSuggestionCursorAdapter(
-				this, R.layout.url_autocomplete_line, null, from, to);
+		UrlSuggestionCursorAdapter adapter = new UrlSuggestionCursorAdapter(this,
+				R.layout.url_autocomplete_line, null, from, to);
 
 		adapter.setCursorToStringConverter(new CursorToStringConverter() {
 			@Override
@@ -447,19 +437,14 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			@Override
 			public Cursor runQuery(CharSequence constraint) {
 				if ((constraint != null) && (constraint.length() > 0)) {
-					return BookmarksProviderWrapper.getUrlSuggestions(
-							getContentResolver(),
+					return BookmarksProviderWrapper.getUrlSuggestions(getContentResolver(),
 							constraint.toString(),
-							PreferenceManager.getDefaultSharedPreferences(
-									MainActivity.this).getBoolean(
-									Constants.PREFERENCE_USE_WEAVE, false));
+							PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+									.getBoolean(Constants.PREFERENCE_USE_WEAVE, false));
 				} else {
-					return BookmarksProviderWrapper.getUrlSuggestions(
-							getContentResolver(),
-							null,
-							PreferenceManager.getDefaultSharedPreferences(
-									MainActivity.this).getBoolean(
-									Constants.PREFERENCE_USE_WEAVE, false));
+					return BookmarksProviderWrapper.getUrlSuggestions(getContentResolver(), null,
+							PreferenceManager.getDefaultSharedPreferences(MainActivity.this)
+									.getBoolean(Constants.PREFERENCE_USE_WEAVE, false));
 				}
 			}
 		});
@@ -489,13 +474,11 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			}
 
 			@Override
-			public void beforeTextChanged(CharSequence arg0, int arg1,
-					int arg2, int arg3) {
+			public void beforeTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
 			}
 
 			@Override
-			public void onTextChanged(CharSequence arg0, int arg1, int arg2,
-					int arg3) {
+			public void onTextChanged(CharSequence arg0, int arg1, int arg2, int arg3) {
 			}
 		};
 
@@ -507,8 +490,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			public void onFocusChange(View v, boolean hasFocus) {
 				// Select all when focus gained.
 				if (hasFocus) {
-					mUrlEditText.setSelection(0, mUrlEditText.getText()
-							.length());
+					mUrlEditText.setSelection(0, mUrlEditText.getText().length());
 				}
 			}
 		});
@@ -522,8 +504,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 				if (mCurrentWebView.isLoading()) {
 					mCurrentWebView.stopLoading();
-				} else if (!mCurrentWebView.isSameUrl(mUrlEditText.getText()
-						.toString())) {
+				} else if (!mCurrentWebView.isSameUrl(mUrlEditText.getText().toString())) {
 					navigateToUrl();
 				} else {
 					mCurrentWebView.reload();
@@ -621,13 +602,11 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			}
 
 			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after) {
+			public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 			}
 
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before,
-					int count) {
+			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				doFind();
 			}
 		});
@@ -645,8 +624,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 		if (url != null) {
 			boolean inList = false;
-			Iterator<String> iter = Controller.getInstance()
-					.getAdBlockWhiteList(this).iterator();
+			Iterator<String> iter = Controller.getInstance().getAdBlockWhiteList(this).iterator();
 			while ((iter.hasNext()) && (!inList)) {
 				if (url.contains(iter.next())) {
 					inList = true;
@@ -685,16 +663,16 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 * @param contentLength
 	 *            The content length.
 	 */
-	private void doDownloadStart(String url, String userAgent,
-			String contentDisposition, String mimetype, long contentLength) {
+	private void doDownloadStart(String url, String userAgent, String contentDisposition,
+			String mimetype, long contentLength) {
 
 		if (ApplicationUtils.checkCardState(this, true)) {
 			DownloadItem item = new DownloadItem(this, url);
 			Controller.getInstance().addToDownload(item);
 			item.startDownload();
 
-			Toast.makeText(this, getString(R.string.Main_DownloadStartedMsg),
-					Toast.LENGTH_SHORT).show();
+			Toast.makeText(this, getString(R.string.Main_DownloadStartedMsg), Toast.LENGTH_SHORT)
+					.show();
 		}
 	}
 
@@ -724,8 +702,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 */
 	private BitmapDrawable getNormalizedFavicon() {
 
-		BitmapDrawable favIcon = new BitmapDrawable(getResources(),
-				mCurrentWebView.getFavicon());
+		BitmapDrawable favIcon = new BitmapDrawable(getResources(), mCurrentWebView.getFavicon());
 
 		if (mCurrentWebView.getFavicon() != null) {
 			int imageButtonSize = ApplicationUtils.getImageButtonSize(this);
@@ -735,9 +712,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 					Bitmap.Config.ARGB_4444);
 			Canvas canvas = new Canvas(bm);
 
-			favIcon.setBounds((imageButtonSize / 2) - (favIconSize / 2),
-					(imageButtonSize / 2) - (favIconSize / 2),
-					(imageButtonSize / 2) + (favIconSize / 2),
+			favIcon.setBounds((imageButtonSize / 2) - (favIconSize / 2), (imageButtonSize / 2)
+					- (favIconSize / 2), (imageButtonSize / 2) + (favIconSize / 2),
 					(imageButtonSize / 2) + (favIconSize / 2));
 			favIcon.draw(canvas);
 
@@ -796,104 +772,86 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		mCurrentWebView.setWebViewClient(new CustomWebViewClient(this));
 		mCurrentWebView.setOnTouchListener(this);
 
-		mCurrentWebView
-				.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+		mCurrentWebView.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
 
-					@Override
-					public void onCreateContextMenu(ContextMenu menu, View v,
-							ContextMenuInfo menuInfo) {
-						HitTestResult result = ((WebView) v).getHitTestResult();
+			@Override
+			public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+				HitTestResult result = ((WebView) v).getHitTestResult();
 
-						int resultType = result.getType();
-						if ((resultType == HitTestResult.ANCHOR_TYPE)
-								|| (resultType == HitTestResult.IMAGE_ANCHOR_TYPE)
-								|| (resultType == HitTestResult.SRC_ANCHOR_TYPE)
-								|| (resultType == HitTestResult.SRC_IMAGE_ANCHOR_TYPE)) {
+				int resultType = result.getType();
+				if ((resultType == HitTestResult.ANCHOR_TYPE)
+						|| (resultType == HitTestResult.IMAGE_ANCHOR_TYPE)
+						|| (resultType == HitTestResult.SRC_ANCHOR_TYPE)
+						|| (resultType == HitTestResult.SRC_IMAGE_ANCHOR_TYPE)) {
 
-							Intent i = new Intent();
-							i.putExtra(Constants.EXTRA_ID_URL,
-									result.getExtra());
+					Intent i = new Intent();
+					i.putExtra(Constants.EXTRA_ID_URL, result.getExtra());
 
-							MenuItem item = menu.add(0, CONTEXT_MENU_OPEN, 0,
-									R.string.Main_MenuOpen);
-							item.setIntent(i);
+					MenuItem item = menu.add(0, CONTEXT_MENU_OPEN, 0, R.string.Main_MenuOpen);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_OPEN_IN_NEW_TAB, 0,
-									R.string.Main_MenuOpenNewTab);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_OPEN_IN_NEW_TAB, 0,
+							R.string.Main_MenuOpenNewTab);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_COPY, 0,
-									R.string.Main_MenuCopyLinkUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_COPY, 0, R.string.Main_MenuCopyLinkUrl);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_DOWNLOAD, 0,
-									R.string.Main_MenuDownload);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_DOWNLOAD, 0, R.string.Main_MenuDownload);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_SHARE, 0,
-									R.string.Main_MenuShareLinkUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_SHARE, 0, R.string.Main_MenuShareLinkUrl);
+					item.setIntent(i);
 
-							menu.setHeaderTitle(result.getExtra());
-						} else if (resultType == HitTestResult.IMAGE_TYPE) {
-							Intent i = new Intent();
-							i.putExtra(Constants.EXTRA_ID_URL,
-									result.getExtra());
+					menu.setHeaderTitle(result.getExtra());
+				} else if (resultType == HitTestResult.IMAGE_TYPE) {
+					Intent i = new Intent();
+					i.putExtra(Constants.EXTRA_ID_URL, result.getExtra());
 
-							MenuItem item = menu.add(0, CONTEXT_MENU_OPEN, 0,
-									R.string.Main_MenuViewImage);
-							item.setIntent(i);
+					MenuItem item = menu.add(0, CONTEXT_MENU_OPEN, 0, R.string.Main_MenuViewImage);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_COPY, 0,
-									R.string.Main_MenuCopyImageUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_COPY, 0, R.string.Main_MenuCopyImageUrl);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_DOWNLOAD, 0,
-									R.string.Main_MenuDownloadImage);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_DOWNLOAD, 0, R.string.Main_MenuDownloadImage);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_SHARE, 0,
-									R.string.Main_MenuShareImageUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_SHARE, 0, R.string.Main_MenuShareImageUrl);
+					item.setIntent(i);
 
-							menu.setHeaderTitle(result.getExtra());
+					menu.setHeaderTitle(result.getExtra());
 
-						} else if (resultType == HitTestResult.EMAIL_TYPE) {
+				} else if (resultType == HitTestResult.EMAIL_TYPE) {
 
-							Intent sendMail = new Intent(Intent.ACTION_VIEW,
-									Uri.parse(WebView.SCHEME_MAILTO
-											+ result.getExtra()));
+					Intent sendMail = new Intent(Intent.ACTION_VIEW, Uri
+							.parse(WebView.SCHEME_MAILTO + result.getExtra()));
 
-							MenuItem item = menu.add(0, CONTEXT_MENU_SEND_MAIL,
-									0, R.string.Main_MenuSendEmail);
-							item.setIntent(sendMail);
+					MenuItem item = menu.add(0, CONTEXT_MENU_SEND_MAIL, 0,
+							R.string.Main_MenuSendEmail);
+					item.setIntent(sendMail);
 
-							Intent i = new Intent();
-							i.putExtra(Constants.EXTRA_ID_URL,
-									result.getExtra());
+					Intent i = new Intent();
+					i.putExtra(Constants.EXTRA_ID_URL, result.getExtra());
 
-							item = menu.add(0, CONTEXT_MENU_COPY, 0,
-									R.string.Main_MenuCopyEmailUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_COPY, 0, R.string.Main_MenuCopyEmailUrl);
+					item.setIntent(i);
 
-							item = menu.add(0, CONTEXT_MENU_SHARE, 0,
-									R.string.Main_MenuShareEmailUrl);
-							item.setIntent(i);
+					item = menu.add(0, CONTEXT_MENU_SHARE, 0, R.string.Main_MenuShareEmailUrl);
+					item.setIntent(i);
 
-							menu.setHeaderTitle(result.getExtra());
-						}
-					}
+					menu.setHeaderTitle(result.getExtra());
+				}
+			}
 
-				});
+		});
 
 		mCurrentWebView.setDownloadListener(new DownloadListener() {
 
 			@Override
-			public void onDownloadStart(String url, String userAgent,
-					String contentDisposition, String mimetype,
-					long contentLength) {
-				doDownloadStart(url, userAgent, contentDisposition, mimetype,
-						contentLength);
+			public void onDownloadStart(String url, String userAgent, String contentDisposition,
+					String mimetype, long contentLength) {
+				doDownloadStart(url, userAgent, contentDisposition, mimetype, contentLength);
 			}
 
 		});
@@ -916,42 +874,36 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			}
 
 			@Override
-			public boolean onJsAlert(WebView view, String url, String message,
-					final JsResult result) {
-				new AlertDialog.Builder(activity)
-						.setTitle(R.string.Commons_JavaScriptDialog)
+			public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
+				new AlertDialog.Builder(activity).setTitle(R.string.Commons_JavaScriptDialog)
 						.setMessage(message)
-						.setPositiveButton(android.R.string.ok,
-								new AlertDialog.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialog,
-											int which) {
-										result.confirm();
-									}
-								}).setCancelable(false).create().show();
+						.setPositiveButton(android.R.string.ok, new AlertDialog.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								result.confirm();
+							}
+						}).setCancelable(false).create().show();
 
 				return true;
 			}
 
 			@Override
-			public boolean onJsConfirm(WebView view, String url,
-					String message, final JsResult result) {
+			public boolean onJsConfirm(WebView view, String url, String message,
+					final JsResult result) {
 				new AlertDialog.Builder(MainActivity.this)
 						.setTitle(R.string.Commons_JavaScriptDialog)
 						.setMessage(message)
 						.setPositiveButton(android.R.string.ok,
 								new DialogInterface.OnClickListener() {
 									@Override
-									public void onClick(DialogInterface dialog,
-											int which) {
+									public void onClick(DialogInterface dialog, int which) {
 										result.confirm();
 									}
 								})
 						.setNegativeButton(android.R.string.cancel,
 								new DialogInterface.OnClickListener() {
 									@Override
-									public void onClick(DialogInterface dialog,
-											int which) {
+									public void onClick(DialogInterface dialog, int which) {
 										result.cancel();
 									}
 								}).create().show();
@@ -963,14 +915,10 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			public boolean onJsPrompt(WebView view, String url, String message,
 					String defaultValue, final JsPromptResult result) {
 
-				final LayoutInflater factory = LayoutInflater
-						.from(MainActivity.this);
-				final View v = factory.inflate(
-						R.layout.javascript_prompt_dialog, null);
-				((TextView) v.findViewById(R.id.JavaScriptPromptMessage))
-						.setText(message);
-				((EditText) v.findViewById(R.id.JavaScriptPromptInput))
-						.setText(defaultValue);
+				final LayoutInflater factory = LayoutInflater.from(MainActivity.this);
+				final View v = factory.inflate(R.layout.javascript_prompt_dialog, null);
+				((TextView) v.findViewById(R.id.JavaScriptPromptMessage)).setText(message);
+				((EditText) v.findViewById(R.id.JavaScriptPromptInput)).setText(defaultValue);
 
 				new AlertDialog.Builder(MainActivity.this)
 						.setTitle(R.string.Commons_JavaScriptDialog)
@@ -978,8 +926,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 						.setPositiveButton(android.R.string.ok,
 								new DialogInterface.OnClickListener() {
 									@Override
-									public void onClick(DialogInterface dialog,
-											int whichButton) {
+									public void onClick(DialogInterface dialog, int whichButton) {
 										String value = ((EditText) v
 												.findViewById(R.id.JavaScriptPromptInput))
 												.getText().toString();
@@ -989,18 +936,15 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 						.setNegativeButton(android.R.string.cancel,
 								new DialogInterface.OnClickListener() {
 									@Override
-									public void onClick(DialogInterface dialog,
-											int whichButton) {
+									public void onClick(DialogInterface dialog, int whichButton) {
 										result.cancel();
 									}
-								})
-						.setOnCancelListener(
-								new DialogInterface.OnCancelListener() {
-									@Override
-									public void onCancel(DialogInterface dialog) {
-										result.cancel();
-									}
-								}).show();
+								}).setOnCancelListener(new DialogInterface.OnCancelListener() {
+							@Override
+							public void onCancel(DialogInterface dialog) {
+								result.cancel();
+							}
+						}).show();
 
 				return true;
 
@@ -1014,8 +958,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			@Override
 			public void onReceivedIcon(WebView view, Bitmap icon) {
-				new Thread(new FaviconUpdaterRunnable(MainActivity.this, view
-						.getUrl(), view.getOriginalUrl(), icon)).start();
+				new Thread(new FaviconUpdaterRunnable(MainActivity.this, view.getUrl(), view
+						.getOriginalUrl(), icon)).start();
 				updateFavIcon();
 
 				super.onReceivedIcon(view, icon);
@@ -1023,9 +967,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			@Override
 			public void onReceivedTitle(WebView view, String title) {
-				setTitle(String.format(
-						getResources().getString(R.string.ApplicationNameUrl),
-						title));
+				setTitle(String
+						.format(getResources().getString(R.string.ApplicationNameUrl), title));
 
 				startHistoryUpdaterRunnable(title, mCurrentWebView.getUrl(),
 						mCurrentWebView.getOriginalUrl());
@@ -1042,9 +985,9 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 				Intent i = new Intent(Intent.ACTION_GET_CONTENT);
 				i.addCategory(Intent.CATEGORY_OPENABLE);
 				i.setType("*/*");
-				MainActivity.this.startActivityForResult(Intent.createChooser(
-						i, MainActivity.this
-								.getString(R.string.Main_FileChooserPrompt)),
+				MainActivity.this.startActivityForResult(
+						Intent.createChooser(i,
+								MainActivity.this.getString(R.string.Main_FileChooserPrompt)),
 						OPEN_FILE_CHOOSER_ACTIVITY);
 			}
 
@@ -1096,11 +1039,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 * Navigate to the user home page.
 	 */
 	private void navigateToHome() {
-		navigateToUrl(Controller
-				.getInstance()
-				.getPreferences()
-				.getString(Constants.PREFERENCES_GENERAL_HOME_PAGE,
-						Constants.URL_ABOUT_START));
+		navigateToUrl(Controller.getInstance().getPreferences()
+				.getString(Constants.PREFERENCES_GENERAL_HOME_PAGE, Constants.URL_ABOUT_START));
 	}
 
 	/**
@@ -1132,17 +1072,15 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			if (url.equals(Constants.URL_ABOUT_START)) {
 
-				mCurrentWebView.loadDataWithBaseURL(
-						"file:///android_asset/startpage/",
-						ApplicationUtils.getStartPage(this), "text/html",
-						"UTF-8", Constants.URL_ABOUT_START);
+				mCurrentWebView.loadDataWithBaseURL("file:///android_asset/startpage/",
+						ApplicationUtils.getStartPage(this), "text/html", "UTF-8",
+						Constants.URL_ABOUT_START);
 
 			} else {
 
 				// If the url is not from GWT mobile view, and is in the mobile
 				// view url list, then load it with GWT.
-				if ((!url
-						.startsWith(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT))
+				if ((!url.startsWith(Constants.URL_GOOGLE_MOBILE_VIEW_NO_FORMAT))
 						&& (UrlUtils.checkInMobileViewUrlList(this, url))) {
 
 					url = String.format(Constants.URL_GOOGLE_MOBILE_VIEW, url);
@@ -1154,8 +1092,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	}
 
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode,
-			Intent intent) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		super.onActivityResult(requestCode, resultCode, intent);
 
 		if (requestCode == OPEN_BOOKMARKS_HISTORY_ACTIVITY) {
@@ -1173,8 +1110,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 				return;
 			}
 
-			Uri result = intent == null || resultCode != RESULT_OK ? null
-					: intent.getData();
+			Uri result = intent == null || resultCode != RESULT_OK ? null : intent.getData();
 			mUploadMessage.onReceiveValue(result);
 			mUploadMessage = null;
 		}
@@ -1207,21 +1143,18 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			case CONTEXT_MENU_DOWNLOAD:
 				if (b != null) {
-					doDownloadStart(b.getString(Constants.EXTRA_ID_URL), null,
-							null, null, 0);
+					doDownloadStart(b.getString(Constants.EXTRA_ID_URL), null, null, null, 0);
 				}
 				return true;
 			case CONTEXT_MENU_COPY:
 				if (b != null) {
-					ApplicationUtils.copyTextToClipboard(this,
-							b.getString(Constants.EXTRA_ID_URL),
+					ApplicationUtils.copyTextToClipboard(this, b.getString(Constants.EXTRA_ID_URL),
 							getString(R.string.Commons_UrlCopyToastMessage));
 				}
 				return true;
 			case CONTEXT_MENU_SHARE:
 				if (b != null) {
-					ApplicationUtils.sharePage(this, "",
-							b.getString(Constants.EXTRA_ID_URL));
+					ApplicationUtils.sharePage(this, "", b.getString(Constants.EXTRA_ID_URL));
 				}
 				return true;
 			default:
@@ -1240,8 +1173,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 		Constants.initializeConstantsFromResources(this);
 
-		Controller.getInstance().setPreferences(
-				PreferenceManager.getDefaultSharedPreferences(this));
+		Controller.getInstance()
+				.setPreferences(PreferenceManager.getDefaultSharedPreferences(this));
 
 		if (Controller.getInstance().getPreferences()
 				.getBoolean(Constants.PREFERENCES_SHOW_FULL_SCREEN, false)) {
@@ -1249,9 +1182,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 					WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		}
 
-		if (Controller
-				.getInstance()
-				.getPreferences()
+		if (Controller.getInstance().getPreferences()
 				.getBoolean(Constants.PREFERENCES_GENERAL_HIDE_TITLE_BARS, true)) {
 			requestWindowFeature(Window.FEATURE_NO_TITLE);
 		}
@@ -1281,25 +1212,20 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			navigateToUrl(i.getDataString());
 		} else {
 			// Normal start.
-			int currentVersionCode = ApplicationUtils
-					.getApplicationVersionCode(this);
-			int savedVersionCode = PreferenceManager
-					.getDefaultSharedPreferences(this).getInt(
-							Constants.PREFERENCES_LAST_VERSION_CODE, -1);
+			int currentVersionCode = ApplicationUtils.getApplicationVersionCode(this);
+			int savedVersionCode = PreferenceManager.getDefaultSharedPreferences(this).getInt(
+					Constants.PREFERENCES_LAST_VERSION_CODE, -1);
 
 			// If currentVersionCode and savedVersionCode are different, the
 			// application has been updated.
 			if (currentVersionCode != savedVersionCode) {
 				// Save current version code.
-				Editor editor = PreferenceManager.getDefaultSharedPreferences(
-						this).edit();
-				editor.putInt(Constants.PREFERENCES_LAST_VERSION_CODE,
-						currentVersionCode);
+				Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
+				editor.putInt(Constants.PREFERENCES_LAST_VERSION_CODE, currentVersionCode);
 				editor.commit();
 
 				// Display changelog dialog.
-				Intent changelogIntent = new Intent(this,
-						ChangelogActivity.class);
+				Intent changelogIntent = new Intent(this, ChangelogActivity.class);
 				startActivity(changelogIntent);
 			}
 
@@ -1321,12 +1247,10 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		item = menu.add(0, MENU_ADD_BOOKMARK, 0, R.string.Main_MenuAddBookmark);
 		item.setIcon(R.drawable.ic_menu_add_bookmark);
 
-		item = menu.add(0, MENU_SHOW_BOOKMARKS, 0,
-				R.string.Main_MenuShowBookmarks);
+		item = menu.add(0, MENU_SHOW_BOOKMARKS, 0, R.string.Main_MenuShowBookmarks);
 		item.setIcon(R.drawable.ic_menu_bookmarks);
 
-		item = menu.add(0, MENU_SHOW_DOWNLOADS, 0,
-				R.string.Main_MenuShowDownloads);
+		item = menu.add(0, MENU_SHOW_DOWNLOADS, 0, R.string.Main_MenuShowDownloads);
 		item.setIcon(R.drawable.ic_menu_downloads);
 
 		item = menu.add(0, MENU_PREFERENCES, 0, R.string.Main_MenuPreferences);
@@ -1359,15 +1283,12 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			DownloadItem item = (DownloadItem) data;
 
 			if (item.getErrorMessage() == null) {
-				Toast.makeText(this,
-						getString(R.string.Main_DownloadFinishedMsg),
+				Toast.makeText(this, getString(R.string.Main_DownloadFinishedMsg),
 						Toast.LENGTH_SHORT).show();
 			} else {
-				Toast.makeText(
-						this,
-						getString(R.string.Main_DownloadErrorMsg,
-								item.getErrorMessage()), Toast.LENGTH_SHORT)
-						.show();
+				Toast.makeText(this,
+						getString(R.string.Main_DownloadErrorMsg, item.getErrorMessage()),
+						Toast.LENGTH_SHORT).show();
 			}
 		}
 	}
@@ -1375,10 +1296,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 
-		String volumeKeysBehaviour = PreferenceManager
-				.getDefaultSharedPreferences(this).getString(
-						Constants.PREFERENCES_UI_VOLUME_KEYS_BEHAVIOUR,
-						"DEFAULT");
+		String volumeKeysBehaviour = PreferenceManager.getDefaultSharedPreferences(this).getString(
+				Constants.PREFERENCES_UI_VOLUME_KEYS_BEHAVIOUR, "DEFAULT");
 
 		if (!volumeKeysBehaviour.equals("DEFAULT")) {
 			switch (keyCode) {
@@ -1509,8 +1428,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			mCurrentWebView.loadAdSweep();
 		}
 
-		WebIconDatabase.getInstance().retainIconForPageUrl(
-				mCurrentWebView.getUrl());
+		WebIconDatabase.getInstance().retainIconForPageUrl(mCurrentWebView.getUrl());
 
 		if (mUrlBarVisible) {
 			startToolbarsHideRunnable();
@@ -1574,19 +1492,13 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		} catch (Exception e) {
 
 			// Notify user that the vnd url cannot be viewed.
-			new AlertDialog.Builder(this)
-					.setTitle(R.string.Main_VndErrorTitle)
-					.setMessage(
-							String.format(
-									getString(R.string.Main_VndErrorMessage),
-									url))
-					.setPositiveButton(android.R.string.ok,
-							new AlertDialog.OnClickListener() {
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-								}
-							}).setCancelable(true).create().show();
+			new AlertDialog.Builder(this).setTitle(R.string.Main_VndErrorTitle)
+					.setMessage(String.format(getString(R.string.Main_VndErrorMessage), url))
+					.setPositiveButton(android.R.string.ok, new AlertDialog.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog, int which) {
+						}
+					}).setCancelable(true).create().show();
 		}
 	}
 
@@ -1597,8 +1509,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		Intent i = new Intent(this, EditBookmarkActivity.class);
 
 		i.putExtra(Constants.EXTRA_ID_BOOKMARK_ID, (long) -1);
-		i.putExtra(Constants.EXTRA_ID_BOOKMARK_TITLE,
-				mCurrentWebView.getTitle());
+		i.putExtra(Constants.EXTRA_ID_BOOKMARK_TITLE, mCurrentWebView.getTitle());
 		i.putExtra(Constants.EXTRA_ID_BOOKMARK_URL, mCurrentWebView.getUrl());
 
 		startActivity(i);
@@ -1659,8 +1570,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 * Restart the application.
 	 */
 	public void restartApplication() {
-		PendingIntent intent = PendingIntent.getActivity(this.getBaseContext(),
-				0, new Intent(getIntent()), getIntent().getFlags());
+		PendingIntent intent = PendingIntent.getActivity(this.getBaseContext(), 0, new Intent(
+				getIntent()), getIntent().getFlags());
 		AlarmManager mgr = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 		mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 2000, intent);
 		System.exit(2);
@@ -1668,13 +1579,11 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 	private void setFindBarVisibility(boolean visible) {
 		if (visible) {
-			mFindBar.startAnimation(AnimationManager.getInstance()
-					.getTopBarShowAnimation());
+			mFindBar.startAnimation(AnimationManager.getInstance().getTopBarShowAnimation());
 			mFindBar.setVisibility(View.VISIBLE);
 			mFindDialogVisible = true;
 		} else {
-			mFindBar.startAnimation(AnimationManager.getInstance()
-					.getTopBarHideAnimation());
+			mFindBar.startAnimation(AnimationManager.getInstance().getTopBarHideAnimation());
 			mFindBar.setVisibility(View.GONE);
 			mFindDialogVisible = false;
 		}
@@ -1690,27 +1599,24 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 		boolean switchTabByButtons = isSwitchTabsByButtonsEnabled();
 		boolean showPreviousTabView = mViewFlipper.getDisplayedChild() > 0;
-		boolean showNextTabView = mViewFlipper.getDisplayedChild() < mViewFlipper
-				.getChildCount() - 1;
+		boolean showNextTabView = mViewFlipper.getDisplayedChild() < mViewFlipper.getChildCount() - 1;
 
 		if (visible) {
 
 			if (!mUrlBarVisible) {
-				mTopBar.startAnimation(AnimationManager.getInstance()
-						.getTopBarShowAnimation());
+				mTopBar.startAnimation(AnimationManager.getInstance().getTopBarShowAnimation());
 				mBottomBar.startAnimation(AnimationManager.getInstance()
 						.getBottomBarShowAnimation());
 
 				if (switchTabByButtons) {
 					if (showPreviousTabView) {
-						mPreviousTabView.startAnimation(AnimationManager
-								.getInstance()
+						mPreviousTabView.startAnimation(AnimationManager.getInstance()
 								.getPreviousTabViewShowAnimation());
 					}
 
 					if (showNextTabView) {
-						mNextTabView.startAnimation(AnimationManager
-								.getInstance().getNextTabViewShowAnimation());
+						mNextTabView.startAnimation(AnimationManager.getInstance()
+								.getNextTabViewShowAnimation());
 					}
 				}
 
@@ -1738,21 +1644,19 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		} else {
 
 			if (mUrlBarVisible) {
-				mTopBar.startAnimation(AnimationManager.getInstance()
-						.getTopBarHideAnimation());
+				mTopBar.startAnimation(AnimationManager.getInstance().getTopBarHideAnimation());
 				mBottomBar.startAnimation(AnimationManager.getInstance()
 						.getBottomBarHideAnimation());
 
 				if (switchTabByButtons) {
 					if (showPreviousTabView) {
-						mPreviousTabView.startAnimation(AnimationManager
-								.getInstance()
+						mPreviousTabView.startAnimation(AnimationManager.getInstance()
 								.getPreviousTabViewHideAnimation());
 					}
 
 					if (showNextTabView) {
-						mNextTabView.startAnimation(AnimationManager
-								.getInstance().getNextTabViewHideAnimation());
+						mNextTabView.startAnimation(AnimationManager.getInstance()
+								.getNextTabViewHideAnimation());
 					}
 				}
 
@@ -1769,12 +1673,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 					}
 				}
 
-				String bubblePosition = Controller
-						.getInstance()
-						.getPreferences()
-						.getString(
-								Constants.PREFERENCES_GENERAL_BUBBLE_POSITION,
-								"right");
+				String bubblePosition = Controller.getInstance().getPreferences()
+						.getString(Constants.PREFERENCES_GENERAL_BUBBLE_POSITION, "right");
 
 				if (bubblePosition.equals("right")) {
 					mBubbleRightView.setVisibility(View.VISIBLE);
@@ -1829,10 +1729,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			mCurrentWebView.doOnPause();
 
-			mViewFlipper.setInAnimation(AnimationManager.getInstance()
-					.getInFromRightAnimation());
-			mViewFlipper.setOutAnimation(AnimationManager.getInstance()
-					.getOutToLeftAnimation());
+			mViewFlipper.setInAnimation(AnimationManager.getInstance().getInFromRightAnimation());
+			mViewFlipper.setOutAnimation(AnimationManager.getInstance().getOutToLeftAnimation());
 
 			mViewFlipper.showNext();
 
@@ -1865,10 +1763,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 
 			mCurrentWebView.doOnPause();
 
-			mViewFlipper.setInAnimation(AnimationManager.getInstance()
-					.getInFromLeftAnimation());
-			mViewFlipper.setOutAnimation(AnimationManager.getInstance()
-					.getOutToRightAnimation());
+			mViewFlipper.setInAnimation(AnimationManager.getInstance().getInFromLeftAnimation());
+			mViewFlipper.setOutAnimation(AnimationManager.getInstance().getOutToRightAnimation());
 
 			mViewFlipper.showPrevious();
 
@@ -1892,20 +1788,14 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 * Show a toast alert on tab switch.
 	 */
 	private void showToastOnTabSwitch() {
-		if (Controller
-				.getInstance()
-				.getPreferences()
-				.getBoolean(Constants.PREFERENCES_SHOW_TOAST_ON_TAB_SWITCH,
-						true)) {
+		if (Controller.getInstance().getPreferences()
+				.getBoolean(Constants.PREFERENCES_SHOW_TOAST_ON_TAB_SWITCH, true)) {
 			String text;
 			if (mCurrentWebView.getTitle() != null) {
-				text = String.format(
-						getString(R.string.Main_ToastTabSwitchFullMessage),
-						mViewFlipper.getDisplayedChild() + 1,
-						mCurrentWebView.getTitle());
+				text = String.format(getString(R.string.Main_ToastTabSwitchFullMessage),
+						mViewFlipper.getDisplayedChild() + 1, mCurrentWebView.getTitle());
 			} else {
-				text = String.format(
-						getString(R.string.Main_ToastTabSwitchMessage),
+				text = String.format(getString(R.string.Main_ToastTabSwitchMessage),
 						mViewFlipper.getDisplayedChild() + 1);
 			}
 			Toast.makeText(this, text, Toast.LENGTH_SHORT).show();
@@ -1920,11 +1810,9 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	 * @param url
 	 *            The page url.
 	 */
-	private void startHistoryUpdaterRunnable(String title, String url,
-			String originalUrl) {
+	private void startHistoryUpdaterRunnable(String title, String url, String originalUrl) {
 		if ((url != null) && (url.length() > 0)) {
-			new Thread(new HistoryUpdater(this, title, url, originalUrl))
-					.start();
+			new Thread(new HistoryUpdater(this, title, url, originalUrl)).start();
 		}
 	}
 
@@ -1966,12 +1854,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 			mHideToolbarsRunnable.setDisabled();
 		}
 
-		int delay = Integer
-				.parseInt(Controller
-						.getInstance()
-						.getPreferences()
-						.getString(Constants.PREFERENCES_GENERAL_BARS_DURATION,
-								"3000"));
+		int delay = Integer.parseInt(Controller.getInstance().getPreferences()
+				.getString(Constants.PREFERENCES_GENERAL_BARS_DURATION, "3000"));
 		if (delay <= 0) {
 			delay = 3000;
 		}
@@ -2013,8 +1897,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	private void updateGoButton() {
 		if (mCurrentWebView.isLoading()) {
 			mGoButton.setImageResource(R.drawable.ic_btn_stop);
-			mUrlEditText.setCompoundDrawablesWithIntrinsicBounds(null, null,
-					mCircularProgress, null);
+			mUrlEditText.setCompoundDrawablesWithIntrinsicBounds(null, null, mCircularProgress,
+					null);
 			((AnimationDrawable) mCircularProgress).start();
 		} else {
 			if (!mCurrentWebView.isSameUrl(mUrlEditText.getText().toString())) {
@@ -2023,8 +1907,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 				mGoButton.setImageResource(R.drawable.ic_btn_reload);
 			}
 
-			mUrlEditText.setCompoundDrawablesWithIntrinsicBounds(null, null,
-					null, null);
+			mUrlEditText.setCompoundDrawablesWithIntrinsicBounds(null, null, null, null);
 			((AnimationDrawable) mCircularProgress).stop();
 		}
 	}
@@ -2049,9 +1932,8 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 	}
 
 	private void updateSwitchTabsMethod() {
-		String method = PreferenceManager.getDefaultSharedPreferences(this)
-				.getString(Constants.PREFERENCES_GENERAL_SWITCH_TABS_METHOD,
-						"buttons");
+		String method = PreferenceManager.getDefaultSharedPreferences(this).getString(
+				Constants.PREFERENCES_GENERAL_SWITCH_TABS_METHOD, "buttons");
 
 		if (method.equals("buttons")) {
 			mSwitchTabsMethod = SwitchTabsMethod.BUTTONS;
@@ -2071,8 +1953,7 @@ public class MainActivity extends Activity implements IToolbarsContainer,
 		String value = mCurrentWebView.getTitle();
 
 		if ((value != null) && (value.length() > 0)) {
-			this.setTitle(String.format(
-					getResources().getString(R.string.ApplicationNameUrl),
+			this.setTitle(String.format(getResources().getString(R.string.ApplicationNameUrl),
 					value));
 		} else {
 			clearTitle();

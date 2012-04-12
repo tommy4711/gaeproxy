@@ -609,6 +609,26 @@ public class GAEProxyService extends Service {
 		notifyAlert(getString(R.string.forward_stop), getString(R.string.service_stopped),
 				Notification.FLAG_AUTO_CANCEL);
 
+		try {
+			if (httpOS != null) {
+				httpOS.close();
+				httpOS = null;
+			}
+			if (httpProcess != null) {
+				httpProcess.destroy();
+				httpProcess = null;
+			}
+		} catch (Exception e) {
+			Log.e(TAG, "HTTP Server close unexpected");
+		}
+
+		try {
+			if (dnsServer != null)
+				dnsServer.close();
+		} catch (Exception e) {
+			Log.e(TAG, "DNS Server close unexpected");
+		}
+
 		new Thread() {
 			@Override
 			public void run() {
@@ -616,25 +636,6 @@ public class GAEProxyService extends Service {
 				// Make sure the connection is closed, important here
 				onDisconnect();
 
-				try {
-					if (httpOS != null) {
-						httpOS.close();
-						httpOS = null;
-					}
-					if (httpProcess != null) {
-						httpProcess.destroy();
-						httpProcess = null;
-					}
-				} catch (Exception e) {
-					Log.e(TAG, "HTTP Server close unexpected");
-				}
-
-				try {
-					if (dnsServer != null)
-						dnsServer.close();
-				} catch (Exception e) {
-					Log.e(TAG, "DNS Server close unexpected");
-				}
 			}
 		}.start();
 

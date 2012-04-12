@@ -60,8 +60,6 @@ public class DNSServer implements Runnable {
 	public HashSet<String> domains;
 
 	private int srvPort = 8153;
-	protected String dnsHost;
-	protected int dnsPort;
 	final protected int DNS_PKG_HEADER_LEN = 12;
 	final private int[] DNS_HEADERS = { 0, 0, 0x81, 0x80, 0, 0, 0, 0, 0, 0, 0, 0 };
 	final private int[] DNS_PAYLOAD = { 0xc0, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x3c,
@@ -77,8 +75,6 @@ public class DNSServer implements Runnable {
 	 */
 	private Hashtable<String, String> orgCache = new Hashtable<String, String>();
 
-	private String target = "8.8.8.8:53";
-
 	private String appHost = "203.208.46.1";
 
 	private static final String CANT_RESOLVE = "Error";
@@ -87,10 +83,8 @@ public class DNSServer implements Runnable {
 
 	private final static AsyncHttpClient client = new AsyncHttpClient();
 
-	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost) {
+	public DNSServer(Context ctx, String appHost) {
 
-		this.dnsHost = dnsHost;
-		this.dnsPort = dnsPort;
 		this.appHost = appHost;
 
 		client.setTimeout(6 * 1000);
@@ -104,9 +98,6 @@ public class DNSServer implements Runnable {
 		if (helper == null) {
 			helper = OpenHelperManager.getHelper(ctx, DatabaseHelper.class);
 		}
-
-		if (dnsHost != null && !dnsHost.equals(""))
-			target = dnsHost + ":" + dnsPort;
 
 		try {
 			srvSocket = new DatagramSocket(0, InetAddress.getByName("127.0.0.1"));
@@ -237,7 +228,7 @@ public class DNSServer implements Runnable {
 						Log.e(TAG, "Failed to resolve domain name: " + domain);
 						return;
 					}
-					
+
 					response = response.trim();
 
 					if (response.equals(CANT_RESOLVE)) {
@@ -571,10 +562,6 @@ public class DNSServer implements Runnable {
 		} catch (IOException e) {
 			Log.e(TAG, "", e);
 		}
-	}
-
-	public void setTarget(String target) {
-		this.target = target;
 	}
 
 }

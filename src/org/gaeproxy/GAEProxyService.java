@@ -461,7 +461,7 @@ public class GAEProxyService extends Service {
 
 		// DNS Proxy Setup
 		// with AsyncHttpClient
-		dnsServer = new DNSServer(this, "8.8.8.8", 53, appHost);
+		dnsServer = new DNSServer(this, appHost);
 		dnsPort = dnsServer.getServPort();
 
 		// Random mirror for load balance

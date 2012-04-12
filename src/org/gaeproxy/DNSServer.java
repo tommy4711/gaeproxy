@@ -30,11 +30,10 @@ import org.gaeproxy.db.DatabaseHelper;
 import android.content.Context;
 import android.util.Log;
 
-import com.github.droidfu.http.BetterHttp;
-import com.github.droidfu.http.BetterHttpRequest;
-import com.github.droidfu.http.BetterHttpResponse;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
 
 /**
  * 此类实现了DNS代理
@@ -58,8 +57,6 @@ public class DNSServer implements Runnable {
 
 	private DatagramSocket srvSocket;
 
-	private volatile int threadNum = 0;
-	private final static int MAX_THREAD_NUM = 5;
 	public HashSet<String> domains;
 
 	private int srvPort = 8153;
@@ -71,11 +68,8 @@ public class DNSServer implements Runnable {
 			0x00, 0x04 };
 
 	final private int IP_SECTION_LEN = 4;
-	final private int DNS_ERROR_LIMIT = 20;
 
 	private boolean inService = false;
-	private boolean httpMode = false;
-	private volatile int dnsError = 0;
 
 	/**
 	 * 内建自定义缓存
@@ -91,15 +85,15 @@ public class DNSServer implements Runnable {
 
 	private DatabaseHelper helper;
 
-	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost, boolean httpMode) {
+	private final static AsyncHttpClient client = new AsyncHttpClient();
+
+	public DNSServer(Context ctx, String dnsHost, int dnsPort, String appHost) {
 
 		this.dnsHost = dnsHost;
 		this.dnsPort = dnsPort;
-		this.httpMode = httpMode;
 		this.appHost = appHost;
 
-		BetterHttp.setupHttpClient();
-		BetterHttp.setTimeout(6 * 1000, 12 * 1000);
+		client.setTimeout(6 * 1000);
 
 		domains = new HashSet<String>();
 
@@ -206,81 +200,72 @@ public class DNSServer implements Runnable {
 		return result;
 	}
 
-	/**
-	 * 由上级DNS通过TCP取得解析
-	 * 
-	 * @param quest
-	 *            原始DNS请求
-	 * @return
-	 */
-	protected byte[] fetchAnswer(byte[] quest) {
+	public void fetchAnswerHTTP(final DatagramPacket dnsq, final byte[] quest) {
 
-		Socket innerSocket = new InnerSocketBuilder(dnsHost, dnsPort, target).getSocket();
-		DataInputStream in;
-		DataOutputStream out;
-		byte[] result = null;
-		try {
-			if (innerSocket != null && innerSocket.isConnected()) {
-				// 构造TCP DNS包
-				int dnsqLength = quest.length;
-				byte[] tcpdnsq = new byte[dnsqLength + 2];
-				System.arraycopy(int2byte(dnsqLength), 0, tcpdnsq, 1, 1);
-				System.arraycopy(quest, 0, tcpdnsq, 2, dnsqLength);
-
-				// 转发DNS
-				in = new DataInputStream(innerSocket.getInputStream());
-				out = new DataOutputStream(innerSocket.getOutputStream());
-				out.write(tcpdnsq);
-				out.flush();
-
-				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-
-				int b = -1;
-				while ((b = in.read()) != -1) {
-					bout.write(b);
-				}
-
-				byte[] tcpdnsr = bout.toByteArray();
-				if (tcpdnsr != null && tcpdnsr.length > 2) {
-					result = new byte[tcpdnsr.length - 2];
-					System.arraycopy(tcpdnsr, 2, result, 0, tcpdnsr.length - 2);
-				}
-				innerSocket.close();
-			}
-		} catch (IOException e) {
-			Log.e(TAG, "", e);
-		}
-		return result;
-	}
-
-	public byte[] fetchAnswerHTTP(byte[] quest) {
-		byte[] result = null;
-		String domain = getRequestDomain(quest);
-		String ip = null;
+		final String domain = getRequestDomain(quest);
 
 		DomainValidator dv = DomainValidator.getInstance();
 		/* Not support reverse domain name query */
 		if (domain.endsWith("ip6.arpa") || domain.endsWith("in-addr.arpa") || !dv.isValid(domain)) {
-			return createDNSResponse(quest, parseIPString("127.0.0.1"));
+			final byte[] answer = createDNSResponse(quest, parseIPString("127.0.0.1"));
+			addToCache(domain, answer);
+			sendDns(answer, dnsq, srvSocket);
+			synchronized (domains) {
+				domains.remove(domain);
+			}
+			return;
 		}
 
-		ip = resolveDomainName(domain);
+		final long startTime = System.currentTimeMillis();
 
-		if (ip == null) {
-			Log.e(TAG, "Failed to resolve domain name: " + domain);
-			return null;
-		}
+		AsyncHttpResponseHandler handler = new AsyncHttpResponseHandler() {
 
-		if (ip.equals(CANT_RESOLVE)) {
-			return null;
-		}
+			@Override
+			public void onFinish() {
+				synchronized (domains) {
+					domains.remove(domain);
+				}
+			}
 
-		byte[] ips = parseIPString(ip);
-		if (ips != null) {
-			result = createDNSResponse(quest, ips);
-		}
+			@Override
+			public void onSuccess(String response) {
+				try {
 
-		return result;
+					byte[] answer = null;
+
+					if (response == null) {
+						Log.e(TAG, "Failed to resolve domain name: " + domain);
+						return;
+					}
+					
+					response = response.trim();
+
+					if (response.equals(CANT_RESOLVE)) {
+						Log.e(TAG, "Cannot resolve domain name: " + domain);
+						return;
+					}
+
+					byte[] ips = parseIPString(response);
+					if (ips != null) {
+						answer = createDNSResponse(quest, ips);
+					}
+
+					if (answer != null && answer.length != 0) {
+						addToCache(domain, answer);
+						sendDns(answer, dnsq, srvSocket);
+						Log.d(TAG, "Success to resolve: " + domain + " length: " + answer.length
+								+ " cost: " + (System.currentTimeMillis() - startTime) / 1000 + "s");
+					} else {
+						Log.e(TAG, "The size of DNS packet returned is 0");
+					}
+				} catch (Exception e) {
+					// Nothing
+				}
+			}
+		};
+
+		resolveDomainName(domain, handler);
+
 	}
 
 	/**
@@ -423,7 +408,7 @@ public class DNSServer implements Runnable {
 		// ips.length);
 
 		if (ips.length != IP_SECTION_LEN) {
-			Log.e(TAG, "Malformed IP string number of sections is: " + ips.length);
+			Log.e(TAG, "Malformed IP string : " + ip);
 			return null;
 		}
 
@@ -441,7 +426,7 @@ public class DNSServer implements Runnable {
 				result[i] = (byte) value;
 				i++;
 			} catch (NumberFormatException e) {
-				Log.e(TAG, "Malformed IP string section: " + section);
+				Log.e(TAG, "Malformed IP string: " + ip);
 				return null;
 			}
 		}
@@ -467,7 +452,7 @@ public class DNSServer implements Runnable {
 	 * http://www.hosts.dotcloud.com/lookup.php?(domain name encoded)
 	 * http://gaednsproxy.appspot.com/?d=(domain name encoded)
 	 */
-	private String resolveDomainName(String domain) {
+	private void resolveDomainName(String domain, AsyncHttpResponseHandler handler) {
 		String ip = null;
 
 		InputStream is;
@@ -495,20 +480,8 @@ public class DNSServer implements Runnable {
 
 		// RFC 2616: http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
 
-		BetterHttpRequest conn = BetterHttp.get(url, host);
+		client.get(url, host, handler);
 
-		try {
-			BetterHttpResponse resp = conn.send();
-			is = resp.getResponseBody();
-			BufferedReader br = new BufferedReader(new InputStreamReader(is));
-			ip = br.readLine();
-		} catch (ConnectException e) {
-			Log.e(TAG, "Failed to request URI: " + url, e);
-		} catch (IOException e) {
-			Log.e(TAG, "Failed to request URI: " + url, e);
-		}
-
-		return ip;
 	}
 
 	@Override
@@ -517,7 +490,6 @@ public class DNSServer implements Runnable {
 		loadCache();
 
 		byte[] qbuffer = new byte[576];
-		long starTime = System.currentTimeMillis();
 
 		while (true) {
 			try {
@@ -552,59 +524,14 @@ public class DNSServer implements Runnable {
 					Log.d(TAG, "Custom DNS resolver: " + questDomain);
 				} else {
 
-					synchronized (this) {
+					synchronized (domains) {
 						if (domains.contains(questDomain))
 							continue;
 						else
 							domains.add(questDomain);
 					}
 
-					if (threadNum >= MAX_THREAD_NUM) {
-						continue;
-					}
-
-					if (dnsError > DNS_ERROR_LIMIT)
-						httpMode = false;
-					else
-						httpMode = true;
-
-					threadNum++;
-
-					new Thread() {
-						@Override
-						public void run() {
-							long startTime = System.currentTimeMillis();
-							try {
-								byte[] answer;
-								if (httpMode)
-									answer = fetchAnswerHTTP(udpreq);
-								else
-									answer = fetchAnswer(udpreq);
-
-								if (answer != null && answer.length != 0) {
-									addToCache(questDomain, answer);
-									sendDns(answer, dnsq, srvSocket);
-									Log.d(TAG,
-											"Success to resolve: " + questDomain + " length: "
-													+ answer.length + " cost: "
-													+ (System.currentTimeMillis() - startTime)
-													/ 1000 + "s");
-								} else {
-									Log.e(TAG, "The size of DNS packet returned is 0");
-									if (httpMode)
-										dnsError++;
-								}
-							} catch (Exception e) {
-								// Nothing
-								if (httpMode)
-									dnsError++;
-							}
-							synchronized (DNSServer.this) {
-								domains.remove(questDomain);
-							}
-							threadNum--;
-						}
-					}.start();
+					fetchAnswerHTTP(dnsq, udpreq);
 
 				}
 

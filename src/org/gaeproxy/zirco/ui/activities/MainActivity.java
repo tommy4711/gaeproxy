@@ -306,6 +306,8 @@ public class MainActivity extends Activity implements IToolbarsContainer, OnTouc
 				R.string.QuickAction_SelectText));
 		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_mobile_view,
 				R.string.QuickAction_MobileView));
+		mToolsActionGrid.addQuickAction(new QuickAction(this, R.drawable.ic_btn_tools,
+				R.string.QuickAction_Menu));
 
 		mToolsActionGrid.setOnQuickActionClickListener(new OnQuickActionClickListener() {
 			@Override
@@ -338,6 +340,9 @@ public class MainActivity extends Activity implements IToolbarsContainer, OnTouc
 								.getText().toString());
 						navigateToUrl(url);
 					}
+					break;
+				case 5:
+					openOptionsMenu();
 					break;
 				}
 			}

@@ -82,9 +82,11 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
 import android.widget.TextView;
@@ -115,9 +117,9 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 
 	NotificationManager nm;
 	Notification notification;
-	private static final int MSG_CRASH_RECOVER = 3;
+	private static final int MSG_CRASH_RECOVER = 1;
+	private static final int MSG_INITIAL_FINISH = 2;
 
-	private static final int MSG_INITIAL_FINISH = 4;
 	final Handler handler = new Handler() {
 		@Override
 		public void handleMessage(Message msg) {

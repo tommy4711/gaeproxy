@@ -54,9 +54,6 @@ import org.gaeproxy.db.DNSResponse;
 import org.gaeproxy.db.DatabaseHelper;
 
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -82,13 +79,10 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.LinearLayout;
-import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -112,11 +106,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 	private boolean isGlobalProxy = false;
 	private boolean isHTTPSProxy = false;
 	private boolean isGFWList = false;
-	// Notification Progress Bar
-	int notification_id = 19172439;
 
-	NotificationManager nm;
-	Notification notification;
 	private static final int MSG_CRASH_RECOVER = 1;
 	private static final int MSG_INITIAL_FINISH = 2;
 
@@ -160,7 +150,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 
 	private Preference browser;
 
-	private void CopyAssets(String path) {
+	private void copyAssets(String path) {
 
 		AssetManager assetManager = getAssets();
 		String[] files = null;
@@ -314,20 +304,6 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 			@Override
 			public void run() {
 
-				nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-				notification = new Notification(R.drawable.icon, getString(R.string.download),
-						System.currentTimeMillis());
-				notification.contentView = new RemoteViews(getPackageName(),
-						R.layout.layout_progress_bar);
-				// 使用notification.xml文件作VIEW
-				notification.contentView.setProgressBar(R.id.pb, 100, 0, false);
-				// 设置进度条，最大值 为100,当前值为0，最后一个参数为true时显示条纹
-				// （就是在Android Market下载软件，点击下载但还没获取到目标大小时的状态）
-				Intent notificationIntent = new Intent(GAEProxy.this, GAEProxy.class);
-				PendingIntent contentIntent = PendingIntent.getActivity(GAEProxy.this, 0,
-						notificationIntent, 0);
-				notification.contentIntent = contentIntent;
-
 				Utils.isRoot();
 
 				String versionName;
@@ -349,7 +325,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 					if (!f.exists())
 						f.mkdir();
 
-					CopyAssets("");
+					copyAssets("");
 
 					Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables\n"
 							+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"
@@ -722,7 +698,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 				if (!f.exists())
 					f.mkdir();
 
-				CopyAssets("");
+				copyAssets("");
 
 				Utils.runCommand("chmod 755 /data/data/org.gaeproxy/iptables\n"
 						+ "chmod 755 /data/data/org.gaeproxy/redsocks\n"

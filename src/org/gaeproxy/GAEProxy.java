@@ -79,9 +79,11 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -274,7 +276,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 		adView = new AdView(GAEProxy.this, AdSize.BANNER, "a14d8be8a284afc");
 		// Lookup your LinearLayout assuming it’s been given
 		// the attribute android:id="@+id/mainLayout"
-		LinearLayout layout = (LinearLayout) findViewById(R.id.ad);
+		FrameLayout layout = (FrameLayout) findViewById(R.id.ad);
 		// Add the adView to it
 		layout.addView(adView);
 		// Initiate a generic request to load it with an ad

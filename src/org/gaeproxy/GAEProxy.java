@@ -336,11 +336,10 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 							+ "chmod 755 /data/data/org.gaeproxy/localproxy_en.sh\n"
 							+ "chmod 755 /data/data/org.gaeproxy/python-cl\n");
 
-						install();
+					install();
 
 				}
 
-				
 				if (!(new File(Utils.getDataPath(GAEProxy.this) + "/python-extras")).exists()) {
 					install();
 				}
@@ -704,6 +703,11 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 
 				if (!f.exists())
 					f.mkdir();
+
+				File hosts = new File("/data/data/org.gaeproxy/hosts");
+
+				if (hosts.exists())
+					hosts.delete();
 
 				copyAssets("");
 

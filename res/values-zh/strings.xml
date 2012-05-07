@@ -43,7 +43,7 @@
     <string name="downloading">下载中...（100%处请耐心等待）</string>
     <string name="install_alert">请先安装依赖模块，滑动到底部，选择安装</string>
     <string name="sdcard_alert">请确认SD卡已插入</string>
-    <string name="recovery">清除连接状态</string>
+    <string name="recovery">重置</string>
     <string name="unzip">解压缩中...</string>
     <string name="proxyed_apps">分应用代理</string>
     <string name="proxyed_apps_summary">为应用单独设置代理，需要 ROOT 权限以及 IPTABLES 的支持</string>

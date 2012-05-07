@@ -83,7 +83,15 @@
         <item>202.248.0.0/16</item>
     </string-array>
     <string-array name="chn_list">
-        <item>1.0.0.0/2</item>
+        <item>1.0.0.0/8</item>
+        <item>14.0.0.0/8</item>
+        <item>27.0.0.0/8</item>
+        <item>36.0.0.0/8</item>
+        <item>39.0.0.0/8</item>
+        <item>42.0.0.0/8</item>
+        <item>49.0.0.0/8</item>
+        <item>58.0.0.0/7</item>
+        <item>60.0.0.0/7</item>
         <item>66.114.0.0/16</item> <!-- tricks for sina weibo -->
         <item>96.0.0.0/3</item>
         <item>128.0.0.0/4</item>
@@ -105,7 +113,7 @@
     <string name="mirror_list">ZmNhcGpwfHBzd3N3ZXxzdG9ybWZhdHdvd3xrZWRpZ3VvfGdmd2Rhb3xiZWFyYmVhcmhqMXxjYW9nb2FnZW50fHByb3h5NjY3fGFlbHhzYW18bWF4bWFydGFpbmdvYWdlbnR8bWV0YWxqb2tlcjEwMDJ8c2hlbmRhbnB1ZmYxfHJveHNreWZxfGZsb3VzZXByb3h5fHRhb2Vyc2h1fGhxeTUxMjI4fGxpaGFuZzkxMnxmcmVlNG0yZ298cGV0ZXJtYXBsZXxnb2FnZW50LWR1cDAwMXxvaWNxZGFuaWVsfGxpYW5neXk4ODg4fGNhdGFtZWk2fHN1bm55aGFuODIwfHBpYW9oYW44NHxibGluZGNoaW5hfHB1YmxpY2dvYWdlbnQxfHl1c2h1bnlhb3pob25nZ3VvfHN0ZWZ3b28tZnVjay1nZnd8Y29tcHV0ZXJ4YW18bGFvbGlhbm5hbmFwcDF8Y2ZhbnMxOTgyfHh1ZXJvbnx6cWhzZnp8c3dhZ21vbnxmb3JqYXBhbmZvbnxpMzMwNjIwMDk4OHx5dW1pbmc1MjAxMzR8YXpyYWVsZ3p8YmVlcmdvYWdlbnR8Y29taXRjbnxnb291dGJhYWF8d2hzaG1kc2ZzdGNzaDE2M3xocS1nb2FnZW50fGJic2NjYnN8Y2x5aHkxOTczfHZpcC0xMTE1fG15bmVjcXF8bXluZWN0dHx6MTY0OTgwMzE2fGNvZGluZ3RpbWVsZXNzfGNhaWh1aTA4MDE=</string>
     <string name="connecting">Connecting...</string>
     <string name="initializing">Initializing...</string>
-    <string name="recovering">Recovering...</string>
+    <string name="recovering">Reseting...</string>
     <string name="https_alert">Please modify your proxy host to start with
 		"https://"</string>
     <string name="https_proxy">Enable HTTPS proxy</string>

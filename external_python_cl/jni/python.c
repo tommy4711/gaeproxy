@@ -4,7 +4,7 @@
 
 typedef int (*main_t)(int, char **);
 
-#define PYTHONPATH "/mnt/sdcard/python-extras:/data/data/org.gaeproxy/files/python-extras:/data/data/org.gaeproxy/python/lib/python2.6/lib-dynload"
+#define PYTHONPATH "/sdcard/python-extras:/mnt/sdcard/python-extras:/data/data/org.gaeproxy/files/python-extras:/data/data/org.gaeproxy/python/lib/python2.6/lib-dynload"
 #define PYTHONHOME "/data/data/org.gaeproxy/python"
 #define LD_LIBRARY_PATH "/data/data/org.gaeproxy/python/lib"
 

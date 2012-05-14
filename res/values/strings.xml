@@ -92,8 +92,8 @@
         <item>49.0.0.0/8</item>
         <item>58.0.0.0/7</item>
         <item>60.0.0.0/7</item>
-        <item>66.114.0.0/16</item> <!-- tricks for sina weibo -->
         <item>96.0.0.0/3</item>
+        <item>123.0.0.0/8</item> <!-- tricks for sina weibo -->
         <item>128.0.0.0/4</item>
         <item>171.0.0.0/8</item>
         <item>175.0.0.0/8</item>

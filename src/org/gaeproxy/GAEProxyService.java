@@ -51,6 +51,7 @@ import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -81,7 +82,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
-import com.google.android.apps.analytics.GoogleAnalyticsTracker;
+import com.google.analytics.tracking.android.EasyTracker;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
 
@@ -136,8 +137,6 @@ public class GAEProxyService extends Service {
 	private boolean isHTTPSProxy = false;
 	private boolean isDNSBlocked = true;
 	private boolean isGFWList = false;
-
-	GoogleAnalyticsTracker tracker;
 
 	private ProxyedApp apps[];
 
@@ -563,14 +562,7 @@ public class GAEProxyService extends Service {
 	public void onCreate() {
 		super.onCreate();
 
-		tracker = GoogleAnalyticsTracker.getInstance();
-
-		// Start the tracker in manual dispatch mode...
-		tracker.startNewSession("UA-21682712-1", this);
-
-		tracker.trackPageView("/version-" + getVersionName());
-
-		tracker.dispatch();
+		EasyTracker.getTracker().trackEvent("service", "start", getVersionName(), 0L);
 
 		settings = PreferenceManager.getDefaultSharedPreferences(this);
 		notificationManager = (NotificationManager) this.getSystemService(NOTIFICATION_SERVICE);
@@ -600,7 +592,7 @@ public class GAEProxyService extends Service {
 	@Override
 	public void onDestroy() {
 
-		tracker.stopSession();
+		EasyTracker.getTracker().trackEvent("service", "stop", getVersionName(), 0L);
 
 		statusLock = true;
 

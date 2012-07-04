@@ -79,19 +79,17 @@ import android.text.SpannableString;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.flurry.android.FlurryAgent;
 import com.google.ads.AdRequest;
 import com.google.ads.AdSize;
 import com.google.ads.AdView;
+import com.google.analytics.tracking.android.EasyTracker;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.Dao;
 
@@ -644,13 +642,13 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 	@Override
 	public void onStart() {
 		super.onStart();
-		FlurryAgent.onStartSession(this, "46W95Q7YQQ6IY1NFIQW4");
+		EasyTracker.getInstance().activityStart(this);
 	}
 
 	@Override
 	public void onStop() {
 		super.onStop();
-		FlurryAgent.onEndSession(this);
+		EasyTracker.getInstance().activityStop(this);
 	}
 
 	private void recovery() {

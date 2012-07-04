@@ -688,6 +688,7 @@ public class GAEProxy extends PreferenceActivity implements OnSharedPreferenceCh
 					for (DNSResponse resp : list) {
 						dnsCacheDao.delete(resp);
 					}
+					OpenHelperManager.releaseHelper();
 				} catch (Exception ignore) {
 					// Nothing
 				}

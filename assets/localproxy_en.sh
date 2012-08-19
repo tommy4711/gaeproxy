@@ -9,11 +9,7 @@ export TEMP=${1}/python-extras
 export PYTHONHOME=${DIR}/python
 export LD_LIBRARY_PATH=${DIR}/python/lib
 
-case $2 in
-
- goagent)
- 
- echo " 
+echo " 
 
 [listen]
 ip = 127.0.0.1
@@ -99,56 +95,3 @@ www.253874.com =
  
 $DIR/python-cl $DIR/goagent.py
 
-;;
-
- gappproxy)
- 
-$DIR/python-cl $DIR/gappproxy.py
-
-;;
-
- wallproxy)
- 
- echo "
-server['listen'] = ('127.0.0.1', $4)
-server['log_file'] = None 
-
-hosts = '''
-$5  .appspot.com
-$5 www.youtube.com
-'''
-
-plugins['plugins.hosts'] = 'hosts'
-
-gaeproxy = [{
-    'url': '$3',
-    'key': '$6',
-    'crypto':'XOR--0',
-    'max_threads':5
-}]
-
-plugins['plugins.gaeproxy'] = 'gaeproxy'
-
-def find_http_handler(method, url, headers):
-    if method not in ('GET', 'HEAD', 'PUT', 'POST', 'DELETE'):
-        return rawproxy[0]
-    if 80<=url.port<=90 or 440<=url.port<=450 or url.port>=1024:
-        return gaeproxy
-    return None
-
-fakehttps = None
-plugins['plugins.fakehttps'] = 'fakehttps'
-
-def find_sock_handler(reqtype, ip, port, cmd):
-    if reqtype == 'https': return fakehttps
-    return None
-
-def check_client(ip, reqtype, args):
-    return True
- " > /data/data/org.gaeproxy/proxy.conf
- 
- $DIR/python-cl $DIR/wallproxy.py
- 
- ;;
- 
- esac
